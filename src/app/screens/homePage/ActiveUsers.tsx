@@ -22,7 +22,7 @@ export default function ActiveUsers() {
     <div className={"active-users-frame"}>
       <Container>
         <Stack className={"main"}>
-          <Box className={"category-title"}>Popular Dishes</Box>
+          <Box className={"category-title"}>Active Users</Box>
           <Stack className={"cards-frame"}>
             {activeUsers.length !== 0 ? (
               activeUsers.map((ele, index) => {
@@ -58,3 +58,19 @@ export default function ActiveUsers() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
