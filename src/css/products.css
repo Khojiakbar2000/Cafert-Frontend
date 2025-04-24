@@ -1,0 +1,301 @@
+/* Avatar  */
+.products .avatar-big-box {
+    margin-top: 80px;
+    width: 100%;
+    height: 46px;
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .products .avatar-big-box .avatar-title {
+    width: 328px;
+    height: 46px;
+  
+    color: #343434;
+    font-family: "Roboto Serif";
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+  }
+  
+  .products .avatar-big-box .avatar-search-box {
+    width: 360px;
+    height: 35.676px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 100px;
+  
+    border-radius: 18.5px;
+    border: 1px solid #fff;
+    background: #fffcfc;
+    box-shadow: 0px 4px 4px 0px rgba(212, 212, 212, 0.25);
+  }
+  
+  /* Dishes-filter-section */
+  
+  .products .dishes-filter-section {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: row;
+  }
+  
+  .products .dishes-filter-section .dishes-filter-box {
+    width: 350px;
+    height: 36.5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 64px 0 0 10px;
+    gap: 20px;
+  }
+  
+  .products .dishes-filter-section .dishes-filter-box button {
+    margin-left: 20px;
+  }
+  
+  /* CATEGORY-SECTION */
+  
+  .list-category-section .product-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 10px;
+  }
+  
+  .product-category .category-main {
+    width: 36px;
+    height: 389px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .product-category .category-main Button {
+    width: 68px;
+    height: 36px;
+    margin-top: 50px;
+    transform: rotate(-90deg);
+    flex-shrink: 0;
+    border-radius: 8px;
+  }
+  
+  .list-category-section .product-wrapper .product-card {
+    width: 273px;
+    height: 323px;
+    display: flex;
+    margin: 0 0 35px 25px;
+  }
+  
+  .list-category-section .product-wrapper .product-card .product-img {
+    width: 273px;
+    height: 275px;
+    position: relative;
+    border-radius: 0px 50px 0px 0px;
+    background-size: cover;
+  }
+  
+  .list-category-section .product-wrapper .product-card .product-sale {
+    width: 90px;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0 0 10px;
+    border-radius: 25px;
+    background: #ff9200;
+    box-shadow: 4px 6px 20px 0px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    font-family: Poppins;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+  }
+  
+  .list-category-section .product-wrapper .product-card .product-desc {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .list-category-section
+    .product-wrapper
+    .product-card
+    .product-desc
+    .product-title {
+    color: #343434;
+    font-family: Poppins;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+  }
+  
+  .list-category-section
+    .product-wrapper
+    .product-card
+    .product-desc
+    .product-price {
+    color: #e3c08d;
+    font-family: Poppins;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+  }
+  
+  .products .product-img:before {
+    border-radius: 0px 50px 0px 0px;
+    content: "";
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2;
+  }
+  
+  .products .product-img:hover::before {
+    border-radius: 0px 50px 0px 0px;
+    opacity: 1;
+  }
+  
+  .product-page .products .product-img img {
+    position: absolute;
+    display: block;
+    max-width: 100%;
+    height: auto;
+    z-index: 1;
+  }
+  
+  .product-wrapper .product-card .shop-btn {
+    width: 64px;
+    height: 46px;
+    border-radius: 10px;
+    border: 1px solid #e3c08d;
+    background: rgba(187, 47, 200, 0.78);
+    position: absolute;
+    bottom: 10px;
+    left: 104.5px;
+    cursor: pointer;
+    z-index: 3;
+    opacity: 0;
+    transform: opacity 0.5s ease;
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 15px;
+    color: #f8f8ff;
+  }
+  
+  .product-wrapper .product-card .view-btn {
+    width: 40px;
+    height: 40px;
+    fill: rgba(0, 0, 0, 0.4);
+    display: flex;
+    padding: 3.068px 1.333px 4.091px 1.333px;
+    z-index: 3;
+    opacity: 0;
+    transform: opacity 0.5s ease;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-family: Roboto;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    position: absolute;
+    right: 36px;
+    bottom: 10px;
+  }
+  
+  .products .product-img:hover .shop-btn {
+    opacity: 1;
+  }
+  
+  .products .product-img:hover .view-btn {
+    opacity: 1;
+  }
+  
+  /* PAGINATION */
+  
+  .pagination-section {
+    margin-top: 10px;
+    margin-bottom: 67px;
+  }
+  
+  /* BRAND-LOGO AND TITLE */
+  
+  .brands-logo {
+    width: 100%;
+    height: auto;
+    background: #0d1518;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 47px;
+  }
+  
+  .brands-logo .brand-title {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .brands-logo .brand-title-text {
+    margin-top: 64px;
+    width: 305px;
+    height: 46px;
+    color: #e3c08d;
+    font-family: Roboto;
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+  }
+  
+  .brands-logo .brand-logos {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 59px;
+    margin-bottom: 92px;
+  }
+  
+  .brands-logo .brand-logos .logo-box {
+    border-radius: 16px;
+    background: cover no-repeat;
+    box-shadow: 0px 0px 22px 0px #e4d4d4;
+    margin-right: 75px;
+  }
+  
+  /* ADDRESS */
+  
+  .address {
+    margin-bottom: 90px;
+  }
+  
+  .address-area .title {
+    width: 232px;
+    height: 53.124px;
+    color: #343434;
+    font-family: "Roboto Serif";
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+  }
