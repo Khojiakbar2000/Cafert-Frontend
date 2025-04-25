@@ -152,7 +152,7 @@ export default function Products() {
                         <Button className="view-btn" sx={{ right: "36px" }}>
                           <Badge badgeContent={20} color="secondary">
                             <RemoveRedEyeIcon
-                              sx={{ color: 1 ? "gray" : "white" }}
+                              sx={{ color: (20 >0) ? "gray" : "white" }}
                             />
                           </Badge>
                         </Button>
