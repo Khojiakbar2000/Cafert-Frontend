@@ -1,13 +1,20 @@
+import { Member } from "./member";
+import { Product } from "./product";
 
 
-/** REACT APP STATE */
+/** REACT APP STATE **/
 export interface AppRootState {
 homePage: HomePageState;
+//productsPage: ProductsPageState;
 }
-
+/** HOMEPAGE **/
 export interface HomePageState{
-    popularDishes: [];
-    newDishes [];
-    topUsers[];
+    popularDishes: Product[];
+    newDishes: Product[];
+    topUsers: Member[];
 
 }
+
+/** PRODUCTS PAGE **/
+
+/** ORDERS PAGE **/
