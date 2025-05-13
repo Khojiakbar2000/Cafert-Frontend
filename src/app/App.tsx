@@ -42,7 +42,8 @@ function App() {
         < HelpPage/>
       </Route>
       <Route path="/">
-      <HomePage/>
+      {/*<HomePage/>*/}
+      <Test/>
       </Route>
     </Switch>
     <Footer />
