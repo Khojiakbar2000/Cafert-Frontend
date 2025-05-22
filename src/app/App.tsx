@@ -40,13 +40,18 @@ function App() {
     onAdd={onAdd}
     onRemove={onRemove} 
     onDelete={onDelete} 
-    onDeleteAll={onDeleteAll}/>
+    onDeleteAll={onDeleteAll}
+    setSignupOpen={setSignupOpen}
+   setLoginOpen={setloginOpen}/>
+
    ) : ( 
    <OtherNavbar cartItems={cartItems} 
    onAdd={onAdd}
    onRemove={onRemove} 
    onDelete={onDelete} 
-   onDeleteAll={onDeleteAll}/>
+   onDeleteAll={onDeleteAll}
+   setSignupOpen={setSignupOpen}
+   setLoginOpen={setloginOpen}/>
    )}
 <Switch>
     <Route path="/products">
