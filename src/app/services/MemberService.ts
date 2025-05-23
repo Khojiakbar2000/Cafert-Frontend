@@ -74,7 +74,7 @@ try{
              console.log("result:", result)
     
              const member: Member= result.data.member;
-             console.log("login:", member)
+             console.log("member:", member)
              localStorage.setItem("memberData", JSON.stringify(member))
              return member;
             }catch(err){
