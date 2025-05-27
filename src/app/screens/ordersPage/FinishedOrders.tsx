@@ -34,7 +34,7 @@ export default function FinishedOrders() {
                   return (
                     <Box key={item._id} className="orders-name-price">
                       <img
-                        src={"imagePath"}
+                        src={imagePath}
                         className="order-dish-img"
                       />
                      <p className="title-dish">{product.productName}</p>
@@ -59,7 +59,7 @@ export default function FinishedOrders() {
                   <img src="/icons/plus.svg" style={{ marginLeft: "20px" }} />
                   <p>Delivery Cost</p>
                   <p>${order.orderDelivery}</p>
-                  <img src="/icons/pause.svg" style={{ marginLeft: "20px" }} />
+                  <img src={"imagePath"} style={{ marginLeft: "20px" }} />
                   <p>Total</p>
                   <p>${order.orderTotal}</p>
                 </Box>
@@ -72,6 +72,7 @@ export default function FinishedOrders() {
           <Box display={"flex"} flexDirection={"row"} justifyContent={"center"}>
             <img
               src="/icons/noimage-list.svg"
+              
               style={{ width: 300, height: 300 }}
             />
           </Box>
