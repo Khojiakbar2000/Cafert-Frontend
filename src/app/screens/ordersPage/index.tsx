@@ -16,6 +16,7 @@ import OrderService from "../../services/OrderService";
 import { useGlobals } from "../../hooks/useGlobals";
 import { useHistory } from "react-router-dom";
 import "../../../css/order.css";
+import { serverApi } from "../../../lib/config";
 
 
 
@@ -96,10 +97,12 @@ export default function OrdersPage() {
 
         <Stack className="order-right">
           <Box className="order-right-top">
-            <img src="/img/martin.webp" className="order-right-top-img" />
+            <img 
+            src= {authMember?.memberImage ?`${serverApi}${authMember.memberImage}`
+            : "/icons/default-user.svg"} className="order-right-top-img" />
             <div className="order-right-top-text">
-              <p className="order-right-top-name">Justin</p>
-              <p className="order-right-top-user">USER</p>
+              <p className="order-right-top-name">{authMember?.memberNick}</p>
+              <p className="order-right-top-user">{authMember?.memberType}</p>
             </div>
             <div>
               <hr
@@ -114,7 +117,7 @@ export default function OrdersPage() {
             </div>
             <div className="order-right-top-address">
               <img src="/icons/location.svg" />
-              <p>South Korea, Busan</p>
+              <p>{authMember?.memberAddress ? authMember.memberAddress : "Do not exist"}</p>
             </div>
           </Box>
           <Box className="order-right-bottom">
