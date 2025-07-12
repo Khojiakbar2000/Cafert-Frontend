@@ -72,9 +72,103 @@ const totalPrice = (itemsPrice + shippingCost).toFixed(1)
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
+        sx={{
+          animation: 'float 3s ease-in-out infinite',
+          '@keyframes float': {
+            '0%, 100%': {
+              transform: 'translateY(0px) rotate(0deg)',
+            },
+            '25%': {
+              transform: 'translateY(-3px) rotate(2deg)',
+            },
+            '50%': {
+              transform: 'translateY(-1px) rotate(-1deg)',
+            },
+            '75%': {
+              transform: 'translateY(-2px) rotate(1deg)',
+            },
+          },
+          '&:hover': {
+            animation: 'bounce 0.6s ease-in-out',
+            '@keyframes bounce': {
+              '0%, 20%, 50%, 80%, 100%': {
+                transform: 'translateY(0px) scale(1)',
+              },
+              '40%': {
+                transform: 'translateY(-8px) scale(1.1)',
+              },
+              '60%': {
+                transform: 'translateY(-4px) scale(1.05)',
+              },
+            },
+          },
+          transition: 'all 0.3s ease',
+          '&:active': {
+            animation: 'shake 0.5s ease-in-out',
+            '@keyframes shake': {
+              '0%, 100%': {
+                transform: 'translateX(0px)',
+              },
+              '25%': {
+                transform: 'translateX(-3px)',
+              },
+              '75%': {
+                transform: 'translateX(3px)',
+              },
+            },
+          },
+        }}
       >
-        <Badge badgeContent={cartItems.length} color="secondary">
-          <img src={"/icons/shopping-cart.svg"} />
+        <Badge 
+          badgeContent={cartItems.length} 
+          color="secondary"
+          sx={{
+            '& .MuiBadge-badge': {
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': {
+                  boxShadow: '0 0 0 0 rgba(255, 193, 7, 0.7)',
+                },
+                '70%': {
+                  boxShadow: '0 0 0 10px rgba(255, 193, 7, 0)',
+                },
+                '100%': {
+                  boxShadow: '0 0 0 0 rgba(255, 193, 7, 0)',
+                },
+              },
+            },
+          }}
+        >
+          <Box
+            component="img"
+            src={"/icons/shopping-cart.svg"}
+            sx={{
+              animation: 'swing 2s ease-in-out infinite',
+              '@keyframes swing': {
+                '0%, 100%': {
+                  transform: 'rotate(-2deg)',
+                },
+                '50%': {
+                  transform: 'rotate(2deg)',
+                },
+              },
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                animation: 'wiggle 0.5s ease-in-out',
+                '@keyframes wiggle': {
+                  '0%, 100%': {
+                    transform: 'rotate(0deg)',
+                  },
+                  '25%': {
+                    transform: 'rotate(-5deg)',
+                  },
+                  '75%': {
+                    transform: 'rotate(5deg)',
+                  },
+                },
+              },
+            }}
+          />
         </Badge>
       </IconButton>
       <Menu
@@ -117,7 +211,7 @@ const totalPrice = (itemsPrice + shippingCost).toFixed(1)
             {cartItems.length === 0 ?(
               <div>Cart is empty!</div>
             ):(
-            <Stack flexDirection={"row"}> <div>Cart Products:</div>
+            <Stack direction={"row"}> <div>Cart Products:</div>
              <DeleteForeverIcon 
              sx={{ml:"5px", cursor:"pointer"}}
              color={"primary"}

@@ -1,0 +1,552 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  Chip,
+  Avatar,
+  Button,
+  IconButton,
+  Divider,
+  Alert,
+  CircularProgress,
+  useTheme,
+  useMediaQuery,
+  Badge,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar
+} from '@mui/material';
+import {
+  Receipt as ReceiptIcon,
+  LocalShipping as ShippingIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  Delete as DeleteIcon,
+  Visibility as ViewIcon,
+  Refresh as RefreshIcon,
+  FilterList as FilterIcon,
+  Search as SearchIcon,
+  LocationOn as LocationIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon
+} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDispatch } from 'react-redux';
+import { Dispatch } from '@reduxjs/toolkit';
+import { setPausedOrders, setProcessOrders, setFinishedOrders } from './slice';
+import { Order, OrderInquiry } from '../../../lib/types/order';
+import { OrderStatus } from '../../../lib/enums/order.enum';
+import OrderService from '../../services/OrderService';
+import { useGlobals } from '../../hooks/useGlobals';
+import { useHistory } from 'react-router-dom';
+import { useTheme as useCoffeeTheme } from '../../../mui-coffee/context/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import { serverApi } from '../../../lib/config';
+
+const actionDispatch = (dispatch: Dispatch) => ({
+  setPausedOrders: (data: Order[]) => dispatch(setPausedOrders(data)),
+  setProcessOrders: (data: Order[]) => dispatch(setProcessOrders(data)),
+  setFinishedOrders: (data: Order[]) => dispatch(setFinishedOrders(data))
+});
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`orders-tabpanel-${index}`}
+      aria-labelledby={`orders-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+const EnhancedOrdersPage: React.FC = () => {
+  const { setPausedOrders, setProcessOrders, setFinishedOrders } = actionDispatch(useDispatch());
+  const { orderBuilder, authMember } = useGlobals();
+  const history = useHistory();
+  const { isDarkMode } = useCoffeeTheme();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { t } = useTranslation();
+
+  const [value, setValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [orderInquiry, setOrderInquiry] = useState<OrderInquiry>({
+    page: 1,
+    limit: 10,
+    orderStatus: OrderStatus.PAUSE,
+  });
+
+  const colors = {
+    background: isDarkMode ? '#1a1a1a' : '#ffffff',
+    surface: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+    text: isDarkMode ? '#ffffff' : '#2c2c2c',
+    textSecondary: isDarkMode ? '#b0b0b0' : '#666666',
+    accent: isDarkMode ? '#ffd700' : '#b38e6a',
+    accentDark: isDarkMode ? '#ffed4e' : '#8b6b4a',
+    cream: isDarkMode ? '#2c2c2c' : '#f8f8ff',
+    shadow: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)',
+    border: isDarkMode ? '#404040' : '#e0e0e0'
+  };
+
+  const tabConfig = [
+    {
+      label: 'Paused Orders',
+      status: OrderStatus.PAUSE,
+      icon: <ScheduleIcon />,
+      color: '#ff9800'
+    },
+    {
+      label: 'Processing Orders',
+      status: OrderStatus.PROCESS,
+      icon: <ShippingIcon />,
+      color: '#2196f3'
+    },
+    {
+      label: 'Completed Orders',
+      status: OrderStatus.FINISH,
+      icon: <CheckCircleIcon />,
+      color: '#4caf50'
+    }
+  ];
+
+  useEffect(() => {
+    if (!authMember) {
+      history.push("/");
+      return;
+    }
+
+    const loadOrders = async () => {
+      setIsLoading(true);
+      try {
+        const orderService = new OrderService();
+        
+        const [pausedOrders, processOrders, finishedOrders] = await Promise.all([
+          orderService.getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.PAUSE }),
+          orderService.getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.PROCESS }),
+          orderService.getMyOrders({ ...orderInquiry, orderStatus: OrderStatus.FINISH })
+        ]);
+
+        setPausedOrders(pausedOrders);
+        setProcessOrders(processOrders);
+        setFinishedOrders(finishedOrders);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [orderInquiry, orderBuilder, authMember, history]);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
+
+  const getOrderStatusColor = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.PAUSE:
+        return '#ff9800';
+      case OrderStatus.PROCESS:
+        return '#2196f3';
+      case OrderStatus.FINISH:
+        return '#4caf50';
+      case OrderStatus.DELETE:
+        return '#f44336';
+      default:
+        return colors.textSecondary;
+    }
+  };
+
+  const getOrderStatusIcon = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.PAUSE:
+        return <ScheduleIcon />;
+      case OrderStatus.PROCESS:
+        return <ShippingIcon />;
+      case OrderStatus.FINISH:
+        return <CheckCircleIcon />;
+      case OrderStatus.DELETE:
+        return <DeleteIcon />;
+      default:
+        return <ReceiptIcon />;
+    }
+  };
+
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateTotal = (order: Order) => {
+    return order.orderItems?.reduce((total, item) => {
+      return total + (item.itemPrice * item.itemQuantity);
+    }, 0) || 0;
+  };
+
+  const renderOrderCard = (order: Order, index: number) => (
+    <motion.div
+      key={order._id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+    >
+      <Card
+        elevation={isDarkMode ? 8 : 2}
+        sx={{
+          mb: 2,
+          backgroundColor: colors.surface,
+          border: `1px solid ${colors.border}`,
+          borderRadius: '16px',
+          overflow: 'hidden',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: `0 8px 25px ${colors.shadow}`,
+            transition: 'all 0.3s ease'
+          }
+        }}
+      >
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+            <Box>
+              <Typography variant="h6" sx={{ color: colors.text, fontWeight: 600, mb: 1 }}>
+                Order #{order._id?.slice(-8)}
+              </Typography>
+              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                {formatDate(order.createdAt)}
+              </Typography>
+            </Box>
+            
+            <Chip
+              icon={getOrderStatusIcon(order.orderStatus)}
+              label={order.orderStatus}
+              sx={{
+                backgroundColor: getOrderStatusColor(order.orderStatus),
+                color: '#ffffff',
+                fontWeight: 600
+              }}
+            />
+          </Box>
+
+          <Divider sx={{ my: 2, borderColor: colors.border }} />
+
+          <List dense>
+            {order.orderItems?.map((item, itemIndex) => {
+              // Find corresponding product data
+              const productData = order.productData?.find(p => p._id === item.productId);
+              
+              return (
+                <ListItem key={itemIndex} sx={{ px: 0 }}>
+                  <ListItemAvatar>
+                    <Avatar
+                      src={productData?.productImages?.[0] ? `${serverApi}${productData.productImages[0]}` : "/icons/default-product.svg"}
+                      sx={{ width: 40, height: 40 }}
+                    />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="body1" sx={{ color: colors.text, fontWeight: 500 }}>
+                        {productData?.productName || `Product ${itemIndex + 1}`}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                        Qty: {item.itemQuantity} × ${item.itemPrice}
+                      </Typography>
+                    }
+                  />
+                  <Typography variant="body1" sx={{ color: colors.accent, fontWeight: 600 }}>
+                    ${(item.itemPrice * item.itemQuantity).toFixed(2)}
+                  </Typography>
+                </ListItem>
+              );
+            })}
+          </List>
+
+          <Divider sx={{ my: 2, borderColor: colors.border }} />
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ color: colors.text, fontWeight: 600 }}>
+              Total: ${calculateTotal(order).toFixed(2)}
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ViewIcon />}
+                sx={{
+                  borderColor: colors.accent,
+                  color: colors.accent,
+                  '&:hover': {
+                    borderColor: colors.accentDark,
+                    backgroundColor: 'rgba(179, 142, 106, 0.1)',
+                  }
+                }}
+              >
+                View Details
+              </Button>
+            </Box>
+          </Box>
+
+          {order.orderStatus === OrderStatus.PROCESS && (
+            <Alert 
+              severity="info" 
+              sx={{ 
+                mt: 2,
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                border: '1px solid #2196f3',
+                color: colors.text
+              }}
+            >
+              Your order is being prepared and will be ready soon!
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
+  if (!authMember) {
+    return null;
+  }
+
+  return (
+    <Box sx={{ 
+      backgroundColor: colors.background,
+      minHeight: '100vh',
+      py: 4
+    }}>
+      <Container maxWidth="lg">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                color: colors.text,
+                fontWeight: 700
+              }}
+            >
+              {t('orders.title', 'My Orders')}
+            </Typography>
+            
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => window.location.reload()}
+              sx={{
+                borderColor: colors.accent,
+                color: colors.accent,
+                '&:hover': {
+                  borderColor: colors.accentDark,
+                  backgroundColor: 'rgba(179, 142, 106, 0.1)',
+                }
+              }}
+            >
+              Refresh
+            </Button>
+          </Box>
+        </motion.div>
+
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4 }}>
+          {/* Orders List */}
+          <Box sx={{ flex: 1 }}>
+            <Paper 
+              elevation={isDarkMode ? 8 : 2}
+              sx={{ 
+                backgroundColor: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '20px',
+                overflow: 'hidden'
+              }}
+            >
+              <Box sx={{ borderBottom: 1, borderColor: colors.border }}>
+                <Tabs
+                  value={value}
+                  onChange={handleTabChange}
+                  variant={isMobile ? "scrollable" : "fullWidth"}
+                  scrollButtons={isMobile ? "auto" : false}
+                  sx={{
+                    '& .MuiTab-root': {
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      '&.Mui-selected': {
+                        color: colors.accent,
+                      }
+                    },
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: colors.accent,
+                    }
+                  }}
+                >
+                  {tabConfig.map((tab, index) => (
+                    <Tab
+                      key={index}
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {tab.icon}
+                          <span>{tab.label}</span>
+                        </Box>
+                      }
+                    />
+                  ))}
+                </Tabs>
+              </Box>
+
+              <Box sx={{ p: 3 }}>
+                {isLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress sx={{ color: colors.accent }} />
+                  </Box>
+                ) : (
+                  <AnimatePresence mode="wait">
+                    {tabConfig.map((tab, index) => (
+                      <TabPanel key={index} value={value} index={index}>
+                        <Box>
+                          {/* This would be populated with actual order data */}
+                          <Typography variant="body1" sx={{ color: colors.textSecondary, textAlign: 'center', py: 4 }}>
+                            {`No ${tab.label.toLowerCase()} found.`}
+                          </Typography>
+                        </Box>
+                      </TabPanel>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </Box>
+            </Paper>
+          </Box>
+
+          {/* User Info Sidebar */}
+          <Box sx={{ width: { xs: '100%', lg: '350px' } }}>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <Paper 
+                elevation={isDarkMode ? 8 : 2}
+                sx={{ 
+                  p: 3,
+                  backgroundColor: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '20px'
+                }}
+              >
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                  <Avatar
+                    src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      border: `3px solid ${colors.accent}`,
+                      margin: '0 auto',
+                      mb: 2
+                    }}
+                  />
+                  <Typography variant="h6" sx={{ color: colors.text, fontWeight: 600, mb: 1 }}>
+                    {authMember?.memberNick}
+                  </Typography>
+                  <Chip 
+                    label={authMember?.memberType} 
+                    sx={{ 
+                      backgroundColor: colors.accent,
+                      color: colors.background,
+                      fontWeight: 600
+                    }}
+                  />
+                </Box>
+
+                <Divider sx={{ my: 3, borderColor: colors.border }} />
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" sx={{ color: colors.text, fontWeight: 600, mb: 2 }}>
+                    Contact Information
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <PhoneIcon sx={{ color: colors.textSecondary, mr: 2 }} />
+                    <Typography variant="body2" sx={{ color: colors.text }}>
+                      {authMember?.memberPhone || 'No phone number'}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <LocationIcon sx={{ color: colors.textSecondary, mr: 2 }} />
+                    <Typography variant="body2" sx={{ color: colors.text }}>
+                      {authMember?.memberAddress || 'No address'}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 3, borderColor: colors.border }} />
+
+                <Box>
+                  <Typography variant="h6" sx={{ color: colors.text, fontWeight: 600, mb: 2 }}>
+                    Order Statistics
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                      Total Orders:
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: colors.text, fontWeight: 600 }}>
+                      0
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                      Completed:
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 600 }}>
+                      0
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                      Pending:
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#ff9800', fontWeight: 600 }}>
+                      0
+                    </Typography>
+                  </Box>
+                </Box>
+              </Paper>
+            </motion.div>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
+export default EnhancedOrdersPage; 

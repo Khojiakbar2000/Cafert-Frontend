@@ -1,0 +1,389 @@
+/* Enhanced Navbar Styles */
+
+.navbar-transparent {
+  background: transparent !important;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.navbar-scrolled {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-logo {
+  transition: width 0.3s ease;
+}
+
+.navbar-logo-transparent {
+  filter: brightness(0) invert(1);
+}
+
+.navbar-logo-scrolled {
+  filter: none;
+}
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-weight: 400;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.navbar-link-scrolled {
+  color: #333;
+}
+
+.navbar-link:hover {
+  color: #D7B686;
+}
+
+.navbar-link-scrolled:hover {
+  color: #8B4513;
+}
+
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #D7B686;
+  transition: width 0.3s ease;
+}
+
+.navbar-link-scrolled::after {
+  background: #8B4513;
+}
+
+.navbar-link.active::after,
+.navbar-link:hover::after {
+  width: 100%;
+}
+
+.navbar-icon-button {
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.navbar-icon-button-scrolled {
+  color: #333;
+}
+
+.navbar-icon-button:hover {
+  color: #D7B686;
+}
+
+.navbar-icon-button-scrolled:hover {
+  color: #8B4513;
+}
+
+.navbar-user-avatar {
+  cursor: pointer;
+  border: 2px solid #fff;
+  transition: all 0.2s ease;
+}
+
+.navbar-user-avatar-scrolled {
+  border-color: #8B4513;
+}
+
+.navbar-user-avatar:hover {
+  transform: scale(1.1);
+}
+
+.navbar-cart-chip {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+
+.navbar-cart-chip-scrolled {
+  background-color: rgba(139, 69, 19, 0.1);
+  color: #8B4513;
+}
+
+.navbar-signup-button {
+  border-color: #fff;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.navbar-signup-button-scrolled {
+  border-color: #8B4513;
+  color: #8B4513;
+}
+
+.navbar-signup-button:hover {
+  border-color: #D7B686;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-signup-button-scrolled:hover {
+  border-color: #A0522D;
+  background-color: rgba(139, 69, 19, 0.05);
+}
+
+.navbar-login-button {
+  background-color: #3776CC;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.navbar-login-button-scrolled {
+  background-color: #8B4513;
+}
+
+.navbar-login-button:hover {
+  background-color: #2d5aa0;
+}
+
+.navbar-login-button-scrolled:hover {
+  background-color: #A0522D;
+}
+
+/* Mobile Drawer Styles */
+.mobile-drawer {
+  width: 280px;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.mobile-drawer-logo {
+  width: 100px;
+  height: auto;
+}
+
+.mobile-drawer-item {
+  color: #666;
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+.mobile-drawer-item.active {
+  color: #8B4513;
+  background-color: rgba(139, 69, 19, 0.1);
+}
+
+.mobile-drawer-item:hover {
+  background-color: rgba(139, 69, 19, 0.05);
+}
+
+.mobile-drawer-user-section {
+  text-align: center;
+  padding: 16px;
+  margin-top: auto;
+}
+
+.mobile-drawer-avatar {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+}
+
+.mobile-drawer-username {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* User Menu Styles */
+.user-menu {
+  overflow: visible;
+  filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.32));
+  margin-top: 6px;
+}
+
+.user-menu::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  transform: translateY(-50%) rotate(45deg);
+  z-index: 0;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease;
+}
+
+.user-menu-item:hover {
+  background-color: rgba(139, 69, 19, 0.05);
+}
+
+.user-menu-icon {
+  font-size: 16px;
+  color: #8B4513;
+}
+
+/* Notification Badge */
+.notification-badge {
+  background-color: #f44336;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Search Button Animation */
+.search-button {
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  transform: scale(1.1);
+}
+
+/* Mobile Menu Button */
+.mobile-menu-button {
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.mobile-menu-button-scrolled {
+  color: #333;
+}
+
+.mobile-menu-button:hover {
+  color: #D7B686;
+}
+
+.mobile-menu-button-scrolled:hover {
+  color: #8B4513;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .navbar-desktop-nav {
+    display: none;
+  }
+  
+  .navbar-mobile-button {
+    display: block;
+  }
+}
+
+@media (min-width: 961px) {
+  .navbar-mobile-button {
+    display: none;
+  }
+}
+
+/* Animation for navbar items */
+.navbar-item {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: slideDown 0.5s ease forwards;
+}
+
+.navbar-item:nth-child(1) { animation-delay: 0.1s; }
+.navbar-item:nth-child(2) { animation-delay: 0.2s; }
+.navbar-item:nth-child(3) { animation-delay: 0.3s; }
+.navbar-item:nth-child(4) { animation-delay: 0.4s; }
+.navbar-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effects for navigation */
+.navbar-nav-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.navbar-nav-item::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #D7B686;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.navbar-nav-item-scrolled::before {
+  background: #8B4513;
+}
+
+.navbar-nav-item:hover::before,
+.navbar-nav-item.active::before {
+  width: 100%;
+}
+
+/* Logo animation */
+.navbar-brand-logo {
+  transition: all 0.3s ease;
+}
+
+.navbar-brand-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Cart animation */
+.navbar-cart-container {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.navbar-cart-container:hover {
+  transform: scale(1.05);
+}
+
+.navbar-cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f44336;
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+} 

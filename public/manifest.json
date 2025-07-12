@@ -1,4 +1,9 @@
 {
-  "name": "Burak"
-  
+  "name": "Cafert",
+  "short_name": "Cafert",
+  "description": "Premium Coffee Shop Experience",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#8B4513",
+  "background_color": "#ffffff"
 }

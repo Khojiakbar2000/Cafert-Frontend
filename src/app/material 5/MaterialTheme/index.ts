@@ -48,13 +48,15 @@ const light = {
 };
 
 // A custom theme for this app
-let theme = createTheme(light);
-theme = createTheme(theme, {
+const theme = createTheme({
+	...light,
 	components: {
+		...light.components,
 		MuiContainer: {
 			styleOverrides: {
+				...light.components?.MuiContainer?.styleOverrides,
 				maxWidthLg: {
-					[theme.breakpoints.up('lg')]: {
+					'@media (min-width:1200px)': {
 						maxWidth: '1300px',
 					},
 				},

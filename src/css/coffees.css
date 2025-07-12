@@ -1,0 +1,101 @@
+.coffees-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.coffees-page .MuiContainer-root {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Coffee Card Hover Effects */
+.coffees-page .MuiCard-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.coffees-page .MuiCard-root:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Search and Filter Styles */
+.coffees-page .MuiTextField-root {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+}
+
+.coffees-page .MuiFormControl-root {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+}
+
+/* Button Styles */
+.coffees-page .MuiButton-contained {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.coffees-page .MuiButton-outlined {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* Chip Styles */
+.coffees-page .MuiChip-root {
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+/* Rating Styles */
+.coffees-page .MuiRating-root {
+  color: #ff9800;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .coffees-page .MuiContainer-root {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .coffees-page .MuiGrid-item {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .coffees-page {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+[data-theme="dark"] .coffees-page .MuiTextField-root,
+[data-theme="dark"] .coffees-page .MuiFormControl-root {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Animation for coffee cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coffees-page .MuiGrid-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.coffees-page .MuiGrid-item:nth-child(1) { animation-delay: 0.1s; }
+.coffees-page .MuiGrid-item:nth-child(2) { animation-delay: 0.2s; }
+.coffees-page .MuiGrid-item:nth-child(3) { animation-delay: 0.3s; }
+.coffees-page .MuiGrid-item:nth-child(4) { animation-delay: 0.4s; }
+.coffees-page .MuiGrid-item:nth-child(5) { animation-delay: 0.5s; }
+.coffees-page .MuiGrid-item:nth-child(6) { animation-delay: 0.6s; } 

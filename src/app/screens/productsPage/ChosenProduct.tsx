@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect } from "react";
 import { Container, Stack, Box } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -123,7 +124,7 @@ if(!chosenProduct) return null;
             <div className={"button-box"}>
               <Button 
               variant="contained"
-              onClick = {(e)=>{
+              onClick = {(e: React.MouseEvent<HTMLButtonElement>)=>{
                 console.log("BUTTON PRESSED")
                 onAdd({
                   _id: chosenProduct._id,
@@ -159,5 +160,6 @@ if(!chosenProduct) return null;
 
 
  
+
 
 

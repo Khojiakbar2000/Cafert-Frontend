@@ -12,6 +12,7 @@ import { LoginInput, MemberInput } from "../../../lib/types/member";
 import MemberService from "../../services/MemberService";
 import { sweetErrorHandling } from "../../../lib/sweetAlert";
 import { useGlobals } from "../../hooks/useGlobals";
+import PostSignupNavigation from "../PostSignupNavigation";
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -49,6 +50,7 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
   const [memberNick, setMemberNick]= useState<string>("");
   const [memberPhone, setMemberPhone]=useState<string>("");
   const [memberPassword, setMemberPassword]=useState<string>("");
+  const [showPostSignupNav, setShowPostSignupNav] = useState<boolean>(false);
   const {setAuthMember}=useGlobals()
 
   /** HANDLERS **/
@@ -97,7 +99,8 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
         const result = await member.signup(signupInput);
       //Saving Authenticated user
       setAuthMember(result)
-        handleSignupClose();
+      handleSignupClose();
+      setShowPostSignupNav(true);
     }catch(err){
      console.log(err)
      handleSignupClose()
@@ -105,8 +108,9 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
     }
   }
 
-
-
+  const handlePostSignupClose = () => {
+    setShowPostSignupNav(false);
+  }
 
   const handleLoginRequest =async ()=>{
     try{
@@ -154,7 +158,7 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
             direction={"row"}
             sx={{ width: "800px" }}
           >
-            <ModalImg src={"/img/auth.webp"} alt="camera" />
+            <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
             <Stack sx={{ marginLeft: "69px", alignItems: "center" }}>
               <h2>Signup Form</h2>
               <TextField
@@ -210,7 +214,7 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
             direction={"row"}
             sx={{ width: "700px" }}
           >
-            <ModalImg src={"/img/auth.webp"} alt="camera" />
+            <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
             <Stack
               sx={{
                 marginLeft: "65px",
@@ -247,6 +251,10 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
           </Stack>
         </Fade>
       </Modal>
+
+      {showPostSignupNav && (
+        <PostSignupNavigation onClose={handlePostSignupClose} />
+      )}
     </div>
   );
 }

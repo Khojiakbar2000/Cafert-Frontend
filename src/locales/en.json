@@ -1,0 +1,283 @@
+{
+  "nav": {
+    "home": "Home",
+    "menu": "Menu",
+    "about": "About",
+    "contact": "Contact",
+    "reservations": "Reservations"
+  },
+  "hero": {
+    "title": "Welcome to Cafert",
+    "subtitle": "Experience the perfect blend of tradition and innovation",
+    "description": "Discover our carefully curated selection of premium coffee beans and artisanal brewing methods",
+    "cta": "Explore Our Menu",
+    "reservation": "Make a Reservation"
+  },
+  "about": {
+    "title": "Our Story",
+    "subtitle": "Every sip tells a story, every moment creates memories",
+    "description": "At Cafert, we believe that coffee is more than just a beverage – it's an experience that brings people together. Our journey began with a simple passion for creating the perfect cup of coffee, and today, we continue to craft exceptional coffee experiences for our valued customers.",
+    "mission": "Our Mission",
+    "missionText": "To provide the highest quality coffee experience while creating a warm, welcoming environment where every customer feels at home.",
+    "values": "Our Values",
+    "quality": "Quality",
+    "qualityText": "We source only the finest coffee beans from around the world",
+    "community": "Community",
+    "communityText": "Building meaningful connections through shared coffee experiences",
+    "sustainability": "Sustainability",
+    "sustainabilityText": "Committed to environmentally responsible practices"
+  },
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Discover our carefully crafted selection",
+    "coffee": "Coffee",
+    "espresso": "Espresso",
+    "espressoDesc": "Strong and authentic Italian espresso",
+    "latte": "Latte",
+    "latteDesc": "Smooth espresso with steamed milk",
+    "cappuccino": "Cappuccino",
+    "cappuccinoDesc": "Classic Italian coffee with foamed milk",
+    "americano": "Americano",
+    "americanoDesc": "Espresso with hot water",
+    "mocha": "Mocha",
+    "mochaDesc": "Espresso with chocolate and steamed milk",
+    "food": "Food",
+    "pastries": "Pastries",
+    "pastriesDesc": "Fresh baked goods and desserts",
+    "sandwiches": "Sandwiches",
+    "sandwichesDesc": "Delicious sandwiches and light meals"
+  },
+  "testimonials": {
+    "title": "What Our Customers Say",
+    "amazingCoffee": "Amazing coffee!",
+    "amazingCoffeeText": "The best coffee I've ever had. The atmosphere is perfect for working and relaxing.",
+    "perfectAtmosphere": "Perfect atmosphere!",
+    "perfectAtmosphereText": "Love the cozy vibe and friendly staff. My go-to place for coffee meetings.",
+    "outstandingService": "Outstanding service!",
+    "outstandingServiceText": "The staff is incredibly friendly and the coffee is consistently excellent.",
+    "freshBeans": "Fresh beans!",
+    "freshBeansText": "The quality of their coffee beans is exceptional. You can taste the difference.",
+    "cozyEnvironment": "Cozy environment!",
+    "cozyEnvironmentText": "Perfect place to work, study, or just enjoy a great cup of coffee.",
+    "bestInTown": "Best in town!",
+    "bestInTownText": "Hands down the best coffee shop in the area. Highly recommended!"
+  },
+  "reservations": {
+    "title": "Make a Reservation",
+    "subtitle": "Book your table for the perfect coffee experience",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Number of Guests",
+    "message": "Special Requests",
+    "submit": "Book Now",
+    "success": "Reservation submitted successfully!",
+    "error": "Please fill in all required fields."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "address": "Address",
+    "addressValue": "123 Coffee Street, Istanbul, Turkey",
+    "phone": "Phone",
+    "phoneValue": "+90 212 555 0123",
+    "email": "Email",
+    "emailValue": "info@cafert.com",
+    "hours": "Opening Hours",
+    "hoursValue": "Monday - Sunday: 7:00 AM - 10:00 PM",
+    "message": "Send us a message",
+    "contactName": "Name",
+    "contactEmail": "Email",
+    "subject": "Subject",
+    "messageText": "Message",
+    "send": "Send Message"
+  },
+  "common": {
+    "learnMore": "Learn More",
+    "viewMenu": "View Menu",
+    "bookNow": "Book Now",
+    "contactUs": "Contact Us",
+    "readMore": "Read More",
+    "close": "Close",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "language": "Language",
+    "english": "English",
+    "korean": "Korean",
+    "search": "Search",
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "price": "Price",
+    "quantity": "Quantity",
+    "total": "Total",
+    "checkout": "Checkout",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "login": "Login",
+    "logout": "Logout",
+    "all": "All Items",
+    "sortBy": "Sort By",
+    "newest": "Newest",
+    "views": "Views",
+    "rating": "Rating",
+    "order": "Order",
+    "descending": "Descending",
+    "ascending": "Ascending",
+    "showing": "Showing",
+    "of": "of",
+    "items": "items"
+  },
+  "navigation": {
+    "home": "Home",
+    "menu": "Menu",
+    "drinks": "Drinks",
+    "desserts": "Desserts",
+    "salads": "Salads",
+    "products": "Products",
+    "orders": "Orders",
+    "profile": "Profile",
+    "settings": "Settings",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "home": {
+    "welcome": "Welcome to Cafert",
+    "subtitle": "Discover the perfect blend of coffee and comfort",
+    "heroTitle": "Premium Coffee Experience",
+    "heroSubtitle": "Handcrafted beverages made with the finest ingredients",
+    "orderNow": "Order Now",
+    "viewMenu": "View Menu",
+    "featuredDrinks": "Featured Drinks",
+    "featuredDesserts": "Featured Desserts",
+    "featuredSalads": "Fresh Salads"
+  },
+  "drinks": {
+    "title": "Our Drinks",
+    "subtitle": "Explore our selection of premium beverages",
+    "categories": {
+      "all": "All Drinks",
+      "coffee": "Coffee",
+      "tea": "Tea",
+      "smoothies": "Smoothies",
+      "juices": "Juices"
+    },
+    "items": {
+      "espresso": "Espresso",
+      "americano": "Americano",
+      "latte": "Latte",
+      "cappuccino": "Cappuccino",
+      "mocha": "Mocha",
+      "greenTea": "Green Tea",
+      "blackTea": "Black Tea",
+      "berrySmoothie": "Berry Smoothie",
+      "orangeJuice": "Orange Juice"
+    }
+  },
+  "desserts": {
+    "title": "Our Desserts",
+    "subtitle": "Sweet treats to complement your coffee",
+    "categories": {
+      "all": "All Desserts",
+      "cakes": "Cakes",
+      "cookies": "Cookies",
+      "pastries": "Pastries",
+      "iceCream": "Ice Cream"
+    },
+    "items": {
+      "chocolateCake": "Chocolate Cake",
+      "cheesecake": "Cheesecake",
+      "tiramisu": "Tiramisu",
+      "chocolateChip": "Chocolate Chip Cookie",
+      "croissant": "Croissant",
+      "vanillaIceCream": "Vanilla Ice Cream"
+    }
+  },
+  "awards": {
+    "sectionTitle": "Awards & Certifications",
+    "mainTitle": "Our Achievements",
+    "description": "Recognized for our commitment to quality, sustainability, and exceptional coffee experience.",
+    "bestCafe": {
+      "title": "Best Café 2024",
+      "subtitle": "Local Excellence Award"
+    },
+    "organic": {
+      "title": "100% Organic Beans",
+      "subtitle": "Certified Organic"
+    },
+    "barista": {
+      "title": "Barista Champion Finalist",
+      "subtitle": "Regional Competition"
+    },
+    "quality": {
+      "title": "Quality Excellence",
+      "subtitle": "Customer Satisfaction"
+    },
+    "sustainable": {
+      "title": "Sustainable Business",
+      "subtitle": "Green Certification"
+    }
+  },
+  "salads": {
+    "title": "Fresh Salads",
+    "subtitle": "Healthy and delicious salad options",
+    "categories": {
+      "all": "All Salads",
+      "green": "Green Salads",
+      "fruit": "Fruit Salads",
+      "protein": "Protein Salads"
+    },
+    "items": {
+      "caesarSalad": "Caesar Salad",
+      "gardenSalad": "Garden Salad",
+      "fruitSalad": "Fresh Fruit Salad",
+      "chickenSalad": "Grilled Chicken Salad"
+    }
+  },
+  "footer": {
+    "about": "About Cafert",
+    "aboutText": "The ultimate destination for exceptional coffee experiences in Istanbul.",
+    "contact": "Contact Us",
+    "hours": "Opening Hours",
+    "address": "Address",
+    "addressValue": "123 Coffee Street, Istanbul, Turkey",
+    "phone": "Phone",
+    "phoneValue": "+90 212 555 0123",
+    "email": "Email",
+    "emailValue": "info@cafert.com",
+    "hoursValue": "Monday - Sunday: 7:00 AM - 10:00 PM",
+    "followUs": "Follow Us",
+    "newsletter": "Newsletter",
+    "subscribe": "Subscribe",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "quickLinks": "Quick Links",
+    "footerMenu": "Menu",
+    "footerAbout": "About",
+    "footerContact": "Contact",
+    "footerReservations": "Reservations",
+    "contactInfo": "Contact Information",
+    "social": "Follow Us",
+    "copyright": "© 2024 Cafert. All rights reserved.",
+    "services": "Services",
+    "dineIn": "Dine In",
+    "takeaway": "Takeaway",
+    "delivery": "Delivery",
+    "catering": "Catering",
+    "events": "Events",
+    "aboutUs": "About Us",
+    "ourStory": "Our Story",
+    "team": "Team",
+    "careers": "Careers",
+    "press": "Press",
+    "blog": "Blog",
+    "stayUpdated": "Stay Updated",
+    "newsletterText": "Subscribe to our newsletter for the latest updates and special offers."
+  }
+} 

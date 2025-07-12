@@ -6,6 +6,7 @@ import {
     Menu,
     MenuItem,
     Stack,
+    Typography,
   } from "@mui/material";
   import { NavLink } from "react-router-dom";
   import Basket from "./Basket";
@@ -14,6 +15,9 @@ import {
   import { serverApi } from "../../../lib/config";
   import { Logout } from "@mui/icons-material";
 import { useGlobals } from "../../hooks/useGlobals";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../../../components/LanguageSwitcher';
+
   
   interface OtherNavbarProps {
     cartItems: CartItem[];
@@ -25,8 +29,8 @@ import { useGlobals } from "../../hooks/useGlobals";
     setLoginOpen: (isOpen: boolean) => void;
     handleLogoutClick: (e: React.MouseEvent<HTMLElement>) => void;
     anchorEl: HTMLElement | null;
-    handleCloseLOgout: () => void;
-    handleLogoutRequst: () => void;
+    handleCloseLogout: () => void;
+    handleLogoutRequest: () => void;
   }
   
   export default function OtherNavbar(props: OtherNavbarProps) {
@@ -40,11 +44,12 @@ import { useGlobals } from "../../hooks/useGlobals";
       setLoginOpen,
       handleLogoutClick,
       anchorEl,
-      handleCloseLOgout,
-      handleLogoutRequst,
+      handleCloseLogout,
+      handleLogoutRequest,
     } = props;
   
     const { authMember } = useGlobals();
+    const { t } = useTranslation();
   
     return (
       <div className="other-navbar">
@@ -52,45 +57,66 @@ import { useGlobals } from "../../hooks/useGlobals";
           <Stack className="menu">
             <Box>
               <NavLink to="/">
-                <img className="brand-logo" src="/icons/burak.svg" />
+                <Typography
+                  variant="h5"
+                  sx={{
+                    color: '#8B4513',
+                    fontWeight: 700,
+                    fontStyle: 'italic',
+                    letterSpacing: '-0.02em',
+                    textDecoration: 'none'
+                  }}
+                >
+                  Cafert
+                </Typography>
               </NavLink>
             </Box>
             <Stack className="links">
               <Box className={"hover-line"}>
-                <NavLink to="/">Home</NavLink>
+                <NavLink to="/">{t('navigation.home')}</NavLink>
               </Box>
               <Box className={"hover-line"}>
-                <NavLink to="/products" activeClassName={"underline"}>
-                  Products
+                <NavLink to="/products" activeClassName="underline">
+                  {t('navigation.products')}
+                </NavLink>
+              </Box>
+              <Box className={"hover-line"}>
+                <NavLink to="/coffees" activeClassName="underline">
+                  {t('navigation.drinks')}
                 </NavLink>
               </Box>
               {authMember ? (
                 <Box className={"hover-line"}>
-                  <NavLink to="/orders" activeClassName={"underline"}>
-                    Orders
+                  <NavLink to="/orders" activeClassName="underline">
+                    {t('navigation.orders')}
                   </NavLink>
                 </Box>
               ) : null}
               {authMember ? (
                 <Box className={"hover-line"}>
-                  <NavLink to="/member-page" activeClassName={"underline"}>
-                    My Page
+                  <NavLink to="/my-page" className={({ isActive }) => isActive ? "underline" : ""}>
+                    {t('navigation.profile')}
                   </NavLink>
                 </Box>
               ) : null}
               <Box className={"hover-line"}>
-                <NavLink to="/help" activeClassName={"underline"}>
-                  Help
+                <NavLink to="/help" className={({ isActive }) => isActive ? "underline" : ""}>
+                  {t('navigation.about')}
                 </NavLink>
               </Box>
-              <Basket
+                            <Basket
                 cartItems={cartItems}
                 onAdd={onAdd}
                 onRemove={onRemove}
                 onDelete={onDelete}
                 onDeleteAll={onDeleteAll}
               />
-  
+
+              {/* Language Switcher */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <LanguageSwitcher />
+              </Box>
+
               {!authMember ? (
                 <Box>
                   <Button
@@ -98,7 +124,7 @@ import { useGlobals } from "../../hooks/useGlobals";
                     className="login-button"
                     onClick={() => setLoginOpen(true)}
                   >
-                    Login
+                    {t('common.login')}
                   </Button>
                 </Box>
               ) : (
@@ -118,8 +144,8 @@ import { useGlobals } from "../../hooks/useGlobals";
                 anchorEl={anchorEl}
                 id="account-menu"
                 open={Boolean(anchorEl)}
-                onClose={handleCloseLOgout}
-                onClick={handleCloseLOgout}
+                onClose={handleCloseLogout}
+                onClick={handleCloseLogout}
                 PaperProps={{
                   elevation: 0,
                   sx: {
@@ -149,11 +175,11 @@ import { useGlobals } from "../../hooks/useGlobals";
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
               >
-                <MenuItem onClick={handleLogoutRequst}>
+                <MenuItem onClick={handleLogoutRequest}>
                   <ListItemIcon>
                     <Logout fontSize="small" style={{ color: "blue" }} />
                   </ListItemIcon>
-                  Logout
+                  {t('common.logout')}
                 </MenuItem>
               </Menu>
             </Stack>

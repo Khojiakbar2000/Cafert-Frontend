@@ -1,377 +1,560 @@
-import React, { ChangeEvent, useEffect, useState, } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
-  Stack,
   Box,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  Grid,
   Button,
-  InputAdornment,
   TextField,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tabs,
+  Tab,
+  Paper,
+  Pagination,
+  useTheme,
+  useMediaQuery,
+  Skeleton,
+  IconButton
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
-import Badge from "@mui/material/Badge";
-import Pagination from "@mui/material/Pagination";
-import PaginationItem from "@mui/material/PaginationItem";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { Margin, Rowing } from "@mui/icons-material";
-
-
-import {Dispatch} from "@reduxjs/toolkit";
-import {useDispatch, useSelector} from "react-redux";
-import {setProducts} from "./slice";
-import {createSelector} from "reselect";
-import { Product, ProductInquiry } from "../../../lib/types/product";
-import {retrieveProducts} from "./selector";
-import ProductService from "../../services/ProductService";
-import { ProductCollection, ProductSize } from "../../../lib/enums/product.enum";
-import { serverApi } from "../../../lib/config";
+import {
+  Search as SearchIcon,
+  Favorite as FavoriteIcon,
+  FavoriteBorder as FavoriteBorderIcon,
+  AddShoppingCart as AddShoppingCartIcon
+} from "@mui/icons-material";
 import { useHistory } from "react-router-dom";
 import { CartItem } from "../../../lib/types/search";
+import { useTheme as useCoffeeTheme } from "../../../mui-coffee/context/ThemeContext";
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { Product } from "../../../lib/types/product";
+import { ProductCollection } from "../../../lib/enums/product.enum";
+import { serverApi } from "../../../lib/config";
+import { useDispatch, useSelector } from "react-redux";
+import { setProducts } from "./slice";
+import { retrieveProducts } from "./selector";
+import ProductService from "../../services/ProductService";
 
+// Loading skeleton for cards
+const CardSkeleton = () => (
+  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Skeleton variant="rectangular" height={240} />
+    <CardContent sx={{ flexGrow: 1 }}>
+      <Skeleton variant="text" height={32} sx={{ mb: 1 }} />
+      <Skeleton variant="text" height={20} sx={{ mb: 2 }} />
+      <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
+      <Skeleton variant="rectangular" height={40} sx={{ mb: 2 }} />
+      <Skeleton variant="rectangular" height={48} />
+    </CardContent>
+  </Card>
+);
 
-
-
-
-
-
-/** REDUX SLICE & SELECTOR */
-const actionDispatch = (dispatch: Dispatch)=>({
-  setProducts: (data: Product[])=>
-        dispatch(setProducts(data)),
-});
-
-/** REDUX SLICE & SELECTOR */
-const productsRetriever = createSelector(
-  retrieveProducts,
-  (products)=> ({products,})
-) 
+// Loading skeleton for the entire grid
+const GridSkeleton = () => (
+  <Box sx={{ 
+    display: 'grid', 
+    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
+    gap: 4 
+  }}>
+    {Array.from({ length: 8 }).map((_, index) => (
+      <CardSkeleton key={index} />
+    ))}
+  </Box>
+);
 
 interface ProductsProps {
-  onAdd: (item: CartItem)=> void
+  onAdd: (item: CartItem) => void;
 }
 
-export default function Products(props:ProductsProps) {
-  const {onAdd} = props;
+export default function Products(props: ProductsProps) {
+  const { onAdd } = props;
+  const history = useHistory();
+  const { isDarkMode, toggleTheme, colors } = useCoffeeTheme();
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const { t } = useTranslation();
   
   const dispatch = useDispatch();
-  const { setProducts } = actionDispatch(dispatch);
-  //const {setProducts} = actionDispatch(useDispatch)
-  const {products} = useSelector(productsRetriever)
-  const [productSearch, setProductSearch] = useState<ProductInquiry>({
-    page: 1,
-    limit:8,
-    order: "createdAt",
-    productCollection: ProductCollection.DISH,
-    search: "",})
-
-   const [searchText, setSearchText] = useState<string>("")
-   const history = useHistory()
-  useEffect(()=>{
-    const product = new ProductService();
-    product.getProducts(productSearch).then((data) =>setProducts(data) ).catch(
-     (err)=>console.log(err)
-    );
-    }, [productSearch]);
-
-    useEffect (()=>{
-     if(searchText === ""){
-      productSearch.search = ""
-      setProductSearch({...productSearch})
-     }
-    }, [searchText])
-
-    /** HANDLERS SECTION */
-
-    const searchCollectionHandler = (collection: ProductCollection) => {
-     productSearch.page = 1;
-     productSearch.productCollection = collection
-     setProductSearch({...productSearch});
-    };
-
-    const searchOrderHandler = (order: string) =>{
-      productSearch.page = 1;
-      productSearch.order = order;
-      setProductSearch({...productSearch});
-    }
-
-    const searchProductHandler = () =>{
-      productSearch.search = searchText;
-      setProductSearch({...productSearch});
-    }
-
-    const paginationHandler = (e: ChangeEvent<any>, value: number) =>{
-     productSearch.page = value;
-     setProductSearch({...productSearch});
-    }
-
-    
-    const chooseDishHandler = (id: string) => {
-      history.push(`/products/${id}`);
-    };
-    
-
-
-    return (
-      <div className="products">
-        <Container>
-          <Stack flexDirection={"column"} alignItems={"center"}>
-            <Stack
-              className="avatar-big-box"
-              display={"flex"}
-              flexDirection={"row"}
-              justifyContent={"flex-end"}
-            >
-              <div className="avatar-title">Burak Restaurant</div>
+  const { setProducts: setProductsAction } = { setProducts: (data: Product[]) => dispatch(setProducts(data)) };
+  const { products } = useSelector((state: any) => ({ products: state.products.products || [] }));
   
-              <Stack className="single-search-big-box">
-                <input
-                  type="search"
-                  className="single-search-input"
-                  name="singleResearch"
-                  placeholder="Type here"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if(e.key === "Enter") searchProductHandler();
-                  }}
-                />
-                <Button
-                  className="single-button-search"
-                  variant="contained"
-                  endIcon={<SearchIcon />}
-                  onClick={searchProductHandler}
+  // Pagination constants
+  const ITEMS_PER_PAGE = 8;
+  
+  const [productSearch, setProductSearch] = useState({
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    order: "createdAt",
+    productCollection: undefined,
+    search: "",
+  });
+
+  const [searchText, setSearchText] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'coffees' | 'desserts' | 'drinks' | 'salads' | 'dishes' | 'other'>('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Fetch products
+  useEffect(() => {
+    const productService = new ProductService();
+    productService.getProducts(productSearch)
+      .then((data) => setProductsAction(data))
+      .catch((err) => console.log(err));
+  }, [productSearch, setProductsAction]);
+
+  // Handle search text changes
+  useEffect(() => {
+    if (searchText === "") {
+      setProductSearch(prev => ({ ...prev, search: "" }));
+    }
+  }, [searchText]);
+
+  // Convert ProductCollection to category string
+  const getCategoryFromCollection = (collection: ProductCollection | undefined) => {
+    switch (collection) {
+      case ProductCollection.COFFEE: return 'coffees';
+      case ProductCollection.DESSERT: return 'desserts';
+      case ProductCollection.DRINK: return 'drinks';
+      case ProductCollection.SALAD: return 'salads';
+      case ProductCollection.DISH: return 'dishes';
+      case ProductCollection.OTHER: return 'other';
+      default: return 'all';
+    }
+  };
+
+  // Convert category string to ProductCollection
+  const getCollectionFromCategory = (category: string): ProductCollection | undefined => {
+    switch (category) {
+      case 'coffees': return ProductCollection.COFFEE;
+      case 'desserts': return ProductCollection.DESSERT;
+      case 'drinks': return ProductCollection.DRINK;
+      case 'salads': return ProductCollection.SALAD;
+      case 'dishes': return ProductCollection.DISH;
+      case 'other': return ProductCollection.OTHER;
+      default: return undefined;
+    }
+  };
+
+  // Filtered and sorted products
+  const filteredProducts = React.useMemo(() => {
+    let filtered = products;
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      const collection = getCollectionFromCategory(selectedCategory);
+      filtered = filtered.filter((product: Product) => product.productCollection === collection);
+    }
+
+    // Apply search filter
+    if (searchText) {
+      filtered = filtered.filter((product: Product) =>
+        product.productName.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a: Product, b: Product) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'newest':
+          comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          break;
+        case 'price':
+          comparison = a.productPrice - b.productPrice;
+          break;
+        case 'views':
+          comparison = (a.productViews || 0) - (b.productViews || 0);
+          break;
+        default:
+          comparison = 0;
+      }
+      return sortOrder === 'desc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [products, selectedCategory, searchText, sortBy, sortOrder]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const currentPage = productSearch.page;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Event handlers
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    setProductSearch(prev => ({ ...prev, page }));
+  };
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(event.target.value);
+  };
+
+  const handleCategoryChange = (event: React.SyntheticEvent, newValue: 'all' | 'coffees' | 'desserts' | 'drinks' | 'salads' | 'dishes' | 'other') => {
+    setSelectedCategory(newValue);
+    setProductSearch(prev => ({ 
+      ...prev, 
+      productCollection: getCollectionFromCategory(newValue),
+      page: 1 
+    }));
+  };
+
+  const handleSortChange = (event: any) => {
+    setSortBy(event.target.value);
+  };
+
+  const handleSortOrderChange = (event: any) => {
+    setSortOrder(event.target.value);
+  };
+
+  const toggleFavorite = (productId: string) => {
+    setFavorites(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleAddToCart = (product: Product) => {
+    onAdd({
+      _id: product._id,
+      quantity: 1,
+      name: product.productName,
+      price: product.productPrice,
+      image: product.productImages[0]
+    });
+  };
+
+  const handleProductClick = (productId: string) => {
+    history.push(`/products/${productId}`);
+  };
+
+  const categories = [
+    { value: 'all', label: 'All Products' },
+    { value: 'coffees', label: 'Coffees' },
+    { value: 'desserts', label: 'Desserts' },
+    { value: 'drinks', label: 'Drinks' },
+    { value: 'salads', label: 'Salads' },
+    { value: 'dishes', label: 'Dishes' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const sortOptions = [
+    { value: 'newest', label: 'Newest' },
+    { value: 'price', label: 'Price' },
+    { value: 'views', label: 'Views' }
+  ];
+
+  return (
+    <Box sx={{
+      backgroundColor: colors.background,
+      color: colors.text,
+      minHeight: '100vh',
+      py: 4
+    }}>
+      <Container maxWidth="lg">
+        {/* Header Section */}
+        <Box sx={{ mb: 6, textAlign: 'center' }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Typography variant="h2" sx={{
+              fontWeight: 700,
+              mb: 2,
+              fontFamily: 'Playfair Display, serif',
+              fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
+              color: colors.text
+            }}>
+              Our Menu
+            </Typography>
+            <Typography variant="h5" sx={{
+              color: colors.textSecondary,
+              fontWeight: 400,
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: { xs: '1.1rem', md: '1.3rem' }
+            }}>
+              Discover our carefully curated selection of coffee, desserts, and more
+            </Typography>
+          </motion.div>
+        </Box>
+
+        {/* Search and Filter Section */}
+        <Paper sx={{
+          p: 3,
+          mb: 4,
+          backgroundColor: colors.surface,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}>
+          <Grid container spacing={3} alignItems="center">
+            {/* Search Bar */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Search products..."
+                value={searchText}
+                onChange={handleSearch}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: colors.textSecondary }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: colors.background
+                  }
+                }}
+              />
+            </Grid>
+
+            {/* Sort Options */}
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Sort By</InputLabel>
+                <Select
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  label="Sort By"
+                  sx={{ borderRadius: 2 }}
                 >
-                  Search
-                </Button>
-              </Stack>
-            </Stack>
-          <Stack className="dishes-filter-section" sx={{ display: "flex" }}>
-            <Stack className="dishes-filter-box">
-              <Button
-                variant={"contained"}
-                className={"order"}
-                color={productSearch.order === "createdAt" ? "primary": "secondary"}
-                onClick={()=>searchOrderHandler("createdAt")}
-              >
-                New
-              </Button>
-              <Button
-                variant={"contained"}
-                className={"order"}
-                color={productSearch.order === "productPrice" ? "primary": "secondary"}
-                onClick={()=>searchOrderHandler("productPrice")}
-              >
-                Price
-              </Button>
-              <Button
-                variant={"contained"}
-                className={"order"}
-                color={productSearch.order === "productViews" ? "primary": "secondary"}
-                onClick={()=>searchOrderHandler("productViews")}
-              >
-                Views
-              </Button>
-            </Stack>
-          </Stack>
-          <Stack
-            className="list-category-section"
+                  {sortOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Sort Order */}
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Order</InputLabel>
+                <Select
+                  value={sortOrder}
+                  onChange={handleSortOrderChange}
+                  label="Order"
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="desc">Descending</MenuItem>
+                  <MenuItem value="asc">Ascending</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Category Tabs */}
+        <Box sx={{ mb: 4 }}>
+          <Tabs
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
-              display: "flex",
-              flexDirection: "row",
-              marginTop: "41px",
-              justifyContent: "flex-end",
-              width: "100%",
-              height: "auto",
+              '& .MuiTab-root': {
+                minWidth: 120,
+                fontSize: '1rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                color: colors.textSecondary,
+                '&.Mui-selected': {
+                  color: colors.accent
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: colors.accent,
+                height: 3,
+                borderRadius: 1.5
+              }
             }}
           >
-            <Stack className="product-category" sx={{ marginRight: "10px" }}>
-              <div className="category-main">
-                <Button 
-                variant={"contained"} 
-                color={
-                  productSearch.productCollection === ProductCollection.OTHER
-                  ? "primary" 
-                  : "secondary"
-                }
+            {categories.map((category) => (
+              <Tab
+                key={category.value}
+                value={category.value}
+                label={category.label}
+              />
+            ))}
+          </Tabs>
+        </Box>
 
-                onClick={()=>searchCollectionHandler(ProductCollection.OTHER)}>
-                  Other
-                </Button>
-
-                <Button variant={"contained"}    color={
-                  productSearch.productCollection === ProductCollection.DESSERT
-                  ? "primary" 
-                  : "secondary"
-                }
-                onClick={()=>searchCollectionHandler(ProductCollection.DESSERT)}>
-                  Dessert
-                </Button>
-
-                <Button variant="contained" 
-                   color={
-                    productSearch.productCollection === ProductCollection.DRINK
-                    ? "primary" 
-                    : "secondary"
+        {/* Products Grid */}
+        <Grid container spacing={3}>
+          {currentProducts.map((product: Product, index: number) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Card sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  backgroundColor: colors.surface,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
                   }
-                onClick={()=>searchCollectionHandler(ProductCollection.DRINK)}>
-                  Drink
-                </Button>
+                }}
+                onClick={() => handleProductClick(product._id)}
+                >
+                  {/* Product Image */}
+                  <Box sx={{ position: 'relative' }}>
+                    <CardMedia
+                      component="img"
+                      height="240"
+                      image={`${serverApi}${product.productImages[0]}`}
+                      alt={product.productName}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    <IconButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(product._id);
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 1)'
+                        }
+                      }}
+                    >
+                      {favorites.includes(product._id) ? (
+                        <FavoriteIcon sx={{ color: '#e91e63' }} />
+                      ) : (
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+                  </Box>
 
-                <Button variant="contained" 
-                   color={
-                    productSearch.productCollection === ProductCollection.SALAD
-                    ? "primary" 
-                    : "secondary"
-                  }
-                onClick={()=>searchCollectionHandler(ProductCollection.SALAD)}>
-                 Salad
-                </Button>
+                  {/* Product Content */}
+                  <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                    <Typography variant="h6" sx={{
+                      fontWeight: 600,
+                      mb: 1,
+                      color: colors.text,
+                      fontSize: '1.1rem',
+                      lineHeight: 1.3
+                    }}>
+                      {product.productName}
+                    </Typography>
 
-                <Button variant="contained" 
-                color={
-                  productSearch.productCollection === ProductCollection.DISH 
-                  ? "primary" 
-                  : "secondary"
-                }
-                onClick={()=>searchCollectionHandler(ProductCollection.DISH)}>
-                  Dish
-                </Button>
-              </div>
-            </Stack>
-            <Stack className="product-wrapper">
-              {products.length !== 0 ? (
-                products.map((product: Product) => {
-                  const imagePAth=`${serverApi}${product.productImages[0]}`
-                  const sizeVolume = product.productCollection === ProductCollection.DRINK ? product.productVolume + "litre" :product.productSize + "size"
-                  return (
-                    <Stack key={product._id} className="product-card" onClick={()=> chooseDishHandler(product._id)}>
-                      <Stack
-                        className="product-img"
-                        sx={{ backgroundImage: `url(${imagePAth})` }}
-                      >
-                        <div className="product-sale">{sizeVolume}</div>
-                        <Button className="shop-btn"
-                        onClick = {(e)=>{
-                          console.log("BUTTON PRESSED")
-                          onAdd({
-                            _id: product._id,
-                            quantity:1,
-                            name: product.productName,
-                            price: product.productPrice,
-                            image: product.productImages[0]
-                          });
-                         e.stopPropagation()
+                    <Typography variant="body2" sx={{
+                      color: colors.textSecondary,
+                      mb: 2,
+                      fontSize: '0.9rem',
+                      lineHeight: 1.5
+                    }}>
+                      {product.productDesc || 'No description available'}
+                    </Typography>
+
+                    {/* Product Meta */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="body2" sx={{
+                        color: colors.textSecondary,
+                        fontSize: '0.8rem'
+                      }}>
+                        Views: {product.productViews || 0}
+                      </Typography>
+                    </Box>
+
+                    {/* Price and Add to Cart */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      mt: 'auto'
+                    }}>
+                      <Typography variant="h6" sx={{
+                        fontWeight: 700,
+                        color: colors.accent,
+                        fontSize: '1.2rem'
+                      }}>
+                        ${product.productPrice}
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddShoppingCartIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
                         }}
-                        >
-                          <img
-                            src={"icons/shopping-cart.svg"}
-                            style={{ display: "flex" }}
-                          />
-                        </Button>
-                        <Button className="view-btn" sx={{ right: "36px" }}>
-                          <Badge badgeContent={product.productViews} color="secondary">
-                            <RemoveRedEyeIcon
-                              sx={{ color: product.productViews === 0 ? "gray" : "white" }}
-                            />
-                          </Badge>
-                        </Button>
-                      </Stack>
-                      <Box className="product-desc">
-                        <span className="product-title">
-                          {product.productName}
-                        </span>
-                        <div className="product-price">
-                          <MonetizationOnIcon />
-                          {product.productPrice}
-                        </div>
-                      </Box>
-                    </Stack>
-                  );
-                })
-              ) : (
-                <Box className={"no-data"}>Products are not available</Box>
-              )}
-            </Stack>
-          </Stack>
-          <Stack className="pagination-section">
+                        sx={{
+                          borderRadius: 2,
+                          backgroundColor: colors.accent,
+                          '&:hover': {
+                            backgroundColor: colors.accentDark
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* No Products Message */}
+        {currentProducts.length === 0 && (
+          <Box sx={{
+            textAlign: 'center',
+            py: 8,
+            color: colors.textSecondary
+          }}>
+            <Typography variant="h5" sx={{ mb: 2 }}>
+              No products found
+            </Typography>
+            <Typography variant="body1">
+              Try adjusting your search or filter criteria
+            </Typography>
+          </Box>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 6
+          }}>
             <Pagination
-              count={products.length !== 0 ? productSearch.page + 1 : productSearch.page }
-              page={productSearch.page}
-              renderItem={(item) => (
-                <PaginationItem
-                  components={{
-                    previous: ArrowBackIcon,
-                    next: ArrowForwardIcon,
-                  }}
-                  {...item}
-                  color={"secondary"}
-                />
-              )}
-              onChange={paginationHandler}
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+              showFirstButton
+              showLastButton
             />
-          </Stack>
-        </Stack>
+          </Box>
+        )}
       </Container>
-
-      <div className="brands-logo">
-        <Container>
-          <Stack className="brand-title">
-            <Box className="brand-title-text">Our Family Brands</Box>
-          </Stack>
-          <Stack className="brand-logos">
-            <Box className="logo-box">
-              <img
-                src="img/gurme.webp"
-                style={{ width: "238px", height: "329px" }}
-              />
-            </Box>
-
-            <Box className="logo-box">
-              <img
-                src="img/seafood.webp"
-                style={{ width: "230px", height: "329px" }}
-              />
-            </Box>
-
-            <Box className="logo-box">
-              <img
-                src="img/sweets.webp"
-                style={{ width: "238px", height: "329px" }}
-              />
-            </Box>
-
-            <Box className="logo-box">
-              <img
-                src="img/doner.webp"
-                style={{ width: "238px", height: "329px" }}
-              />
-            </Box>
-          </Stack>
-        </Container>
-      </div>
-      <div className="address">
-        <Container>
-          <Stack
-            className="address-area"
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Box className="title">Our address</Box>
-            <iframe
-              style={{ marginTop: "60px" }}
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3234.279488067767!2d127.13298197622382!3d35.8421497725358!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357023379e824939%3A0xd35dd0a46a73b0f0!2s1549-18%20Geumam-dong%2C%20Deokjin-gu%2C%20Jeonju%2C%20Jeollabuk-do!5e0!3m2!1sen!2skr!4v1720974938245!5m2!1sen!2skr"
-              width="1300"
-              height="500"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </Stack>
-        </Container>
-      </div>
-    </div>
+    </Box>
   );
 }
