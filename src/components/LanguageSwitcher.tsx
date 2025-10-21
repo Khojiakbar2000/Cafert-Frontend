@@ -9,8 +9,8 @@ import {
   Typography,
   Box,
   Tooltip,
-} from '@material-ui/core';
-import { Language as LanguageIcon } from '@material-ui/icons';
+} from '@mui/material';
+import LanguageIcon from '@mui/icons-material/Language';
 
 const LanguageSwitcher: React.FC = () => {
   const { t, i18n } = useTranslation();

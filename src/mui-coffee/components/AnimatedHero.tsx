@@ -2,8 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Box, Typography, Button, Container } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { useHistory } from 'react-router-dom';
 
 const AnimatedHero: React.FC = () => {
+  const history = useHistory();
+
+  const handleExploreMenu = () => {
+    history.push('/coffees');
+  };
+
   return (
     <Box
       sx={{
@@ -165,6 +172,7 @@ const AnimatedHero: React.FC = () => {
               <Button
                 variant="contained"
                 size="large"
+                onClick={handleExploreMenu}
                 sx={{
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   backdropFilter: 'blur(10px)',

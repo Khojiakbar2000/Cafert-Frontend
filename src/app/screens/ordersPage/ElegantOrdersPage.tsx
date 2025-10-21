@@ -40,9 +40,10 @@ import {
   Timeline as TimelineIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Dispatch } from '@reduxjs/toolkit';
 import { setPausedOrders, setProcessOrders, setFinishedOrders } from './slice';
+import { retrievePausedOrders, retrieveProcessOrders, retrieveFinishedOrders } from './selector';
 import { Order, OrderInquiry } from '../../../lib/types/order';
 import { OrderStatus } from '../../../lib/enums/order.enum';
 import OrderService from '../../services/OrderService';
@@ -227,6 +228,11 @@ const ElegantOrdersPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { t } = useTranslation();
 
+  // Get orders from Redux store using selectors
+  const pausedOrders = useSelector(retrievePausedOrders);
+  const processOrders = useSelector(retrieveProcessOrders);
+  const finishedOrders = useSelector(retrieveFinishedOrders);
+
   const [value, setValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -236,21 +242,21 @@ const ElegantOrdersPage: React.FC = () => {
       status: OrderStatus.PAUSE,
       icon: <ScheduleIcon />,
       color: '#F39C12',
-      orders: mockOrders.filter(order => order.orderStatus === OrderStatus.PAUSE)
+      orders: pausedOrders
     },
     {
       label: 'Processing Orders',
       status: OrderStatus.PROCESS,
       icon: <ShippingIcon />,
       color: '#3498DB',
-      orders: mockOrders.filter(order => order.orderStatus === OrderStatus.PROCESS)
+      orders: processOrders
     },
     {
       label: 'Completed Orders',
       status: OrderStatus.FINISH,
       icon: <CheckCircleIcon />,
       color: '#27AE60',
-      orders: mockOrders.filter(order => order.orderStatus === OrderStatus.FINISH)
+      orders: finishedOrders
     }
   ];
 
@@ -260,18 +266,89 @@ const ElegantOrdersPage: React.FC = () => {
       return;
     }
 
-    // Simulate loading
-    setIsLoading(true);
-    setTimeout(() => {
-      setPausedOrders(mockOrders.filter(order => order.orderStatus === OrderStatus.PAUSE));
-      setProcessOrders(mockOrders.filter(order => order.orderStatus === OrderStatus.PROCESS));
-      setFinishedOrders(mockOrders.filter(order => order.orderStatus === OrderStatus.FINISH));
-      setIsLoading(false);
-    }, 1000);
-  }, [authMember, history]);
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const orderService = new OrderService();
+        
+        // Fetch orders for each status
+        const [pausedOrders, processOrders, finishedOrders] = await Promise.all([
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.PAUSE }),
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.PROCESS }),
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.FINISH })
+        ]);
+
+        console.log('Fetched paused orders:', pausedOrders);
+        console.log('Fetched process orders:', processOrders);
+        console.log('Fetched finished orders:', finishedOrders);
+
+        // Update Redux state
+        setPausedOrders(pausedOrders || []);
+        setProcessOrders(processOrders || []);
+        setFinishedOrders(finishedOrders || []);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        // Fallback to mock data if API fails
+        const fallbackPaused = mockOrders.filter(order => order.orderStatus === OrderStatus.PAUSE);
+        const fallbackProcess = mockOrders.filter(order => order.orderStatus === OrderStatus.PROCESS);
+        const fallbackFinished = mockOrders.filter(order => order.orderStatus === OrderStatus.FINISH);
+        
+        setPausedOrders(fallbackPaused);
+        setProcessOrders(fallbackProcess);
+        setFinishedOrders(fallbackFinished);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [authMember, history, orderBuilder]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
+  };
+
+  const handleRefresh = () => {
+    // Trigger a re-fetch of orders
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const orderService = new OrderService();
+        
+        // Fetch orders for each status
+        const [pausedOrders, processOrders, finishedOrders] = await Promise.all([
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.PAUSE }),
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.PROCESS }),
+          orderService.getMyOrders({ page: 1, limit: 50, orderStatus: OrderStatus.FINISH })
+        ]);
+
+        // Update Redux state
+        setPausedOrders(pausedOrders || []);
+        setProcessOrders(processOrders || []);
+        setFinishedOrders(finishedOrders || []);
+      } catch (error) {
+        console.error('Error refreshing orders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      const orderService = new OrderService();
+      await orderService.updateOrder({
+        orderId: orderId,
+        orderStatus: newStatus
+      });
+      
+      // Refresh orders after update
+      handleRefresh();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
   };
 
   const getOrderStatusColor = (status: OrderStatus) => {
@@ -430,27 +507,73 @@ const ElegantOrdersPage: React.FC = () => {
               </Typography>
             </Box>
             
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<ViewIcon />}
-              sx={{
-                borderColor: '#667eea',
-                color: '#667eea',
-                borderWidth: 2,
-                borderRadius: '12px',
-                px: 3,
-                py: 1.5,
-                fontWeight: 600,
-                '&:hover': {
-                  borderColor: '#5a6fd8',
-                  backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                  transform: 'translateY(-2px)',
-                }
-              }}
-            >
-              View Details
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {order.orderStatus === OrderStatus.PAUSE && (
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<ShippingIcon />}
+                  onClick={() => handleUpdateOrderStatus(order._id, OrderStatus.PROCESS)}
+                  sx={{
+                    background: 'linear-gradient(45deg, #3498DB, #2980B9)',
+                    borderRadius: '12px',
+                    px: 3,
+                    py: 1,
+                    fontWeight: 600,
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #2980B9, #1F618D)',
+                      transform: 'translateY(-2px)',
+                    }
+                  }}
+                >
+                  Start Processing
+                </Button>
+              )}
+              
+              {order.orderStatus === OrderStatus.PROCESS && (
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<CheckCircleIcon />}
+                  onClick={() => handleUpdateOrderStatus(order._id, OrderStatus.FINISH)}
+                  sx={{
+                    background: 'linear-gradient(45deg, #27AE60, #229954)',
+                    borderRadius: '12px',
+                    px: 3,
+                    py: 1,
+                    fontWeight: 600,
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #229954, #1E8449)',
+                      transform: 'translateY(-2px)',
+                    }
+                  }}
+                >
+                  Mark Complete
+                </Button>
+              )}
+              
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<ViewIcon />}
+                sx={{
+                  borderColor: '#667eea',
+                  color: '#667eea',
+                  borderWidth: 2,
+                  borderRadius: '12px',
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                  '&:hover': {
+                    borderColor: '#5a6fd8',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                View Details
+              </Button>
+            </Box>
           </Box>
 
           {order.orderStatus === OrderStatus.PROCESS && (
@@ -516,11 +639,32 @@ const ElegantOrdersPage: React.FC = () => {
               variant="h6" 
               sx={{ 
                 color: 'rgba(255,255,255,0.9)',
-                fontWeight: 400
+                fontWeight: 400,
+                mb: 3
               }}
             >
               {t('orders.subtitle', 'Track your orders and view order history')}
             </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={isLoading}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.8)',
+                color: '#ffffff',
+                '&:hover': {
+                  borderColor: '#ffffff',
+                  backgroundColor: 'rgba(255,255,255,0.1)'
+                },
+                '&:disabled': {
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(255,255,255,0.3)'
+                }
+              }}
+            >
+              Refresh Orders
+            </Button>
           </Box>
         </motion.div>
 
@@ -716,7 +860,7 @@ const ElegantOrdersPage: React.FC = () => {
                     <Box sx={{ flex: '1 1 calc(50% - 8px)', minWidth: 120 }}>
                       <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(102, 126, 234, 0.1)' }}>
                         <Typography variant="h4" sx={{ color: '#667eea', fontWeight: 700 }}>
-                          {mockOrders.length}
+                          {pausedOrders.length + processOrders.length + finishedOrders.length}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#7F8C8D', fontWeight: 500 }}>
                           Total Orders
@@ -726,7 +870,7 @@ const ElegantOrdersPage: React.FC = () => {
                     <Box sx={{ flex: '1 1 calc(50% - 8px)', minWidth: 120 }}>
                       <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(39, 174, 96, 0.1)' }}>
                         <Typography variant="h4" sx={{ color: '#27AE60', fontWeight: 700 }}>
-                          {mockOrders.filter(o => o.orderStatus === OrderStatus.FINISH).length}
+                          {finishedOrders.length}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#7F8C8D', fontWeight: 500 }}>
                           Completed
@@ -736,7 +880,7 @@ const ElegantOrdersPage: React.FC = () => {
                     <Box sx={{ flex: '1 1 calc(50% - 8px)', minWidth: 120 }}>
                       <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(243, 156, 18, 0.1)' }}>
                         <Typography variant="h4" sx={{ color: '#F39C12', fontWeight: 700 }}>
-                          {mockOrders.filter(o => o.orderStatus === OrderStatus.PAUSE || o.orderStatus === OrderStatus.PROCESS).length}
+                          {pausedOrders.length + processOrders.length}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#7F8C8D', fontWeight: 500 }}>
                           Pending
@@ -746,7 +890,7 @@ const ElegantOrdersPage: React.FC = () => {
                     <Box sx={{ flex: '1 1 calc(50% - 8px)', minWidth: 120 }}>
                       <Box sx={{ textAlign: 'center', p: 2, borderRadius: '12px', background: 'rgba(52, 152, 219, 0.1)' }}>
                         <Typography variant="h4" sx={{ color: '#3498DB', fontWeight: 700 }}>
-                          ${mockOrders.reduce((total, order) => total + calculateTotal(order), 0).toFixed(0)}
+                          ${[...pausedOrders, ...processOrders, ...finishedOrders].reduce((total, order) => total + calculateTotal(order), 0).toFixed(0)}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#7F8C8D', fontWeight: 500 }}>
                           Total Spent

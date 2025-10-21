@@ -5,8 +5,11 @@ import { Route, Switch, useLocation } from "react-router-dom";
 // Import i18n configuration
 import "../i18n";
 
+// Styles
+import "../css/navbar.css";
+import "../css/footer.css";
+
 // Import components that are needed immediately
-import HomeNavbar from "./components/headers/HomeNavbar";
 import OtherNavbar from "./components/headers/OtherNavbar";
 import Footer from "./components/footer";
 import { ThemeProvider } from "../mui-coffee/context/ThemeContext";
@@ -23,110 +26,91 @@ import AuthenticationModal from "./components/auth";
 import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Styles
-import "../css/navbar.css";
-import "../css/footer.css";
+// Create an instance of MemberService
+const memberService = new MemberService();
 
 // Lazy load components for better performance
-const OrdersPage = lazy(() => import("../mui-coffee/screens/OrdersPage"));
-const UserPage = lazy(() => import("./screens/userPage"));
+const OrdersPage = lazy(() => import("./screens/ordersPage"));
+const UserProfilePage = lazy(() => import("./screens/userPage"));
 const MyPage = lazy(() => import("../mui-coffee/screens/MyPage"));
 const HelpPage = lazy(() => import("./screens/helpPage"));
 const CoffeeHomePage = lazy(() => import("../mui-coffee/screens/CoffeeHomePage"));
 const ImageTest = lazy(() => import("../mui-coffee/ImageTest"));
 const VerticalBasketDemo = lazy(() => import("../mui-coffee/components/VerticalBasketDemo"));
-const CoffeesPage = lazy(() => import("./screens/coffeesPage"));
-const SaladsPage = lazy(() => import("./screens/saladsPage"));
-const DessertsPage = lazy(() => import("./screens/dessertsPage"));
-const DrinksPage = lazy(() => import("./screens/drinksPage"));
+const StatsPage = lazy(() => import("../mui-coffee/screens/StatsPage"));
+const ProductsPage = lazy(() => import("./screens/productsPage"));
 
 function App() {
   const location = useLocation();
-  const { setAuthMember } = useGlobals()
+  const { authMember, setAuthMember } = useGlobals();
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
-  const [signupOpen, setSignupOpen] = useState<boolean>(false)
-  const [loginOpen, setLoginOpen] = useState<boolean>(false);
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
 
-  /** HANDLERS */
-  const handleSignupClose = () => setSignupOpen(false);
+
+
+  const [signupOpen, setSignupOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
   const handleLoginClose = () => setLoginOpen(false);
+  const handleSignupClose = () => setSignupOpen(false);
 
-  const handleLogoutClick = (e: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(e.currentTarget);
+  const handleLogoutClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
-  const handleCloseLogout = () => setAnchorEl(null);
+
+  const handleCloseLogout = () => {
+    setAnchorEl(null);
+  };
+
   const handleLogoutRequest = async () => {
     try {
-      const member = new MemberService();
-      await member.logout
-      await sweetTopSuccessAlert("success", 700);
-      setAuthMember(null)
-    } catch (err) {
-      console.log(err);
-      sweetErrorHandling(Messages.error1)
+      const result = await memberService.logout();
+      setAuthMember(null);
+      handleCloseLogout();
+      sweetTopSuccessAlert("Logout successful", 700);
+    } catch (err: any) {
+      console.log("ERROR handleLogoutRequest ::", err);
+      // Even if the server logout fails, clear the local state
+      setAuthMember(null);
+      handleCloseLogout();
+      sweetErrorHandling(err).then();
     }
-  }
+  };
 
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        {location.pathname === "/" ? (
-          <HomeNavbar
-            cartItems={cartItems}
-            onAdd={onAdd}
-            onRemove={onRemove}
-            onDelete={onDelete}
-            onDeleteAll={onDeleteAll}
-            setSignupOpen={setSignupOpen}
-            setLoginOpen={setLoginOpen}
-            handleLogoutClick={handleLogoutClick}
-            anchorEl={anchorEl}
-            handleCloseLogout={handleCloseLogout}
-            handleLogoutRequest={handleLogoutRequest}
-          />
-        ) : (
-          <OtherNavbar
-            cartItems={cartItems}
-            onAdd={onAdd}
-            onRemove={onRemove}
-            onDelete={onDelete}
-            onDeleteAll={onDeleteAll}
-            setSignupOpen={setSignupOpen}
-            setLoginOpen={setLoginOpen}
-            handleLogoutClick={handleLogoutClick}
-            anchorEl={anchorEl}
-            handleCloseLogout={handleCloseLogout}
-            handleLogoutRequest={handleLogoutRequest}
-          />
-        )}
+        <OtherNavbar
+          cartItems={cartItems}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          onDelete={onDelete}
+          onDeleteAll={onDeleteAll}
+          setSignupOpen={setSignupOpen}
+          setLoginOpen={setLoginOpen}
+          handleLogoutClick={handleLogoutClick}
+          anchorEl={anchorEl}
+          handleCloseLogout={handleCloseLogout}
+          handleLogoutRequest={handleLogoutRequest}
+        />
         
         <Suspense fallback={<LoadingSpinner />}>
           {/* @ts-ignore */}
           <Switch>
-            <Route path="/coffees">
-              <CoffeesPage onAdd={onAdd} />
-            </Route>
-            <Route path="/salads">
-              <SaladsPage />
-            </Route>
-            <Route path="/desserts">
-              <DessertsPage />
-            </Route>
-            <Route path="/drinks">
-              <DrinksPage />
-            </Route>
             <Route path="/products">
-              <CoffeesPage onAdd={onAdd} />
+              <ProductsPage onAdd={onAdd} />
             </Route>
             <Route path="/orders">
               <OrdersPage />
             </Route>
-            <Route path="/member-page">
-              <UserPage />
+            <Route path="/user-profile">
+              <UserProfilePage />
             </Route>
             <Route path="/my-page">
               <MyPage />
+            </Route>
+            <Route path="/stats">
+              <StatsPage />
             </Route>
             <Route path="/help">
               <HelpPage />
@@ -146,8 +130,6 @@ function App() {
           </Switch>
         </Suspense>
         
-        <Footer />
-
         <AuthenticationModal
           signupOpen={signupOpen}
           loginOpen={loginOpen}

@@ -1,5 +1,5 @@
 // Coffees component for listing all coffees
-import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useCallback, Suspense, useRef } from "react";
 import {
   Container,
   Stack,
@@ -47,9 +47,10 @@ import { CartItem } from "../../../lib/types/search";
 import { useTheme as useCoffeeTheme } from "../../../mui-coffee/context/ThemeContext";
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import ProductService from "../../services/ProductService";
 
 // Lazy load the AwardsStrip component
-const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
+import { serverApi } from "../../../lib/config";const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
 
 // Loading skeleton for cards
 const CardSkeleton = () => (
@@ -85,7 +86,7 @@ interface CoffeeItem {
   description: string;
   price: number;
   image: string;
-  category: 'coffees' | 'desserts' | 'drinks' | 'salads';
+  category: "coffees" | "desserts" | "drinks" | "salads" | "dishes" | "other";
   origin: string;
   roast: string;
   rating: number;
@@ -114,249 +115,101 @@ export default function Coffees(props: CoffeesProps) {
   // Pagination constants
   const ITEMS_PER_PAGE = 5;
   
-  const [coffees, setCoffees] = useState<CoffeeItem[]>([
-    {
-      id: '1',
-      name: 'Espresso Classic',
-      description: 'Rich and bold single shot espresso',
-      price: 3.50,
-      image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
-      category: 'coffees',
-      origin: 'Italy',
-      roast: 'Dark',
-      rating: 4.8,
-      reviews: 124,
-      views: 1250,
-      isNew: true,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '2 min',
-      calories: 5,
-      ingredients: ['Arabica beans', 'Water']
-    },
-    {
-      id: '2',
-      name: 'Cappuccino Deluxe',
-      description: 'Perfectly balanced espresso with steamed milk',
-      price: 4.80,
-      image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400',
-      category: 'coffees',
-      origin: 'Italy',
-      roast: 'Medium',
-      rating: 4.6,
-      reviews: 89,
-      views: 980,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '4 min',
-      calories: 120,
-      ingredients: ['Espresso', 'Steamed milk', 'Milk foam']
-    },
-    {
-      id: '3',
-      name: 'Chocolate Cake',
-      description: 'Rich chocolate layer cake with ganache',
-      price: 6.50,
-      image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400',
-      category: 'desserts',
-      origin: 'France',
-      roast: 'N/A',
-      rating: 4.9,
-      reviews: 156,
-      views: 2100,
-      isNew: true,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '15 min',
-      calories: 350,
-      ingredients: ['Chocolate', 'Flour', 'Eggs', 'Sugar', 'Butter']
-    },
-    {
-      id: '4',
-      name: 'Green Tea Latte',
-      description: 'Smooth matcha green tea with steamed milk',
-      price: 5.20,
-      image: 'https://images.unsplash.com/photo-1515823662972-9b8c2c2c0e5b?w=400',
-      category: 'drinks',
-      origin: 'Japan',
-      roast: 'N/A',
-      rating: 4.4,
-      reviews: 67,
-      views: 750,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '3 min',
-      calories: 80,
-      ingredients: ['Matcha powder', 'Steamed milk', 'Honey']
-    },
-    {
-      id: '5',
-      name: 'Caesar Salad',
-      description: 'Fresh romaine lettuce with caesar dressing',
-      price: 8.90,
-      image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
-      category: 'salads',
-      origin: 'Mexico',
-      roast: 'N/A',
-      rating: 4.2,
-      reviews: 43,
-      views: 520,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '8 min',
-      calories: 180,
-      ingredients: ['Romaine lettuce', 'Parmesan cheese', 'Croutons', 'Caesar dressing']
-    },
-    {
-      id: '6',
-      name: 'Caramel Macchiato',
-      description: 'Espresso with caramel and steamed milk',
-      price: 5.50,
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400',
-      category: 'coffees',
-      origin: 'Italy',
-      roast: 'Medium',
-      rating: 4.7,
-      reviews: 203,
-      views: 1850,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '5 min',
-      calories: 140,
-      ingredients: ['Espresso', 'Steamed milk', 'Caramel syrup']
-    },
-    {
-      id: '7',
-      name: 'Tiramisu',
-      description: 'Classic Italian coffee-flavored dessert',
-      price: 7.80,
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400',
-      category: 'desserts',
-      origin: 'Italy',
-      roast: 'N/A',
-      rating: 4.8,
-      reviews: 178,
-      views: 1650,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '20 min',
-      calories: 280,
-      ingredients: ['Mascarpone cheese', 'Coffee', 'Ladyfingers', 'Cocoa powder']
-    },
-    {
-      id: '8',
-      name: 'Fresh Fruit Smoothie',
-      description: 'Blend of seasonal fruits with yogurt',
-      price: 6.20,
-      image: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=400',
-      category: 'drinks',
-      origin: 'Local',
-      roast: 'N/A',
-      rating: 4.3,
-      reviews: 92,
-      views: 890,
-      isNew: true,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '4 min',
-      calories: 160,
-      ingredients: ['Mixed fruits', 'Yogurt', 'Honey', 'Ice']
-    },
-    {
-      id: '9',
-      name: 'Greek Salad',
-      description: 'Fresh vegetables with feta cheese and olives',
-      price: 9.50,
-      image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400',
-      category: 'salads',
-      origin: 'Greece',
-      roast: 'N/A',
-      rating: 4.5,
-      reviews: 78,
-      views: 650,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '10 min',
-      calories: 220,
-      ingredients: ['Cucumber', 'Tomatoes', 'Feta cheese', 'Olives', 'Red onion']
-    },
-    {
-      id: '10',
-      name: 'Cheesecake',
-      description: 'Creamy New York style cheesecake',
-      price: 8.20,
-      image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400',
-      category: 'desserts',
-      origin: 'USA',
-      roast: 'N/A',
-      rating: 4.7,
-      reviews: 134,
-      views: 1450,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '25 min',
-      calories: 320,
-      ingredients: ['Cream cheese', 'Graham crackers', 'Sugar', 'Vanilla']
-    },
-    {
-      id: '11',
-      name: 'Iced Latte',
-      description: 'Chilled espresso with cold milk',
-      price: 4.90,
-      image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400',
-      category: 'coffees',
-      origin: 'Italy',
-      roast: 'Medium',
-      rating: 4.4,
-      reviews: 156,
-      views: 1200,
-      isNew: true,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '3 min',
-      calories: 90,
-      ingredients: ['Espresso', 'Cold milk', 'Ice']
-    },
-    {
-      id: '12',
-      name: 'Lemonade',
-      description: 'Fresh squeezed lemonade with mint',
-      price: 3.80,
-      image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400',
-      category: 'drinks',
-      origin: 'Local',
-      roast: 'N/A',
-      rating: 4.1,
-      reviews: 45,
-      views: 420,
-      isNew: false,
-      inStock: true,
-      isFavorite: false,
-      preparationTime: '2 min',
-      calories: 70,
-      ingredients: ['Fresh lemons', 'Sugar', 'Mint', 'Water']
-    }
-  ]);
+  const [coffees, setCoffees] = useState<CoffeeItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [filteredCoffees, setFilteredCoffees] = useState<CoffeeItem[]>(coffees);
+  const [filteredCoffees, setFilteredCoffees] = useState<CoffeeItem[]>([]);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const productService = new ProductService();
+        const products = await productService.getProducts({
+          page: 1,
+          limit: 50,
+          order: "createdAt"
+        });
+
+        // Transform backend data to frontend format
+        const transformedProducts: CoffeeItem[] = products.map((product: any) => {
+          let category = 'other';
+          const productCollection = product.productCollection?.toLowerCase();
+          
+          if (productCollection === 'coffee' || productCollection === 'drink') {
+            category = 'drinks';
+          } else if (productCollection === 'dessert') {
+            category = 'desserts';
+          } else if (productCollection === 'salad') {
+            category = 'salads';
+          } else if (productCollection === 'dish') {
+            category = 'dishes';
+          }
+          
+          return {
+            id: product._id, // Keep the original MongoDB _id as id
+            name: product.productName,
+            description: product.productDesc || 'No description available',
+            price: product.productPrice,
+            image: product.productImages?.[0] ? `${serverApi}${product.productImages[0]}` : 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
+            category: category as "coffees" | "desserts" | "drinks" | "salads" | "dishes" | "other",
+            origin: 'Local',
+            roast: 'Medium',
+            rating: 4.5,
+            reviews: Math.floor(Math.random() * 200) + 50,
+            views: (() => {
+              const backendViews = product.productViews || 0;
+              const storageKey = `product_views_${product._id}`;
+              const persistentViews = parseInt(localStorage.getItem(storageKey) || "0", 10);
+              return Math.max(backendViews, persistentViews);
+            })(),
+            isNew: false,
+            inStock: product.productLeftCount > 0,
+            isFavorite: false,
+            preparationTime: '5 min',
+            calories: Math.floor(Math.random() * 300) + 50,
+            ingredients: ['Fresh ingredients']
+          };
+        });
+
+        setCoffees(transformedProducts);
+        setFilteredCoffees(transformedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to empty array if API fails
+        setCoffees([]);
+        setFilteredCoffees([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   const [searchText, setSearchText] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'coffees' | 'desserts' | 'drinks' | 'salads' | 'dishes' | 'other'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "desserts" | "drinks" | "salads" | "dishes" | "other">('all');
   const [sortBy, setSortBy] = useState<'new' | 'price' | 'views' | 'rating'>('new');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [highlightResults, setHighlightResults] = useState(false);
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+  
+  // Ref for auto-scrolling to search results
+  const productsGridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let filtered = coffees.filter((coffee) => {
-      const matchesSearch = coffee.name.toLowerCase().includes(searchText.toLowerCase()) ||
-                           coffee.description.toLowerCase().includes(searchText.toLowerCase());
+      if (!searchText.trim()) {
+        // If no search term, only filter by category
+        return selectedCategory === 'all' || coffee.category === selectedCategory;
+      }
+      
+      const searchLower = searchText.toLowerCase().trim();
+      const nameMatch = coffee.name.toLowerCase().includes(searchLower);
+      const descMatch = coffee.description.toLowerCase().includes(searchLower);
+      const matchesSearch = nameMatch || descMatch;
       const matchesCategory = selectedCategory === 'all' || coffee.category === selectedCategory;
       
       return matchesSearch && matchesCategory;
@@ -403,10 +256,57 @@ export default function Coffees(props: CoffeesProps) {
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(event.target.value);
+    const value = event.target.value;
+    setSearchText(value);
+    
+    // Reset search submitted flag when text changes
+    if (searchSubmitted) {
+      setSearchSubmitted(false);
+    }
+    
+    // Reset highlight when search is cleared
+    if (!value.trim()) {
+      setHighlightResults(false);
+    }
   };
 
-  const handleCategoryChange = (event: React.SyntheticEvent, newValue: 'all' | 'coffees' | 'desserts' | 'drinks' | 'salads' | 'dishes' | 'other') => {
+  // Function to handle auto-scroll to search results
+  const scrollToSearchResults = () => {
+    if (searchText.trim() && filteredCoffees.length > 0) {
+      // Mark search as submitted
+      setSearchSubmitted(true);
+      
+      // Trigger highlight effect
+      setHighlightResults(true);
+      
+      setTimeout(() => {
+        if (productsGridRef.current) {
+          const navbarHeight = 120; // Account for fixed navbar
+          const elementPosition = productsGridRef.current.getBoundingClientRect().top + window.pageYOffset;
+          const offsetPosition = elementPosition - navbarHeight;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+        
+        // Remove highlight after scroll completes
+        setTimeout(() => {
+          setHighlightResults(false);
+        }, 2000);
+      }, 100); // Small delay to ensure DOM is updated
+    }
+  };
+
+  // Handle Enter key press in search field
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      scrollToSearchResults();
+    }
+  };
+
+  const handleCategoryChange = (event: React.SyntheticEvent, newValue: "all" | "desserts" | "drinks" | "salads" | "dishes" | "other") => {
     setSelectedCategory(newValue);
   };
 
@@ -446,7 +346,7 @@ export default function Coffees(props: CoffeesProps) {
   };
 
   const handleCoffeeClick = (coffeeId: string) => {
-    history.push(`/coffees/${coffeeId}`);
+    history.push(`/products/${coffeeId}`);
   };
 
   const categories = [
@@ -527,9 +427,13 @@ export default function Coffees(props: CoffeesProps) {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 300 }}>
                 {/* Enhanced Search Bar */}
                 <TextField
-                  placeholder={t('common.search')}
+                  id="coffee-search"
+                  name="coffee-search"
+                  label="Search Products"
+                  placeholder="Search for products... (Press Enter to scroll to results)"
                   value={searchText}
                   onChange={handleSearch}
+                  onKeyPress={handleSearchKeyPress}
                   size="medium"
                   fullWidth
                   sx={{
@@ -561,6 +465,23 @@ export default function Coffees(props: CoffeesProps) {
                           color: isDarkMode ? '#ffd700' : '#8B4513',
                           fontSize: '1.5rem'
                         }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchText.trim() && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={scrollToSearchResults}
+                          sx={{
+                            color: isDarkMode ? '#ffd700' : '#8B4513',
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.1)',
+                            '&:hover': {
+                              backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.2)',
+                            }
+                          }}
+                          title="Click to scroll to results"
+                        >
+                          <SearchIcon />
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}
@@ -639,7 +560,6 @@ export default function Coffees(props: CoffeesProps) {
               }}
             >
               <Tab label={t('common.all')} value="all" />
-              <Tab label={t('navigation.drinks')} value="coffees" />
               <Tab label={t('navigation.desserts')} value="desserts" />
               <Tab label={t('navigation.drinks')} value="drinks" />
               <Tab label={t('navigation.salads')} value="salads" />
@@ -776,27 +696,83 @@ export default function Coffees(props: CoffeesProps) {
             </Box>
           </Paper>
 
+          {/* Search Results Indicator */}
+          {searchText.trim() && searchSubmitted && filteredCoffees.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: highlightResults ? 1 : 0.7, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Paper sx={{ 
+                p: 2, 
+                mb: 3,
+                backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                border: `1px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`,
+                borderRadius: '12px',
+                textAlign: 'center'
+              }}>
+                <Typography variant="body1" sx={{ 
+                  color: isDarkMode ? '#ffd700' : '#8B4513',
+                  fontWeight: 600,
+                  fontSize: '1rem'
+                }}>
+                  🔍 Found {filteredCoffees.length} result{filteredCoffees.length !== 1 ? 's' : ''} for "{searchText}"
+                </Typography>
+              </Paper>
+            </motion.div>
+          )}
+
           {/* Enhanced Items Grid */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-            gap: 4,
-            position: 'relative'
-          }}>
-            {currentItems.map((item) => (
+          <Box 
+            ref={productsGridRef}
+            sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
+              gap: 4,
+              position: 'relative',
+              borderRadius: '16px',
+              padding: '16px',
+              transition: 'all 0.5s ease',
+              backgroundColor: highlightResults 
+                ? (isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)')
+                : 'transparent',
+              border: highlightResults 
+                ? `2px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`
+                : '2px solid transparent',
+              boxShadow: highlightResults 
+                ? (isDarkMode 
+                  ? '0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 20px rgba(255, 215, 0, 0.1)'
+                  : '0 0 20px rgba(139, 69, 19, 0.15), inset 0 0 20px rgba(139, 69, 19, 0.05)')
+                : 'none',
+            }}>
+            {loading ? (
+              <GridSkeleton />
+            ) : (
+              currentItems.map((item) => (
               <Card 
                 key={item.id}
                 sx={{ 
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-                  border: `2px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-                  borderRadius: '20px',
+                  // Glassmorphism effect
+                  backgroundColor: isDarkMode 
+                    ? 'rgba(26, 26, 26, 0.7)' 
+                    : 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)', // For Safari support
+                  border: isDarkMode 
+                    ? '1px solid rgba(255, 255, 255, 0.1)' 
+                    : '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '24px',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
                   overflow: 'hidden',
                   position: 'relative',
+                  // Glassmorphism shadow
+                  boxShadow: isDarkMode 
+                    ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+                    : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -812,18 +788,48 @@ export default function Coffees(props: CoffeesProps) {
                     transition: 'transform 0.3s ease',
                   },
                   '&:hover': {
-                    transform: 'translateY(-8px) scale(1.02)',
+                    transform: 'translateY(-12px) scale(1.03)',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(26, 26, 26, 0.9)' 
+                      : 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(255, 215, 0, 0.3)' 
+                      : '1px solid rgba(139, 69, 19, 0.3)',
                     boxShadow: isDarkMode 
-                      ? '0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255, 215, 0, 0.2)'
-                      : '0 20px 40px rgba(0,0,0,0.15), 0 0 20px rgba(139, 69, 19, 0.1)',
-                    borderColor: isDarkMode ? '#ffd700' : '#8B4513',
+                      ? '0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 215, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                      : '0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(139, 69, 19, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                     '&::before': {
                       transform: 'scaleX(1)',
+                    },
+                    '& .glassmorphism-glow': {
+                      opacity: 1,
+                      transform: 'scale(1.1)',
                     },
                   },
                 }}
                 onClick={() => handleCoffeeClick(item.id)}
               >
+                {/* Glassmorphism glow effect */}
+                <Box 
+                  className="glassmorphism-glow"
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '100%',
+                    height: '100%',
+                    background: isDarkMode 
+                      ? 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)' 
+                      : 'radial-gradient(circle, rgba(139, 69, 19, 0.1) 0%, transparent 70%)',
+                    transform: 'translate(-50%, -50%) scale(0.8)',
+                    opacity: 0,
+                    transition: 'all 0.4s ease',
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                  }}
+                />
                 <Box sx={{ position: 'relative', overflow: 'hidden' }}>
                   <CardMedia
                     component="img"
@@ -852,7 +858,7 @@ export default function Coffees(props: CoffeesProps) {
                     pointerEvents: 'none'
                   }} />
                   
-                  {/* New Badge */}
+                  {/* New Badge with glassmorphism */}
                   {item.isNew && (
                     <Chip
                       label="NEW"
@@ -861,34 +867,55 @@ export default function Coffees(props: CoffeesProps) {
                         position: 'absolute',
                         top: 12,
                         left: 12,
-                        backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 215, 0, 0.9)' 
+                          : 'rgba(139, 69, 19, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
                         color: isDarkMode ? '#1a1a1a' : '#ffffff',
                         fontWeight: 700,
                         fontSize: '0.75rem',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        borderRadius: '16px',
+                        border: isDarkMode 
+                          ? '1px solid rgba(255, 215, 0, 0.3)' 
+                          : '1px solid rgba(139, 69, 19, 0.3)',
+                        boxShadow: isDarkMode 
+                          ? '0 4px 12px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                          : '0 4px 12px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                         zIndex: 2,
                       }}
                     />
                   )}
                   
-                  {/* Favorite Button */}
+                  {/* Favorite Button with enhanced glassmorphism */}
                   <IconButton
                     sx={{
                       position: 'absolute',
                       top: 12,
                       right: 12,
-                      backgroundColor: 'rgba(255,255,255,0.95)',
-                      backdropFilter: 'blur(10px)',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(255, 255, 255, 0.15)' 
+                        : 'rgba(255, 255, 255, 0.9)',
+                      backdropFilter: 'blur(15px)',
+                      WebkitBackdropFilter: 'blur(15px)',
+                      width: 44,
+                      height: 44,
+                      borderRadius: '16px',
+                      border: isDarkMode 
+                        ? '1px solid rgba(255, 255, 255, 0.2)' 
+                        : '1px solid rgba(255, 255, 255, 0.3)',
+                      boxShadow: isDarkMode 
+                        ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+                        : '0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                       zIndex: 2,
                       '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,1)',
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.25)' 
+                          : 'rgba(255, 255, 255, 1)',
                         transform: 'scale(1.1)',
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.3)',
+                        boxShadow: isDarkMode 
+                          ? '0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                          : '0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                       },
                       transition: 'all 0.3s ease',
                     }}
@@ -898,13 +925,13 @@ export default function Coffees(props: CoffeesProps) {
                     }}
                   >
                     {item.isFavorite ? (
-                      <FavoriteIcon sx={{ color: '#e91e63', fontSize: '1.2rem' }} />
+                      <FavoriteIcon sx={{ color: '#e91e63', fontSize: '1.3rem' }} />
                     ) : (
-                      <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />
+                      <FavoriteBorderIcon sx={{ fontSize: '1.3rem' }} />
                     )}
                   </IconButton>
                   
-                  {/* Out of Stock Badge */}
+                  {/* Out of Stock Badge with glassmorphism */}
                   {!item.inStock && (
                     <Chip
                       label="Out of Stock"
@@ -914,11 +941,14 @@ export default function Coffees(props: CoffeesProps) {
                         bottom: 12,
                         left: 12,
                         backgroundColor: 'rgba(244, 67, 54, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
                         color: '#ffffff',
                         fontWeight: 600,
                         fontSize: '0.75rem',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(244, 67, 54, 0.3)',
+                        boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
                         zIndex: 2,
                       }}
                     />
@@ -930,22 +960,43 @@ export default function Coffees(props: CoffeesProps) {
                   display: 'flex', 
                   flexDirection: 'column',
                   p: 3,
-                  position: 'relative'
+                  position: 'relative',
+                  // Glassmorphism content styling
+                  backgroundColor: 'transparent',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  zIndex: 2,
                 }}>
-                  {/* Price Badge */}
+                  {/* Price Badge with glassmorphism */}
                   <Box sx={{
                     position: 'absolute',
                     top: -20,
                     right: 16,
-                    backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(255, 215, 0, 0.9)' 
+                      : 'rgba(139, 69, 19, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
                     color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                    px: 2,
-                    py: 0.5,
+                    px: 2.5,
+                    py: 1,
                     borderRadius: '20px',
                     fontWeight: 700,
                     fontSize: '1.1rem',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    border: isDarkMode 
+                      ? '1px solid rgba(255, 215, 0, 0.3)' 
+                      : '1px solid rgba(139, 69, 19, 0.3)',
+                    boxShadow: isDarkMode 
+                      ? '0 8px 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                      : '0 8px 20px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                     zIndex: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: isDarkMode 
+                        ? '0 12px 25px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
+                        : '0 12px 25px rgba(139, 69, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                    },
                   }}>
                     ${item.price}
                   </Box>
@@ -979,16 +1030,25 @@ export default function Coffees(props: CoffeesProps) {
                     {item.description}
                   </Typography>
                   
-                  {/* Enhanced Stats Row */}
+                  {/* Enhanced Stats Row with glassmorphism */}
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 2, 
                     mb: 2,
                     p: 1.5,
-                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                    borderRadius: '12px',
-                    border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(42, 42, 42, 0.6)' 
+                      : 'rgba(248, 249, 250, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    borderRadius: '16px',
+                    border: isDarkMode 
+                      ? '1px solid rgba(255, 255, 255, 0.1)' 
+                      : '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: isDarkMode 
+                      ? 'inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+                      : 'inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                   }}>
                     <Rating 
                       value={item.rating} 
@@ -1018,21 +1078,36 @@ export default function Coffees(props: CoffeesProps) {
                     </Box>
                   </Box>
                   
-                  {/* Enhanced Category and Origin */}
+                  {/* Enhanced Category and Origin with glassmorphism */}
                   <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
                     <Chip 
                       label={item.category.charAt(0).toUpperCase() + item.category.slice(1)} 
                       size="medium" 
                       variant="outlined"
                       sx={{ 
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 215, 0, 0.1)' 
+                          : 'rgba(139, 69, 19, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
                         borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
                         color: isDarkMode ? '#ffd700' : '#8B4513',
                         fontWeight: 600,
                         fontSize: '0.85rem',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
+                        border: isDarkMode 
+                          ? '1px solid rgba(255, 215, 0, 0.3)' 
+                          : '1px solid rgba(139, 69, 19, 0.3)',
                         '&:hover': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
-                        }
+                          backgroundColor: isDarkMode 
+                            ? 'rgba(255, 215, 0, 0.2)' 
+                            : 'rgba(139, 69, 19, 0.15)',
+                          transform: 'scale(1.05)',
+                          boxShadow: isDarkMode 
+                            ? '0 4px 12px rgba(255, 215, 0, 0.3)' 
+                            : '0 4px 12px rgba(139, 69, 19, 0.2)',
+                        },
+                        transition: 'all 0.3s ease',
                       }}
                     />
                     {item.origin !== 'N/A' && (
@@ -1041,20 +1116,35 @@ export default function Coffees(props: CoffeesProps) {
                         size="medium" 
                         variant="outlined"
                         sx={{ 
+                          backgroundColor: isDarkMode 
+                            ? 'rgba(255, 215, 0, 0.1)' 
+                            : 'rgba(139, 69, 19, 0.1)',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
                           borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
                           color: isDarkMode ? '#ffd700' : '#8B4513',
                           fontWeight: 600,
                           fontSize: '0.85rem',
-                          borderRadius: '12px',
+                          borderRadius: '16px',
+                          border: isDarkMode 
+                            ? '1px solid rgba(255, 215, 0, 0.3)' 
+                            : '1px solid rgba(139, 69, 19, 0.3)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
-                          }
+                            backgroundColor: isDarkMode 
+                              ? 'rgba(255, 215, 0, 0.2)' 
+                              : 'rgba(139, 69, 19, 0.15)',
+                            transform: 'scale(1.05)',
+                            boxShadow: isDarkMode 
+                              ? '0 4px 12px rgba(255, 215, 0, 0.3)' 
+                              : '0 4px 12px rgba(139, 69, 19, 0.2)',
+                          },
+                          transition: 'all 0.3s ease',
                         }}
                       />
                     )}
                   </Box>
                   
-                  {/* Enhanced Add to Cart Button */}
+                  {/* Enhanced Add to Cart Button with glassmorphism */}
                   <Button
                     variant="contained"
                     startIcon={<AddShoppingCartIcon />}
@@ -1065,23 +1155,39 @@ export default function Coffees(props: CoffeesProps) {
                       handleAddToCart(item);
                     }}
                     sx={{
-                      backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(255, 215, 0, 0.9)' 
+                        : 'rgba(139, 69, 19, 0.9)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
                       color: isDarkMode ? '#1a1a1a' : '#ffffff',
                       fontWeight: 700,
                       fontSize: '1rem',
                       py: 1.5,
-                      borderRadius: '12px',
+                      borderRadius: '16px',
                       textTransform: 'none',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                      border: isDarkMode 
+                        ? '1px solid rgba(255, 215, 0, 0.3)' 
+                        : '1px solid rgba(139, 69, 19, 0.3)',
+                      boxShadow: isDarkMode 
+                        ? '0 8px 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                        : '0 8px 20px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                       '&:hover': {
-                        backgroundColor: isDarkMode ? '#ffed4e' : '#A0522D',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 215, 0, 1)' 
+                          : 'rgba(139, 69, 19, 1)',
+                        transform: 'translateY(-2px) scale(1.02)',
+                        boxShadow: isDarkMode 
+                          ? '0 12px 25px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
+                          : '0 12px 25px rgba(139, 69, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                       },
                       '&:disabled': {
-                        backgroundColor: '#ccc',
+                        backgroundColor: 'rgba(204, 204, 204, 0.5)',
+                        backdropFilter: 'blur(5px)',
+                        WebkitBackdropFilter: 'blur(5px)',
                         transform: 'none',
                         boxShadow: 'none',
+                        border: '1px solid rgba(204, 204, 204, 0.3)',
                       },
                       transition: 'all 0.3s ease',
                     }}
@@ -1090,7 +1196,8 @@ export default function Coffees(props: CoffeesProps) {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            )}
           </Box>
 
           {/* Enhanced Pagination */}

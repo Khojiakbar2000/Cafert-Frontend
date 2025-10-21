@@ -8,7 +8,7 @@ import { ProductCollection } from "../../../lib/enums/product.enum";
 import MemberService from "../../services/MemberService";
 import { Member } from "../../../lib/types/member";
 import "../../../css/home.css"
-import VerticalMovingBasket from "../../../mui-coffee/components/VerticalMovingBasket";
+
 
 export default function HomePage() {
     const [popularDishes, setPopularDishes] = useState<Product[]>([]);
@@ -146,7 +146,7 @@ export default function HomePage() {
 
     return (
         <div className={"homepage"} ref={containerRef}>
-            <VerticalMovingBasket itemCount={3} />
+
             
             {/* Hero Section with Parallax */}
             <Box

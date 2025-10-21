@@ -6,7 +6,7 @@
 }
 
 .order-page .order-container {
-  margin-top: 50px;
+  margin-top: 120px; /* Increased to account for fixed navbar */
   margin-bottom: 50px;
   display: flex;
   flex-direction: row;

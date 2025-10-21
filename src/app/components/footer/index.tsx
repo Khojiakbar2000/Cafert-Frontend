@@ -9,7 +9,6 @@ import {
   Divider,
   useTheme,
   useMediaQuery,
-  Link as MuiLink,
   Stack,
   Chip
 } from '@mui/material';
@@ -35,7 +34,6 @@ import { useTranslation } from 'react-i18next';
 export default function Footer() {
   const { authMember } = useGlobals();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { t } = useTranslation();
 
   const scrollToTop = () => {
@@ -86,7 +84,7 @@ export default function Footer() {
   ];
 
   const contactInfo = [
-    { icon: <LocationIcon />, label: 'Location', value: 'Downtown, Dubai', action: () => window.open('https://maps.google.com') },
+    { icon: <LocationIcon />, label: 'Location', value: 'Downtown, New York', action: () => window.open('https://maps.google.com') },
     { icon: <PhoneIcon />, label: 'Phone', value: '+971 4 554 7777', action: () => window.open('tel:+97145547777') },
     { icon: <EmailIcon />, label: 'Email', value: 'info@coffeeshop.com', action: () => window.open('mailto:info@coffeeshop.com') },
     { icon: <TimeIcon />, label: 'Hours', value: '24/7 Service', action: null },
@@ -96,7 +94,7 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
-        background: 'linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)',
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #1a1a1a 100%)',
         color: '#fff',
         position: 'relative',
         overflow: 'hidden',
@@ -106,46 +104,70 @@ export default function Footer() {
           top: 0,
           left: 0,
           right: 0,
-          height: '4px',
-          background: 'linear-gradient(90deg, #8B4513, #A0522D, #CD853F, #D2691E)',
+          height: '6px',
+          background: 'linear-gradient(90deg, #8B4513, #A0522D, #CD853F, #D2691E, #8B4513)',
+          backgroundSize: '200% 100%',
+          animation: 'gradientShift 3s ease-in-out infinite',
+        },
+        '@keyframes gradientShift': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
         }
       }}
     >
       {/* Main Footer Content */}
-      <Container maxWidth="xl" sx={{ py: 6 }}>
+      <Container maxWidth="xl" sx={{ py: 8 }}>
         <Box sx={{ 
           display: 'flex', 
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: 4,
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: 6,
           flexWrap: 'wrap'
         }}>
           {/* Company Info */}
-          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' }, minWidth: { md: '300px' } }}>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <CoffeeIcon sx={{ fontSize: 40, color: '#8B4513', mr: 2 }} />
+          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 35%' }, minWidth: { lg: '350px' } }}>
+            <Box sx={{ mb: 5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                <CoffeeIcon sx={{ fontSize: 48, color: '#8B4513', mr: 3 }} />
                 <Typography
-                  variant="h4"
+                  variant="h3"
                   sx={{
                     color: '#fff',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     fontStyle: 'italic',
-                    letterSpacing: '-0.02em'
+                    letterSpacing: '-0.03em',
+                    fontSize: { xs: '2.5rem', md: '3rem' }
                   }}
                 >
                   Cafert
                 </Typography>
               </Box>
-              <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8, color: '#b0b0b0' }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 4, 
+                  lineHeight: 1.8, 
+                  color: '#d0d0d0',
+                  fontSize: { xs: '1.1rem', md: '1.25rem' },
+                  fontWeight: 400
+                }}
+              >
                 {t('footer.aboutText')}
               </Typography>
               
               {/* Social Media */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#fff', fontWeight: 600 }}>
+              <Box sx={{ mb: 5 }}>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    mb: 3, 
+                    color: '#fff', 
+                    fontWeight: 700,
+                    fontSize: { xs: '1.5rem', md: '1.75rem' }
+                  }}
+                >
                   {t('footer.social')}
                 </Typography>
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" spacing={2}>
                   {socialLinks.map((social, index) => (
                     <IconButton
                       key={index}
@@ -153,14 +175,20 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
-                        backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                        backgroundColor: 'rgba(139, 69, 19, 0.15)',
                         color: '#8B4513',
+                        width: 56,
+                        height: 56,
                         '&:hover': {
                           backgroundColor: '#8B4513',
                           color: '#fff',
-                          transform: 'translateY(-2px)',
+                          transform: 'translateY(-4px) scale(1.1)',
+                          boxShadow: '0 8px 25px rgba(139, 69, 19, 0.4)',
                         },
-                        transition: 'all 0.3s ease',
+                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        '& svg': {
+                          fontSize: 28,
+                        }
                       }}
                     >
                       {social.icon}
@@ -171,22 +199,46 @@ export default function Footer() {
 
               {/* Newsletter Signup */}
               <Box>
-                <Typography variant="h6" sx={{ mb: 2, color: '#fff', fontWeight: 600 }}>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    mb: 3, 
+                    color: '#fff', 
+                    fontWeight: 700,
+                    fontSize: { xs: '1.5rem', md: '1.75rem' }
+                  }}
+                >
                   {t('footer.stayUpdated')}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 2, color: '#b0b0b0' }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    mb: 3, 
+                    color: '#d0d0d0',
+                    fontSize: { xs: '1rem', md: '1.1rem' },
+                    fontWeight: 400
+                  }}
+                >
                   {t('footer.newsletterText')}
                 </Typography>
                 <Button
                   variant="outlined"
-                  size="small"
+                  size="large"
                   sx={{
                     borderColor: '#8B4513',
+                    borderWidth: 2,
                     color: '#8B4513',
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.5,
                     '&:hover': {
                       borderColor: '#A0522D',
-                      backgroundColor: 'rgba(139, 69, 19, 0.1)',
-                    }
+                      backgroundColor: 'rgba(139, 69, 19, 0.15)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(139, 69, 19, 0.3)',
+                    },
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {t('footer.subscribe')}
@@ -196,19 +248,27 @@ export default function Footer() {
           </Box>
 
           {/* Navigation Links */}
-          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' }, minWidth: { md: '300px' } }}>
+          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 30%' }, minWidth: { lg: '300px' } }}>
             <Box sx={{ 
               display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 3,
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 4,
               flexWrap: 'wrap'
             }}>
               {footerSections.map((section, index) => (
-                <Box key={index} sx={{ flex: { xs: '1 1 100%', sm: '1 1 30%' }, minWidth: { sm: '200px' } }}>
-                  <Typography variant="h6" sx={{ mb: 3, color: '#fff', fontWeight: 600 }}>
+                <Box key={index} sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' }, minWidth: { md: '200px' } }}>
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      mb: 4, 
+                      color: '#fff', 
+                      fontWeight: 700,
+                      fontSize: { xs: '1.4rem', md: '1.6rem' }
+                    }}
+                  >
                     {section.title}
                   </Typography>
-                  <Stack spacing={1}>
+                  <Stack spacing={2}>
                     {section.links.map((link, linkIndex) => (
                       <Link
                         key={linkIndex}
@@ -216,13 +276,17 @@ export default function Footer() {
                         style={{ textDecoration: 'none' }}
                       >
                         <Typography
-                          variant="body2"
+                          variant="h6"
                           sx={{
-                            color: '#b0b0b0',
+                            color: '#d0d0d0',
                             cursor: 'pointer',
-                            transition: 'color 0.3s ease',
+                            transition: 'all 0.3s ease',
+                            fontSize: { xs: '1rem', md: '1.1rem' },
+                            fontWeight: 500,
                             '&:hover': {
                               color: '#8B4513',
+                              transform: 'translateX(8px)',
+                              fontWeight: 600,
                             }
                           }}
                         >
@@ -237,11 +301,19 @@ export default function Footer() {
           </Box>
 
           {/* Contact Information */}
-          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' }, minWidth: { md: '300px' } }}>
-            <Typography variant="h6" sx={{ mb: 3, color: '#fff', fontWeight: 600 }}>
+          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 35%' }, minWidth: { lg: '350px' } }}>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                mb: 4, 
+                color: '#fff', 
+                fontWeight: 700,
+                fontSize: { xs: '1.5rem', md: '1.75rem' }
+              }}
+            >
               Contact Information
             </Typography>
-            <Stack spacing={2}>
+            <Stack spacing={3}>
               {contactInfo.map((contact, index) => (
                 <Box
                   key={index}
@@ -249,33 +321,53 @@ export default function Footer() {
                     display: 'flex',
                     alignItems: 'center',
                     cursor: contact.action ? 'pointer' : 'default',
+                    p: 2,
+                    borderRadius: 2,
                     '&:hover': contact.action ? {
-                      transform: 'translateX(5px)',
-                      transition: 'transform 0.3s ease',
+                      transform: 'translateX(8px)',
+                      backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                      transition: 'all 0.3s ease',
                     } : {},
                   }}
                   onClick={contact.action || undefined}
                 >
                   <Box
                     sx={{
-                      backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                      backgroundColor: 'rgba(139, 69, 19, 0.2)',
                       borderRadius: '50%',
-                      p: 1,
-                      mr: 2,
+                      p: 2,
+                      mr: 3,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      minWidth: 56,
+                      minHeight: 56,
                     }}
                   >
                     {React.cloneElement(contact.icon, { 
-                      sx: { fontSize: 20, color: '#8B4513' } 
+                      sx: { fontSize: 28, color: '#8B4513' } 
                     })}
                   </Box>
                   <Box>
-                    <Typography variant="body2" sx={{ color: '#8B4513', fontWeight: 600 }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        color: '#8B4513', 
+                        fontWeight: 700,
+                        fontSize: { xs: '1.1rem', md: '1.2rem' },
+                        mb: 0.5
+                      }}
+                    >
                       {contact.label}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        color: '#d0d0d0',
+                        fontSize: { xs: '1rem', md: '1.1rem' },
+                        fontWeight: 400
+                      }}
+                    >
                       {contact.value}
                     </Typography>
                   </Box>
@@ -284,27 +376,89 @@ export default function Footer() {
             </Stack>
 
             {/* Opening Hours */}
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" sx={{ mb: 2, color: '#fff', fontWeight: 600 }}>
+            <Box sx={{ mt: 5 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  mb: 3, 
+                  color: '#fff', 
+                  fontWeight: 700,
+                  fontSize: { xs: '1.4rem', md: '1.6rem' }
+                }}
+              >
                 Opening Hours
               </Typography>
-              <Stack spacing={1}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Monday - Friday</Typography>
-                  <Typography variant="body2" sx={{ color: '#8B4513', fontWeight: 600 }}>7:00 AM - 10:00 PM</Typography>
+              <Stack spacing={2}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#d0d0d0',
+                      fontSize: { xs: '1rem', md: '1.1rem' },
+                      fontWeight: 500
+                    }}
+                  >
+                    Monday - Friday
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#8B4513', 
+                      fontWeight: 700,
+                      fontSize: { xs: '1rem', md: '1.1rem' }
+                    }}
+                  >
+                    7:00 AM - 10:00 PM
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Saturday - Sunday</Typography>
-                  <Typography variant="body2" sx={{ color: '#8B4513', fontWeight: 600 }}>8:00 AM - 11:00 PM</Typography>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#d0d0d0',
+                      fontSize: { xs: '1rem', md: '1.1rem' },
+                      fontWeight: 500
+                    }}
+                  >
+                    Saturday - Sunday
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#8B4513', 
+                      fontWeight: 700,
+                      fontSize: { xs: '1rem', md: '1.1rem' }
+                    }}
+                  >
+                    8:00 AM - 11:00 PM
+                  </Typography>
                 </Box>
                 <Chip
                   label="24/7 Online Ordering"
-                  size="small"
+                  size="large"
                   sx={{
-                    backgroundColor: 'rgba(139, 69, 19, 0.2)',
+                    backgroundColor: 'rgba(139, 69, 19, 0.25)',
                     color: '#8B4513',
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    height: 48,
                     alignSelf: 'flex-start',
+                    '& .MuiChip-label': {
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                    }
                   }}
                 />
               </Stack>
@@ -314,44 +468,80 @@ export default function Footer() {
       </Container>
 
       {/* Bottom Section */}
-      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.15)', borderWidth: 2 }} />
       
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', md: 'row' },
           justifyContent: 'space-between',
           alignItems: { xs: 'center', md: 'center' },
-          gap: 2
+          gap: 3
         }}>
-          <Typography variant="body2" sx={{ color: '#b0b0b0', textAlign: { xs: 'center', md: 'left' } }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#d0d0d0', 
+              textAlign: { xs: 'center', md: 'left' },
+              fontSize: { xs: '1rem', md: '1.1rem' },
+              fontWeight: 500
+            }}
+          >
             © {currentYear} Cafert. All rights reserved. Made with{' '}
-            <HeartIcon sx={{ fontSize: 16, color: '#8B4513', verticalAlign: 'middle' }} />
+            <HeartIcon sx={{ fontSize: 20, color: '#8B4513', verticalAlign: 'middle' }} />
             {' '}for coffee lovers.
           </Typography>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Link to="/privacy" style={{ textDecoration: 'none' }}>
-              <Typography variant="body2" sx={{ color: '#b0b0b0', '&:hover': { color: '#8B4513' } }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#d0d0d0', 
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: '#8B4513',
+                    fontWeight: 600,
+                  } 
+                }}
+              >
                 Privacy Policy
               </Typography>
             </Link>
             <Link to="/terms" style={{ textDecoration: 'none' }}>
-              <Typography variant="body2" sx={{ color: '#b0b0b0', '&:hover': { color: '#8B4513' } }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#d0d0d0', 
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: '#8B4513',
+                    fontWeight: 600,
+                  } 
+                }}
+              >
                 Terms of Service
               </Typography>
             </Link>
             <IconButton
               onClick={scrollToTop}
               sx={{
-                backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                backgroundColor: 'rgba(139, 69, 19, 0.2)',
                 color: '#8B4513',
+                width: 56,
+                height: 56,
                 '&:hover': {
                   backgroundColor: '#8B4513',
                   color: '#fff',
-                  transform: 'translateY(-2px)',
+                  transform: 'translateY(-4px) scale(1.1)',
+                  boxShadow: '0 8px 25px rgba(139, 69, 19, 0.4)',
                 },
-                transition: 'all 0.3s ease',
+                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                '& svg': {
+                  fontSize: 28,
+                }
               }}
             >
               <ArrowUpIcon />

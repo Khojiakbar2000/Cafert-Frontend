@@ -4,94 +4,66 @@ import {
   Container,
   Typography,
   Button,
+  Grid,
   Card,
   CardContent,
   CardMedia,
+  Chip,
   IconButton,
+  useTheme,
+  useMediaQuery,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  AppBar,
+  Toolbar,
   Avatar,
-  Grid,
   Dialog,
   TextField
 } from '@mui/material';
-import HeroSection from '../../app/components/HeroSection';
+import { useTranslation } from 'react-i18next';
 import {
+  Menu as MenuIcon,
+  Close as CloseIcon,
+  Home as HomeIcon,
+  LocalCafe as CoffeeIcon,
+  Help as HelpIcon,
+  Star as StarIcon,
+  KeyboardArrowLeft as ArrowLeftIcon,
+  KeyboardArrowRight as ArrowRightIcon,
+  Person as PersonIcon,
+  CheckCircle as CheckCircleIcon,
   Facebook as FacebookIcon,
   Instagram as InstagramIcon,
   Twitter as TwitterIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  Star as StarIcon,
-  LocalCafe as CafeIcon,
   Restaurant as RestaurantIcon,
-  Coffee as CoffeeIcon,
-  KeyboardArrowLeft as ArrowLeftIcon,
-  KeyboardArrowRight as ArrowRightIcon,
-  Person as PersonIcon,
-  Favorite as FavoriteIcon,
+  Coffee as CafeIcon,
   ShoppingCart as ShoppingCartIcon,
+  Favorite as FavoriteIcon,
   Visibility as VisibilityIcon,
-  Close as CloseIcon,
-  CheckCircle as CheckCircleIcon
+  TrendingUp as TrendingUpIcon,
+  Logout as LogoutIcon
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme as useThemeContext } from '../context/ThemeContext';
+import { useGlobals } from '../../app/hooks/useGlobals';
+import ActivityService from '../../app/services/ActivityService';
+import ProductService from '../../app/services/ProductService';
+import MemberService from '../../app/services/MemberService';
 import ThemeToggle from '../components/ThemeToggle';
 import LanguageToggle from '../components/LanguageToggle';
+import HeroSection from '../../app/components/HeroSection';
 import NewsletterSubscription from '../components/NewsletterSubscription';
 import FloatingStyleSwitcher from '../components/FloatingStyleSwitcher';
-import { useTheme as useThemeContext } from '../context/ThemeContext';
-
-// Global Styles for Animations
-const globalStyles = `
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.05);
-      opacity: 0.8;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-      transform: translateY(0);
-    }
-    40% {
-      transform: translateY(-10px);
-    }
-    60% {
-      transform: translateY(-5px);
-    }
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes steam {
-    0% {
-      opacity: 0;
-      transform: translateY(0) scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: translateY(-20px) scale(1.2);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-40px) scale(0.8);
-    }
-  }
-`;
+import StorytellingTimeline from '../components/StorytellingTimeline';
+import { coffeeShopTimelineData } from '../components/TimelineData';
+import { Product } from '../../lib/types/product';
+import { UserActivity, RecentActivity, ActiveUsersStats } from '../../app/services/ActivityService';
+import { serverApi } from '../../lib/config';
 
 interface CoffeeHomePageProps {
   setSignupOpen?: (isOpen: boolean) => void;
@@ -102,12 +74,14 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
   setSignupOpen, 
   setLoginOpen 
 }: CoffeeHomePageProps) => {
+  const { t, i18n } = useTranslation();
   const { isDarkMode, toggleTheme, colors } = useThemeContext();
+  const { authMember, setAuthMember } = useGlobals();
   const [activeMenuTab, setActiveMenuTab] = useState('popular-coffees');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
   const [reservationOpen, setReservationOpen] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(false);
@@ -121,19 +95,145 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     specialRequests: ''
   });
   
+  // New state for real products
+  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
+  const [freshProducts, setFreshProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // New state for real active users data
+  const [userProfiles, setUserProfiles] = useState<UserActivity[]>([]);
+  const [activeUsersStats, setActiveUsersStats] = useState<ActiveUsersStats>({
+    totalActive: 0,
+    onlineUsers: 0,
+    recentJoiners: 0
+  });
+  
   // Refs for smooth scrolling
   const heroRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
+  
+  // Mobile menu state
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Force re-render when language changes
+  const currentLanguage = i18n.language;
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      const memberService = new MemberService();
+      await memberService.logout();
+      setAuthMember(null);
+      // Optionally redirect to home or show success message
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error logging out:', error);
+      // Still clear the auth state even if API call fails
+      setAuthMember(null);
+      localStorage.removeItem('memberData');
+      window.location.href = '/';
+    }
+  };
+
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const productService = new ProductService();
+        
+        // Fetch popular products (by views) - backend handles sorting
+        const popularData = await productService.getProducts({
+          page: 1,
+          limit: 6,
+          order: "productViews" // Backend sorts by views
+        });
+        
+        // Fetch fresh products (by creation date) - backend handles sorting
+        const freshData = await productService.getProducts({
+          page: 1,
+          limit: 6,
+          order: "createdAt" // Backend sorts by creation date
+        });
+        
+        setPopularProducts(popularData);
+        setFreshProducts(freshData);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to empty arrays if API fails
+        setPopularProducts([]);
+        setFreshProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Transform backend products to frontend format
+  const transformProduct = (product: Product, isPopular: boolean = false, isFresh: boolean = false) => {
+    // Use your beautiful coffee images as fallbacks
+    const coffeeImages = [
+      '/img/coffee-1.webp',
+      '/img/coffee-2.webp', 
+      '/img/coffee-3.webp',
+      '/img/coffee-4.webp',
+      '/coffee-latte.jpg',
+      '/coffee-espresso.jpg'
+    ];
+    
+    const foodImages = [
+      '/img/kebab.webp',
+      '/img/lavash.webp',
+      '/img/cutlet.webp',
+      '/img/doner.webp',
+      '/img/seafood.webp',
+      '/img/sweets.webp'
+    ];
+    
+    const fallbackImage = isPopular 
+      ? coffeeImages[Math.floor(Math.random() * coffeeImages.length)]
+      : foodImages[Math.floor(Math.random() * foodImages.length)];
+    
+    return {
+      id: product._id,
+      name: product.productName,
+      price: `$${product.productPrice}`,
+      image: product.productImages?.[0] ? `${serverApi}${product.productImages[0]}` : fallbackImage,
+      description: product.productDesc || 'Delicious product from our menu',
+      ingredients: 'Fresh ingredients',
+      rating: 4.5 + (Math.random() * 0.5), // Random rating between 4.5-5.0
+      orders: product.productViews || Math.floor(Math.random() * 1000) + 100,
+      isPopular: isPopular,
+      isNew: isFresh,
+      views: product.productViews || 0,
+      createdAt: product.createdAt
+    };
+  };
+
+  // Dynamic menu items based on real data
   const menuItems = {
+    'popular-coffees': popularProducts.map(product => transformProduct(product, true, false)),
+    'fresh-menu': freshProducts.map(product => transformProduct(product, false, true))
+  };
+
+  // Fallback menu items if no data is available - using your beautiful coffee images
+  const fallbackMenuItems = {
     'popular-coffees': [
       { 
         id: 1, 
         name: 'Classic Espresso', 
         price: '$3.50', 
-        image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop', 
+        image: '/img/coffee-1.webp', 
         description: 'Rich and bold Italian espresso with perfect crema', 
         ingredients: 'Premium Arabica beans, filtered water',
         rating: 4.9,
@@ -144,7 +244,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 2, 
         name: 'Cappuccino Deluxe', 
         price: '$4.80', 
-        image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop', 
+        image: '/img/coffee-2.webp', 
         description: 'Perfectly balanced with velvety steamed milk and rich foam', 
         ingredients: 'Espresso, whole milk, microfoam',
         rating: 4.8,
@@ -155,7 +255,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 3, 
         name: 'Caramel Latte', 
         price: '$5.20', 
-        image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=300&fit=crop', 
+        image: '/img/coffee-3.webp', 
         description: 'Smooth espresso with caramel and steamed milk', 
         ingredients: 'Espresso, caramel syrup, steamed milk',
         rating: 4.7,
@@ -164,129 +264,154 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       },
       { 
         id: 4, 
-        name: 'Mocha Supreme', 
+        name: 'Mocha Delight', 
         price: '$5.50', 
-        image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop', 
-        description: 'Rich chocolate and espresso with whipped cream', 
-        ingredients: 'Espresso, dark chocolate, steamed milk, cream',
+        image: '/img/coffee-4.webp', 
+        description: 'Rich chocolate and espresso blend with steamed milk', 
+        ingredients: 'Espresso, chocolate syrup, steamed milk, whipped cream',
         rating: 4.6,
         orders: 720,
         isPopular: true
       },
       { 
         id: 5, 
-        name: 'Americano Classic', 
-        price: '$3.20', 
-        image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop', 
-        description: 'Bold espresso diluted with hot water for a clean taste', 
-        ingredients: 'Espresso, hot water',
-        rating: 4.5,
-        orders: 650,
+        name: 'Vanilla Latte', 
+        price: '$4.90', 
+        image: '/coffee-latte.jpg', 
+        description: 'Smooth vanilla-infused latte with perfect foam', 
+        ingredients: 'Espresso, vanilla syrup, steamed milk, microfoam',
+        rating: 4.8,
+        orders: 890,
         isPopular: true
       },
       { 
         id: 6, 
-        name: 'Macchiato Art', 
+        name: 'Americano Classic', 
         price: '$3.80', 
-        image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop', 
-        description: 'Espresso "marked" with a touch of steamed milk', 
-        ingredients: 'Espresso, small amount of steamed milk',
-        rating: 4.4,
-        orders: 580,
+        image: '/coffee-espresso.jpg', 
+        description: 'Bold espresso with hot water for a clean, strong taste', 
+        ingredients: 'Espresso, hot water',
+        rating: 4.7,
+        orders: 650,
         isPopular: true
       }
     ],
     'fresh-menu': [
       { 
         id: 7, 
-        name: 'Avocado Toast Deluxe', 
-        price: '$12.50', 
-        image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400&h=300&fit=crop', 
-        description: 'Fresh avocado on artisan sourdough with microgreens', 
-        ingredients: 'Sourdough bread, ripe avocado, microgreens, sea salt',
-        rating: 4.8,
-        orders: 420,
+        name: 'Gourmet Kebab Plate', 
+        price: '$18.50', 
+        image: '/img/kebab.webp', 
+        description: 'Fresh kebab with premium meat and authentic spices', 
+        ingredients: 'Premium lamb, fresh vegetables, authentic spices, pita bread',
+        rating: 4.9,
+        orders: 520,
         isNew: true
       },
       { 
         id: 8, 
-        name: 'Acai Power Bowl', 
-        price: '$14.00', 
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop', 
-        description: 'Fresh acai with granola, berries, and honey', 
-        ingredients: 'Acai puree, granola, mixed berries, honey, coconut',
-        rating: 4.9,
-        orders: 380,
+        name: 'Lavash Wrap Deluxe', 
+        price: '$16.00', 
+        image: '/img/lavash.webp', 
+        description: 'Fresh lavash wrap with tender meat and vegetables', 
+        ingredients: 'Lavash bread, tender meat, fresh vegetables, special sauce',
+        rating: 4.8,
+        orders: 480,
         isNew: true
       },
       { 
         id: 9, 
-        name: 'Quinoa Buddha Bowl', 
-        price: '$16.50', 
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop', 
-        description: 'Nutritious quinoa with roasted vegetables and tahini', 
-        ingredients: 'Quinoa, roasted vegetables, tahini sauce, seeds',
+        name: 'Cutlet Special', 
+        price: '$19.50', 
+        image: '/img/cutlet.webp', 
+        description: 'Crispy cutlet with golden breading and tender meat', 
+        ingredients: 'Premium meat, golden breading, fresh herbs, special seasoning',
         rating: 4.7,
-        orders: 320,
+        orders: 420,
         isNew: true
       },
       { 
         id: 10, 
-        name: 'Eggs Benedict Royal', 
-        price: '$18.00', 
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop', 
-        description: 'Poached eggs with hollandaise on English muffin', 
-        ingredients: 'Fresh eggs, English muffin, ham, hollandaise sauce',
+        name: 'Fresh Doner', 
+        price: '$15.00', 
+        image: '/img/doner.webp', 
+        description: 'Traditional doner with authentic preparation', 
+        ingredients: 'Marinated meat, fresh vegetables, traditional spices',
         rating: 4.8,
-        orders: 450,
+        orders: 380,
         isNew: true
       },
       { 
         id: 11, 
-        name: 'Chia Pudding Paradise', 
-        price: '$11.00', 
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop', 
-        description: 'Overnight chia pudding with fresh fruits and nuts', 
-        ingredients: 'Chia seeds, almond milk, fresh fruits, nuts, honey',
-        rating: 4.6,
-        orders: 280,
+        name: 'Seafood Delight', 
+        price: '$22.00', 
+        image: '/img/seafood.webp', 
+        description: 'Fresh seafood selection with premium quality', 
+        ingredients: 'Fresh seafood, herbs, lemon, special sauce',
+        rating: 4.9,
+        orders: 320,
         isNew: true
       },
       { 
         id: 12, 
-        name: 'Smoothie Bowl Sunrise', 
-        price: '$13.50', 
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop', 
-        description: 'Vibrant smoothie bowl with tropical fruits and granola', 
-        ingredients: 'Mixed tropical fruits, yogurt, granola, coconut, seeds',
-        rating: 4.7,
-        orders: 340,
+        name: 'Sweet Treats', 
+        price: '$8.50', 
+        image: '/img/sweets.webp', 
+        description: 'Delicious sweet treats and desserts', 
+        ingredients: 'Premium ingredients, fresh preparation, special recipes',
+        rating: 4.8,
+        orders: 280,
         isNew: true
       }
     ]
   };
 
-  const testimonials = [
+  // Use real data if available, otherwise use fallback
+  const currentMenuItems = {
+    'popular-coffees': menuItems['popular-coffees'].length > 0 ? menuItems['popular-coffees'] : fallbackMenuItems['popular-coffees'],
+    'fresh-menu': menuItems['fresh-menu'].length > 0 ? menuItems['fresh-menu'] : fallbackMenuItems['fresh-menu']
+  };
+
+  // Dynamic testimonials using active users data when available
+  const testimonials = userProfiles.length > 0 ? userProfiles.slice(0, 4).map((user, index) => ({
+    id: index + 1,
+    text: [
+      "The best coffee I've ever tasted! The atmosphere is perfect for working and the staff is incredibly friendly.",
+      "Amazing food and coffee. This place has become my go-to spot for meetings and casual dining.",
+      "Perfect blend of comfort and quality. The pastries are to die for and the coffee is consistently excellent.",
+      "Exceptional service and the most delicious coffee in town. I love the cozy atmosphere!"
+    ][index],
+    author: user.name || `User ${index + 1}`,
+    rating: 5,
+    avatar: user.avatar || `/img/rose.webp`
+  })) : [
     {
       id: 1,
       text: "The best coffee I've ever tasted! The atmosphere is perfect for working and the staff is incredibly friendly.",
       author: "Sarah Johnson",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face"
+      avatar: "/img/rose.webp"
     },
     {
       id: 2,
       text: "Amazing food and coffee. This place has become my go-to spot for meetings and casual dining.",
       author: "Michael Chen",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"
+      avatar: "/img/martin.webp"
     },
     {
       id: 3,
       text: "Perfect blend of comfort and quality. The pastries are to die for and the coffee is consistently excellent.",
       author: "Emily Rodriguez",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face"
+      avatar: "/img/justin.webp"
+    },
+    {
+      id: 4,
+      text: "Exceptional service and the most delicious coffee in town. I love the cozy atmosphere!",
+      author: "Nusret Gökçe",
+      rating: 5,
+      avatar: "/img/nusret.webp"
     }
   ];
 
@@ -333,45 +458,53 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     'booked a table for tonight'
   ];
 
-  // User profiles for active users (4 users)
-  const userProfiles = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face',
-      status: 'online',
-      lastActivity: '2 min ago',
-      activity: 'Ordered Caramel Latte',
-      location: 'New York, NY'
-    },
-    {
-      id: 2,
-      name: 'Mike Chen',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face',
-      status: 'online',
-      lastActivity: '1 min ago',
-      activity: 'Browsing menu',
-      location: 'San Francisco, CA'
-    },
-    {
-      id: 3,
-      name: 'Emma Rodriguez',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
-      status: 'online',
-      lastActivity: '3 min ago',
-      activity: 'Added to favorites',
-      location: 'Los Angeles, CA'
-    },
-    {
-      id: 4,
-      name: 'Alex Thompson',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
-      status: 'online',
-      lastActivity: 'just now',
-      activity: 'Joined community',
-      location: 'Chicago, IL'
-    }
-  ];
+  // Fetch active users and activities from backend
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const fetchActiveUsersData = async () => {
+      try {
+        const activityService = new ActivityService();
+        
+        // Fetch active users
+        const activeUsersData = await activityService.getActiveUsers();
+        if (isMounted) {
+          setUserProfiles(activeUsersData);
+        }
+        
+        // Fetch recent activities
+        const activitiesData = await activityService.getRecentActivities();
+        if (isMounted) {
+          setRecentActivities(activitiesData);
+        }
+        
+        // Fetch active users stats
+        const statsData = await activityService.getActiveUsersStats();
+        if (isMounted) {
+          setActiveUsersStats(statsData);
+          setActiveUsers(statsData.totalActive);
+        }
+        
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error fetching active users data:', error);
+          // Fallback data is handled in the service
+        }
+      }
+    };
+
+    fetchActiveUsersData();
+    
+    // Refresh data every 60 seconds instead of 30 to reduce API calls
+    const interval = setInterval(fetchActiveUsersData, 60000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      abortController.abort();
+    };
+  }, []);
 
   // Scroll handling
   useEffect(() => {
@@ -383,66 +516,10 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Active users simulation
+  // Auto-rotate carousel for active users
   useEffect(() => {
-    // Simulate active users count
-    const updateActiveUsers = () => {
-      const baseUsers = 45;
-      const randomVariation = Math.floor(Math.random() * 20) - 10;
-      setActiveUsers(Math.max(30, baseUsers + randomVariation));
-    };
-
-    // Initial update
-    updateActiveUsers();
-
-    // Update every 5 seconds
-    const interval = setInterval(updateActiveUsers, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Recent activities simulation
-  useEffect(() => {
-    const generateActivity = () => {
-      const randomUser = userProfiles[Math.floor(Math.random() * userProfiles.length)];
-      const randomMessage = activityMessages[Math.floor(Math.random() * activityMessages.length)];
-      const randomType = activityTypes[Math.floor(Math.random() * activityTypes.length)];
-      
-      return {
-        id: Date.now(),
-        name: randomUser.name,
-        avatar: randomUser.avatar,
-        message: randomMessage,
-        type: randomType.type,
-        icon: randomType.icon,
-        color: randomType.color,
-        time: 'just now'
-      };
-    };
-
-    const addActivity = () => {
-      setRecentActivities(prev => {
-        const newActivity = generateActivity();
-        const updated = [newActivity, ...prev.slice(0, 4)]; // Keep only 5 activities
-        return updated;
-      });
-    };
-
-    // Add initial activities
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => addActivity(), i * 1000);
-    }
-
-    // Add new activity every 3-8 seconds
-    const interval = setInterval(() => {
-      addActivity();
-    }, Math.random() * 5000 + 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-rotate carousel
-  useEffect(() => {
+    if (userProfiles.length === 0) return;
+    
     const autoRotate = setInterval(() => {
       setCurrentUserIndex((prev) => (prev + 1) % userProfiles.length);
     }, 4000); // Change user every 4 seconds
@@ -536,6 +613,49 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     }));
   };
 
+  // Track user activity when they perform actions
+  const trackUserActivity = async (type: 'order' | 'favorite' | 'view' | 'join', productId?: string) => {
+    try {
+      const memberData = localStorage.getItem("memberData");
+      if (memberData) {
+        const member = JSON.parse(memberData);
+        const activityService = new ActivityService();
+        await activityService.trackUserActivity({
+          type,
+          productId,
+          memberId: member._id
+        });
+      }
+    } catch (error) {
+      console.error('Error tracking user activity:', error);
+      // Silently fail - don't break user experience
+    }
+  };
+
+  // Track product view when user clicks on a product
+  const handleProductClick = (productId: string) => {
+    trackUserActivity('view', productId);
+  };
+
+  // Global styles for the page
+  const globalStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .scroll-smooth {
+      scroll-behavior: smooth;
+    }
+  `;
+
   return (
     <Box sx={{
       backgroundColor: colors.background,
@@ -546,6 +666,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     }}>
       {/* Global Styles */}
       <style>{globalStyles}</style>
+
+
 
       {/* Header */}
       <Box sx={{
@@ -582,7 +704,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             
             {/* Navigation Links */}
             <Box sx={{ 
-              display: { xs: 'none', md: 'flex' }, 
+              display: 'flex', 
               alignItems: 'center', 
               gap: 6,
               mx: 4
@@ -624,11 +746,11 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   }
                 }}
               >
-                Home
+                {t('navigation.home')}
               </Typography>
               <Typography
                 variant="body1"
-                onClick={() => window.location.href = '/coffees'}
+                onClick={() => window.location.href = '/products'}
                 sx={{
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,
@@ -663,20 +785,33 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   }
                 }}
               >
-                Menu
+                {t('navigation.menu')}
               </Typography>
-              <Typography
-                variant="body1"
-                onClick={() => window.location.href = '/orders'}
-                sx={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '18px',
-                  color: isDarkMode ? colors.text : '#6B4F4F',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  '&:hover': {
-                    color: isDarkMode ? colors.accent : '#8B6B6B',
+              {authMember && (
+                <Typography
+                  variant="body1"
+                  onClick={() => window.location.href = '/orders'}
+                  sx={{
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '18px',
+                    color: isDarkMode ? colors.text : '#6B4F4F',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    '&:hover': {
+                      color: isDarkMode ? colors.accent : '#8B6B6B',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: '-4px',
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                        transform: 'scaleX(1)',
+                        transition: 'transform 0.3s ease'
+                      }
+                    },
                     '&::after': {
                       content: '""',
                       position: 'absolute',
@@ -685,37 +820,39 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       right: 0,
                       height: '2px',
                       backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
-                      transform: 'scaleX(1)',
+                      transform: 'scaleX(0)',
                       transition: 'transform 0.3s ease'
                     }
-                  },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: '-4px',
-                    left: 0,
-                    right: 0,
-                    height: '2px',
-                    backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
-                    transform: 'scaleX(0)',
-                    transition: 'transform 0.3s ease'
-                  }
-                }}
-              >
-                Orders
-              </Typography>
-              <Typography
-                variant="body1"
-                onClick={() => window.location.href = '/member-page'}
-                sx={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '18px',
-                  color: isDarkMode ? colors.text : '#6B4F4F',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  '&:hover': {
-                    color: isDarkMode ? colors.accent : '#8B6B6B',
+                  }}
+                >
+                  {t('navigation.orders')}
+                </Typography>
+              )}
+              {authMember && (
+                <Typography
+                  variant="body1"
+                  onClick={() => window.location.href = '/user-profile'}
+                  sx={{
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '18px',
+                    color: isDarkMode ? colors.text : '#6B4F4F',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    '&:hover': {
+                      color: isDarkMode ? colors.accent : '#8B6B6B',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: '-4px',
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                        transform: 'scaleX(1)',
+                        transition: 'transform 0.3s ease'
+                      }
+                    },
                     '&::after': {
                       content: '""',
                       position: 'absolute',
@@ -724,25 +861,14 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       right: 0,
                       height: '2px',
                       backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
-                      transform: 'scaleX(1)',
+                      transform: 'scaleX(0)',
                       transition: 'transform 0.3s ease'
                     }
-                  },
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: '-4px',
-                    left: 0,
-                    right: 0,
-                    height: '2px',
-                    backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
-                    transform: 'scaleX(0)',
-                    transition: 'transform 0.3s ease'
-                  }
-                }}
-              >
-                Member
-              </Typography>
+                  }}
+                >
+                  {t('navigation.profile')}
+                </Typography>
+              )}
               <Typography
                 variant="body1"
                 onClick={() => window.location.href = '/help'}
@@ -780,53 +906,477 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   }
                 }}
               >
-                Help
+                {t('navigation.about')}
               </Typography>
             </Box>
             
-            {/* Right side controls */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
-              <LanguageToggle isDarkMode={isDarkMode} />
-              <Button
-                variant="contained"
-                onClick={handleSignup}
+            {/* Stats Button */}
+            {authMember && (
+              <Typography
+                variant="body1"
+                onClick={() => window.location.href = '/stats'}
                 sx={{
-                  backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
-                  color: isDarkMode ? colors.background : '#F8F4F0',
-                  fontWeight: 600,
-                  fontSize: '20px',
                   fontFamily: 'Poppins, sans-serif',
-                  px: { xs: 4, md: 5 },
-                  py: 2,
-                  borderRadius: '8px',
+                  fontWeight: 500,
+                  fontSize: '18px',
+                  color: isDarkMode ? colors.text : '#6B4F4F',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  mr: 4,
                   '&:hover': {
-                    backgroundColor: isDarkMode ? colors.accentDark : '#8B6B6B',
-                    transform: 'translateY(-2px)'
+                    color: isDarkMode ? colors.accent : '#8B6B6B',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: '-4px',
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                      transform: 'scaleX(1)',
+                      transition: 'transform 0.3s ease'
+                    }
                   },
-                  transition: 'all 0.3s ease'
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '-4px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                    transform: 'scaleX(0)',
+                    transition: 'transform 0.3s ease'
+                  }
                 }}
               >
-                Sign Up
-              </Button>
+                {t('navigation.analytics')}
+              </Typography>
+            )}
+            
+            {/* Right side controls */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
+              <LanguageToggle isDarkMode={isDarkMode} />
+              
+              {/* Show login/signup buttons only when not authenticated */}
+              {!authMember ? (
+                <>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setLoginOpen && setLoginOpen(true)}
+                    sx={{
+                      borderColor: isDarkMode ? colors.accent : '#6B4F4F',
+                      color: isDarkMode ? colors.accent : '#6B4F4F',
+                      fontWeight: 600,
+                      fontSize: '18px',
+                      fontFamily: 'Poppins, sans-serif',
+                      px: { xs: 3, md: 4 },
+                      py: 1.5,
+                      borderRadius: '8px',
+                      '&:hover': {
+                        borderColor: isDarkMode ? colors.accentDark : '#8B6B6B',
+                        backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)',
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {t('common.login')}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleSignup}
+                    sx={{
+                      backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                      color: isDarkMode ? colors.background : '#F8F4F0',
+                      fontWeight: 600,
+                      fontSize: '20px',
+                      fontFamily: 'Poppins, sans-serif',
+                      px: { xs: 4, md: 5 },
+                      py: 2,
+                      borderRadius: '8px',
+                      whiteSpace: 'nowrap',
+                      textTransform: 'none',
+                      '&:hover': {
+                        backgroundColor: isDarkMode ? colors.accentDark : '#8B6B6B',
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {t('common.signup')}
+                  </Button>
+                </>
+              ) : (
+                /* Show user info when authenticated */
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: isDarkMode ? colors.text : '#6B4F4F',
+                      fontWeight: 500,
+                      fontSize: '16px',
+                      fontFamily: 'Poppins, sans-serif',
+                    }}
+                  >
+                    {t('common.welcome')}, {authMember.memberNick || t('common.user')}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    sx={{
+                      borderColor: isDarkMode ? colors.accent : '#6B4F4F',
+                      color: isDarkMode ? colors.accent : '#6B4F4F',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      fontFamily: 'Poppins, sans-serif',
+                      px: 2,
+                      py: 1,
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      '&:hover': {
+                        borderColor: isDarkMode ? colors.accentDark : '#8B6B6B',
+                        backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.05)',
+                        transform: 'translateY(-1px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {t('navigation.logout')}
+                  </Button>
+                </Box>
+              )}
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="start"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    color: isDarkMode ? colors.text : '#6B4F4F',
+                    '&:hover': { 
+                      color: isDarkMode ? colors.accent : '#8B6B6B',
+                      backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)'
+                    }
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
             </Box>
           </Box>
         </Container>
       </Box>
 
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: 280,
+            backgroundColor: isDarkMode ? 'rgba(26, 26, 26, 0.95)' : 'rgba(248, 244, 240, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: isDarkMode ? `1px solid ${colors.border}` : '1px solid rgba(107, 79, 79, 0.1)',
+          },
+        }}
+      >
+        <Box sx={{ width: 280, pt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, mb: 3 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                color: isDarkMode ? colors.accent : '#6B4F4F',
+                fontWeight: 700,
+                fontStyle: 'italic',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Cafert
+            </Typography>
+            <IconButton onClick={handleDrawerToggle} sx={{ color: isDarkMode ? colors.text : '#6B4F4F' }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <List>
+            <ListItem
+              onClick={() => {
+                scrollToTop();
+                handleDrawerToggle();
+              }}
+              sx={{
+                color: isDarkMode ? colors.text : '#6B4F4F',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary={t('nav.home')} />
+            </ListItem>
+            <ListItem
+              onClick={() => {
+                window.location.href = '/products';
+                handleDrawerToggle();
+              }}
+              sx={{
+                color: isDarkMode ? colors.text : '#6B4F4F',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <CoffeeIcon />
+              </ListItemIcon>
+              <ListItemText primary={t('nav.menu')} />
+            </ListItem>
+            {authMember && (
+              <ListItem
+                onClick={() => {
+                  window.location.href = '/stats';
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  color: isDarkMode ? colors.text : '#6B4F4F',
+                  '&:hover': {
+                    backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <TrendingUpIcon />
+                </ListItemIcon>
+                <ListItemText primary={t('navigation.analytics')} />
+              </ListItem>
+            )}
+            <ListItem
+              onClick={() => {
+                window.location.href = '/help';
+                handleDrawerToggle();
+              }}
+              sx={{
+                color: isDarkMode ? colors.text : '#6B4F4F',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'inherit' }}>
+                <HelpIcon />
+              </ListItemIcon>
+              <ListItemText primary={t('navigation.help')} />
+            </ListItem>
+          </List>
+
+          <Divider sx={{ my: 2, borderColor: isDarkMode ? colors.border : 'rgba(107, 79, 79, 0.2)' }} />
+
+          {/* Mobile Stats Section */}
+          <Box sx={{ p: 2, mb: 2 }}>
+            <Typography variant="h6" sx={{
+              color: isDarkMode ? colors.accent : '#6B4F4F',
+              fontWeight: 600,
+              fontSize: '1rem',
+              fontFamily: 'Poppins, sans-serif',
+              mb: 2,
+              textAlign: 'center'
+            }}>
+              {t('common.communityStats')}
+            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-around',
+              p: 2,
+              borderRadius: '8px',
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(107, 79, 79, 0.05)',
+              border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(107, 79, 79, 0.1)'}`
+            }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{
+                  color: isDarkMode ? colors.accent : '#6B4F4F',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {activeUsersStats.totalActive}
+                </Typography>
+                <Typography variant="caption" sx={{
+                  color: isDarkMode ? colors.textSecondary : '#8B6B6B',
+                  fontSize: '0.7rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {t('common.active')}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{
+                  color: isDarkMode ? colors.accent : '#6B4F4F',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {activeUsersStats.onlineUsers}
+                </Typography>
+                <Typography variant="caption" sx={{
+                  color: isDarkMode ? colors.textSecondary : '#8B6B6B',
+                  fontSize: '0.7rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {t('common.online')}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{
+                  color: isDarkMode ? colors.accent : '#6B4F4F',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {activeUsersStats.recentJoiners}
+                </Typography>
+                <Typography variant="caption" sx={{
+                  color: isDarkMode ? colors.textSecondary : '#8B6B6B',
+                  fontSize: '0.7rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {t('common.new')}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Show login/signup buttons only when not authenticated */}
+          {!authMember ? (
+            <Box sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => {
+                    setLoginOpen && setLoginOpen(true);
+                    handleDrawerToggle();
+                  }}
+                  sx={{
+                    borderColor: isDarkMode ? colors.accent : '#6B4F4F',
+                    color: isDarkMode ? colors.accent : '#6B4F4F',
+                    '&:hover': { 
+                      borderColor: isDarkMode ? colors.accentDark : '#8B6B6B', 
+                      backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.1)' 
+                    }
+                  }}
+                >
+                  {t('common.login')}
+                </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => {
+                    handleSignup();
+                    handleDrawerToggle();
+                  }}
+                  sx={{
+                    backgroundColor: isDarkMode ? colors.accent : '#6B4F4F',
+                    whiteSpace: 'nowrap',
+                    textTransform: 'none',
+                    '&:hover': { backgroundColor: isDarkMode ? colors.accentDark : '#8B6B6B' }
+                  }}
+                >
+                  {t('common.signup')}
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            /* Show user info when authenticated in mobile drawer */
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: isDarkMode ? colors.text : '#6B4F4F',
+                  fontWeight: 500,
+                  fontSize: '16px',
+                  fontFamily: 'Poppins, sans-serif',
+                  mb: 2
+                }}
+              >
+                {t('common.welcome')}, {authMember.memberNick || t('common.user')}
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<LogoutIcon />}
+                onClick={() => {
+                  handleLogout();
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  borderColor: isDarkMode ? colors.accent : '#6B4F4F',
+                  color: isDarkMode ? colors.accent : '#6B4F4F',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  fontFamily: 'Poppins, sans-serif',
+                  px: 3,
+                  py: 1,
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  '&:hover': {
+                    borderColor: isDarkMode ? colors.accentDark : '#8B6B6B',
+                    backgroundColor: isDarkMode ? `${colors.accent}10` : 'rgba(107, 79, 79, 0.05)',
+                  }
+                }}
+              >
+                {t('navigation.logout')}
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Drawer>
+
       {/* Hero Section */}
       <Box ref={heroRef}>
-        <HeroSection />
+        <HeroSection onReservationClick={handleReservationOpen} />
       </Box>
+
+      {/* Storytelling Timeline */}
+      <StorytellingTimeline 
+        title={t('about.title')}
+        subtitle={t('about.subtitle')}
+        items={coffeeShopTimelineData}
+      />
+
+
 
       {/* Happy Coffee Time Section */}
       <Box sx={{
         padding: '6rem 0',
-        backgroundColor: colors.surface,
+        backgroundImage: `url('/coffee-beans.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: isDarkMode 
+            ? 'rgba(0, 0, 0, 0.7)' 
+            : 'rgba(255, 255, 255, 0.9)',
+          zIndex: 1
+        }
       }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
           <Grid container alignItems="center" spacing={6}>
             <Grid item xs={12} md={6}>
               <motion.div
@@ -860,7 +1410,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     fontSize: '0.9rem',
                     textTransform: 'uppercase'
                   }}>
-                    Welcome to
+                    {t('hero.welcome')}
                   </Typography>
                   <Typography variant="h2" sx={{
                     color: colors.text,
@@ -874,7 +1424,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent'
                   }}>
-                    Happy Coffee Time
+                    {t('hero.happyCoffeeTime')}
                   </Typography>
                   <Typography variant="h5" sx={{
                     color: colors.textSecondary,
@@ -884,7 +1434,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     fontSize: { xs: '1.25rem', md: '1.5rem' },
                     lineHeight: 1.4
                   }}>
-                    Where every sip tells a story
+                    {t('hero.whereEverySip')}
                   </Typography>
                   <Typography variant="body1" sx={{
                     color: colors.textSecondary,
@@ -892,8 +1442,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     mb: 4,
                     fontSize: '1.1rem'
                   }}>
-                    Experience the perfect blend of tradition and innovation in every cup. 
-                    Our artisanal coffee creates moments of pure delight that awaken your senses.
+                    {t('hero.experiencePerfect')}
                   </Typography>
                 </motion.div>
               </motion.div>
@@ -1042,7 +1591,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               mb: 2,
               fontFamily: 'Playfair Display, serif'
             }}>
-              Special Menu
+              {t('menu.title')}
             </Typography>
             <Typography variant="h6" sx={{
               color: colors.textSecondary,
@@ -1051,7 +1600,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               mx: 'auto',
               lineHeight: 1.6
             }}>
-              Carefully crafted beverages and delicious treats made with the finest ingredients
+              {t('menu.subtitle')}
             </Typography>
           </Box>
 
@@ -1066,8 +1615,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               border: `1px solid ${colors.border}`
             }}>
               {[
-                { key: 'popular-coffees', label: 'Popular Coffees', icon: '☕' },
-                { key: 'fresh-menu', label: 'Fresh Menu', icon: '🥗' }
+                { key: 'popular-coffees', label: t('menu.popular'), icon: '🔥' },
+                { key: 'fresh-menu', label: t('menu.fresh'), icon: '✨' }
               ].map((tab) => (
                 <Button
                   key={tab.key}
@@ -1105,7 +1654,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
             gap: 4
           }}>
-            {menuItems[activeMenuTab as keyof typeof menuItems].map((item, index) => (
+            {currentMenuItems[activeMenuTab as keyof typeof currentMenuItems].map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 50 }}
@@ -1121,11 +1670,14 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   transition: 'all 0.4s ease',
                   position: 'relative',
                   backgroundColor: colors.surface,
+                  cursor: 'pointer',
                   '&:hover': {
                     boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
                     transform: 'translateY(-8px) scale(1.02)'
                   }
-                }}>
+                }}
+                onClick={() => handleProductClick(item.id)}
+                >
                   {/* Popular/New Badge */}
                   {(item.isPopular || item.isNew) && (
                     <Box sx={{
@@ -1144,7 +1696,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       letterSpacing: '0.5px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                     }}>
-                      {item.isPopular ? '🔥 Popular' : '✨ New'}
+                      {item.isPopular ? `🔥 ${t('common.popular')}` : `✨ ${t('common.new')}`}
                     </Box>
                   )}
 
@@ -1162,6 +1714,11 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           transform: 'scale(1.05)'
                         }
                       }}
+                      onError={(e) => {
+                        console.error('Image failed to load:', item.image);
+                        (e.target as HTMLImageElement).src = '/coffee-placeholder.jpg';
+                      }}
+                      onLoad={() => console.log('Image loaded successfully:', item.image)}
                     />
                     {/* Gradient Overlay */}
                     <Box sx={{
@@ -1197,25 +1754,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       </Typography>
                     </Box>
 
-                    {/* Rating and Orders */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <StarIcon sx={{ color: '#FFD700', fontSize: '1.1rem' }} />
-                        <Typography variant="body2" sx={{ 
-                          color: colors.textSecondary,
-                          fontWeight: 600,
-                          fontSize: '0.9rem'
-                        }}>
-                          {item.rating}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ 
-                        color: colors.textSecondary,
-                        fontSize: '0.85rem'
-                      }}>
-                        ({item.orders} orders)
-                      </Typography>
-                    </Box>
+
 
                     {/* Description */}
                     <Typography variant="body2" sx={{ 
@@ -1255,10 +1794,24 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       {/* Services Section */}
       <Box ref={servicesRef} sx={{
         padding: '6rem 0',
-        backgroundColor: colors.surface,
-        position: 'relative'
+        backgroundImage: `url('/night-mode.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: isDarkMode 
+            ? 'rgba(0, 0, 0, 0.6)' 
+            : 'rgba(255, 255, 255, 0.85)',
+          zIndex: 1
+        }
       }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
           <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Typography variant="overline" sx={{
               color: colors.accent,
@@ -1884,6 +2437,167 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         </Container>
       </Box>
 
+      {/* Image Gallery Section */}
+      <Box sx={{
+        padding: '6rem 0',
+        backgroundColor: colors.surface,
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <Typography variant="overline" sx={{
+                color: colors.accent,
+                fontWeight: 600,
+                letterSpacing: 2,
+                mb: 2,
+                display: 'block'
+              }}>
+                our gallery
+              </Typography>
+              <Typography variant="h2" sx={{
+                color: colors.text,
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                fontWeight: 700,
+                mb: 2,
+                fontFamily: 'Playfair Display, serif'
+              }}>
+                Visual Stories
+              </Typography>
+              <Typography variant="h6" sx={{
+                color: colors.textSecondary,
+                fontSize: { xs: '1.1rem', md: '1.3rem' },
+                maxWidth: '600px',
+                mx: 'auto',
+                lineHeight: 1.6
+              }}>
+                Discover the beauty and atmosphere of Cafert through our curated collection
+              </Typography>
+            </motion.div>
+          </Box>
+
+          {/* Gallery Grid */}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+            gap: 3,
+            mb: 4,
+            maxWidth: '900px',
+            mx: 'auto'
+          }}>
+            {[
+              { src: '/coffee-hero.jpg', alt: 'Coffee Hero', title: 'Perfect Brew' },
+              { src: '/coffee-shop.jpg', alt: 'Coffee Shop Interior', title: 'Cozy Atmosphere' },
+              { src: '/tropical-outdoor-cafe.jpg', alt: 'Outdoor Cafe', title: 'Outdoor Dining' },
+              { src: '/istock-cafe.jpg', alt: 'Modern Cafe', title: 'Modern Design' },
+              { src: '/coffee-gallery.jpg', alt: 'Coffee Gallery', title: 'Coffee Art' },
+              { src: '/coffee-menu.jpg', alt: 'Coffee Menu', title: 'Our Menu' }
+            ].map((image, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -10, scale: 1.02 }}
+              >
+                <Box sx={{
+                  position: 'relative',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    '& .image-overlay': {
+                      opacity: 1
+                    },
+                    '& .gallery-image': {
+                      transform: 'scale(1.1)'
+                    }
+                  }
+                }}>
+                  <Box
+                    component="img"
+                    src={image.src}
+                    alt={image.alt}
+                    className="gallery-image"
+                    sx={{
+                      width: '100%',
+                      height: { xs: '250px', md: '300px' },
+                      objectFit: 'cover',
+                      transition: 'transform 0.4s ease'
+                    }}
+                  />
+                  <Box
+                    className="image-overlay"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease'
+                    }}
+                  >
+                    <Typography variant="h6" sx={{
+                      color: 'white',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                    }}>
+                      {image.title}
+                    </Typography>
+                  </Box>
+                </Box>
+              </motion.div>
+            ))}
+          </Box>
+
+          {/* Gallery CTA */}
+          <Box sx={{ textAlign: 'center', mt: 6 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Button
+                variant="outlined"
+                size="large"
+                sx={{
+                  borderColor: colors.accent,
+                  color: colors.accent,
+                  px: 6,
+                  py: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderRadius: '25px',
+                  '&:hover': {
+                    borderColor: colors.accentDark,
+                    backgroundColor: `${colors.accent}08`,
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                View Full Gallery
+              </Button>
+            </motion.div>
+          </Box>
+        </Container>
+      </Box>
+
       {/* Active Users Section */}
       <Box sx={{
         padding: '6rem 0',
@@ -1928,7 +2642,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                 mb: 2,
                 fontFamily: 'Playfair Display, serif'
               }}>
-                Join Our Active Community
+                {t('home.joinCommunity')}
               </Typography>
               <Typography variant="h6" sx={{
                 color: colors.textSecondary,
@@ -1937,7 +2651,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                 mx: 'auto',
                 lineHeight: 1.6
               }}>
-                See what's happening right now in our coffee community
+                {t('home.communityDescription')}
               </Typography>
             </motion.div>
           </Box>
@@ -1983,7 +2697,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                         backgroundColor: '#4caf50',
                         animation: 'pulse 2s ease-in-out infinite'
                       }} />
-                      Active Users ({activeUsers})
+                      {t('home.activeUsers')} ({activeUsers})
                     </Typography>
                   </Box>
 
@@ -2071,90 +2785,127 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           justifyContent: 'center',
                           mb: 4
                         }}>
-                          <Box
-                            component="img"
-                            src={userProfiles[currentUserIndex].avatar}
-                            alt={userProfiles[currentUserIndex].name}
-                            sx={{
+                          {userProfiles.length > 0 && userProfiles[currentUserIndex] ? (
+                            <>
+                              <Box
+                                component="img"
+                                src={userProfiles[currentUserIndex].avatar}
+                                alt={userProfiles[currentUserIndex].name}
+                                sx={{
+                                  width: 180,
+                                  height: 180,
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: `5px solid ${colors.accent}30`,
+                                  boxShadow: '0 12px 35px rgba(0,0,0,0.2)',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    transform: 'scale(1.05)',
+                                    borderColor: colors.accent,
+                                    boxShadow: '0 16px 45px rgba(0,0,0,0.3)'
+                                  }
+                                }}
+                              />
+                              {/* Online Status */}
+                              <Box sx={{
+                                position: 'absolute',
+                                bottom: 20,
+                                right: '50%',
+                                transform: 'translateX(50%)',
+                                width: 32,
+                                height: 32,
+                                borderRadius: '50%',
+                                backgroundColor: '#4caf50',
+                                border: `4px solid ${colors.surface}`,
+                                animation: 'pulse 2s ease-in-out infinite',
+                                boxShadow: '0 6px 20px rgba(76, 175, 80, 0.5)'
+                              }} />
+                            </>
+                          ) : (
+                            // Loading placeholder
+                            <Box sx={{
                               width: 180,
                               height: 180,
                               borderRadius: '50%',
-                              objectFit: 'cover',
+                              backgroundColor: colors.border,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                               border: `5px solid ${colors.accent}30`,
-                              boxShadow: '0 12px 35px rgba(0,0,0,0.2)',
-                              transition: 'all 0.3s ease',
-                              '&:hover': {
-                                transform: 'scale(1.05)',
-                                borderColor: colors.accent,
-                                boxShadow: '0 16px 45px rgba(0,0,0,0.3)'
-                              }
-                            }}
-                          />
-                          {/* Online Status */}
-                          <Box sx={{
-                            position: 'absolute',
-                            bottom: 20,
-                            right: '50%',
-                            transform: 'translateX(50%)',
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            backgroundColor: '#4caf50',
-                            border: `4px solid ${colors.surface}`,
-                            animation: 'pulse 2s ease-in-out infinite',
-                            boxShadow: '0 6px 20px rgba(76, 175, 80, 0.5)'
-                          }} />
+                            }}>
+                              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                                Loading...
+                              </Typography>
+                            </Box>
+                          )}
                         </Box>
 
                         {/* User Info */}
                         <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h3" sx={{
-                            color: colors.text,
-                            fontWeight: 700,
-                            fontSize: '1.8rem',
-                            mb: 2,
-                            fontFamily: 'Playfair Display, serif'
-                          }}>
-                            {userProfiles[currentUserIndex].name}
-                          </Typography>
-                          
-                          <Typography variant="h6" sx={{
-                            color: colors.textSecondary,
-                            fontSize: '1.1rem',
-                            mb: 3,
-                            fontStyle: 'italic'
-                          }}>
-                            {userProfiles[currentUserIndex].location}
-                          </Typography>
+                          {userProfiles.length > 0 && userProfiles[currentUserIndex] ? (
+                            <>
+                              <Typography variant="h3" sx={{
+                                color: colors.text,
+                                fontWeight: 700,
+                                fontSize: '1.8rem',
+                                mb: 2,
+                                fontFamily: 'Playfair Display, serif'
+                              }}>
+                                {userProfiles[currentUserIndex].name}
+                              </Typography>
+                              
+                              <Typography variant="h6" sx={{
+                                color: colors.textSecondary,
+                                fontSize: '1.1rem',
+                                mb: 3,
+                                fontStyle: 'italic'
+                              }}>
+                                {userProfiles[currentUserIndex].location}
+                              </Typography>
 
-                          <Box sx={{
-                            backgroundColor: `${colors.accent}15`,
-                            borderRadius: '30px',
-                            px: 4,
-                            py: 2,
-                            mb: 3,
-                            display: 'inline-block',
-                            border: `2px solid ${colors.accent}30`
-                          }}>
-                            <Typography variant="h6" sx={{
-                              color: colors.accent,
-                              fontSize: '1rem',
-                              fontWeight: 600,
-                              textTransform: 'uppercase',
-                              letterSpacing: '1px'
-                            }}>
-                              {userProfiles[currentUserIndex].activity}
-                            </Typography>
-                          </Box>
+                              <Box sx={{
+                                backgroundColor: `${colors.accent}15`,
+                                borderRadius: '30px',
+                                px: 4,
+                                py: 2,
+                                mb: 3,
+                                display: 'inline-block',
+                                border: `2px solid ${colors.accent}30`
+                              }}>
+                                <Typography variant="h6" sx={{
+                                  color: colors.accent,
+                                  fontSize: '1rem',
+                                  fontWeight: 600,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '1px'
+                                }}>
+                                  {userProfiles[currentUserIndex].activity}
+                                </Typography>
+                              </Box>
 
-                          <Typography variant="body1" sx={{
-                            color: colors.textSecondary,
-                            fontSize: '1rem',
-                            fontWeight: 500,
-                            display: 'block'
-                          }}>
-                            {userProfiles[currentUserIndex].lastActivity}
-                          </Typography>
+                              <Typography variant="body1" sx={{
+                                color: colors.textSecondary,
+                                fontSize: '1rem',
+                                fontWeight: 500,
+                                display: 'block'
+                              }}>
+                                {userProfiles[currentUserIndex].lastActivity}
+                              </Typography>
+                            </>
+                          ) : (
+                            // Loading placeholder for user info
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h3" sx={{
+                                color: colors.textSecondary,
+                                fontWeight: 700,
+                                fontSize: '1.8rem',
+                                mb: 2,
+                                fontFamily: 'Playfair Display, serif'
+                              }}>
+                                Loading User...
+                              </Typography>
+                            </Box>
+                          )}
                         </Box>
 
                         {/* Hover Effect Overlay */}
@@ -2184,24 +2935,35 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     gap: 2,
                     mt: 4
                   }}>
-                    {userProfiles.map((_, index) => (
-                      <Box
-                        key={index}
-                        onClick={() => goToUser(index)}
-                        sx={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: '50%',
-                          backgroundColor: index === currentUserIndex ? colors.accent : colors.border,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            backgroundColor: colors.accent,
-                            transform: 'scale(1.2)'
-                          }
-                        }}
-                      />
-                    ))}
+                    {userProfiles.length > 0 ? (
+                      userProfiles.map((_, index) => (
+                        <Box
+                          key={index}
+                          onClick={() => goToUser(index)}
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            backgroundColor: index === currentUserIndex ? colors.accent : colors.border,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              backgroundColor: colors.accent,
+                              transform: 'scale(1.2)'
+                            }
+                          }}
+                        />
+                      ))
+                    ) : (
+                      // Loading placeholder for indicators
+                      <Box sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: colors.border,
+                        animation: 'pulse 2s ease-in-out infinite'
+                      }} />
+                    )}
                   </Box>
                 </Box>
               </motion.div>
@@ -2246,98 +3008,120 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     maxHeight: '400px',
                     overflow: 'hidden'
                   }}>
-                    {recentActivities.map((activity, index) => (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                      >
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          p: 2,
-                          mb: 2,
-                          borderRadius: '12px',
-                          backgroundColor: colors.background,
-                          border: `1px solid ${colors.border}`,
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                            borderColor: activity.color
-                          }
-                        }}>
-                          {/* User Avatar */}
-                          <Box sx={{ position: 'relative' }}>
-                            <Box
-                              component="img"
-                              src={activity.avatar}
-                              alt={activity.name}
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                border: `2px solid ${colors.border}`
-                              }}
-                            />
-                            {/* Activity Icon Overlay */}
+                    {recentActivities.length > 0 ? (
+                      recentActivities.map((activity, index) => {
+                        // Map activity type to icon and color
+                        const activityType = activityTypes.find(type => type.type === activity.type);
+                        const icon = activityType?.icon || <PersonIcon />;
+                        const color = activityType?.color || colors.accent;
+                        
+                        return (
+                          <motion.div
+                            key={activity.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                          >
                             <Box sx={{
-                              position: 'absolute',
-                              bottom: -2,
-                              right: -2,
-                              width: 20,
-                              height: 20,
-                              borderRadius: '50%',
-                              backgroundColor: activity.color,
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              color: colors.background,
-                              fontSize: '0.7rem',
-                              border: `2px solid ${colors.background}`
+                              gap: 2,
+                              p: 2,
+                              mb: 2,
+                              borderRadius: '12px',
+                              backgroundColor: colors.background,
+                              border: `1px solid ${colors.border}`,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                transform: 'translateX(5px)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                borderColor: color
+                              }
                             }}>
-                              {activity.icon}
-                            </Box>
-                          </Box>
-
-                          {/* Activity Content */}
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body1" sx={{
-                              color: colors.text,
-                              fontWeight: 500,
-                              fontSize: '0.95rem',
-                              lineHeight: 1.4
-                            }}>
-                              <Box component="span" sx={{
-                                color: colors.accent,
-                                fontWeight: 600
-                              }}>
-                                {activity.name}
+                              {/* User Avatar */}
+                              <Box sx={{ position: 'relative' }}>
+                                <Box
+                                  component="img"
+                                  src={activity.avatar}
+                                  alt={activity.name}
+                                  sx={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                    border: `2px solid ${colors.border}`
+                                  }}
+                                />
+                                {/* Activity Icon Overlay */}
+                                <Box sx={{
+                                  position: 'absolute',
+                                  bottom: -2,
+                                  right: -2,
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: '50%',
+                                  backgroundColor: color,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: colors.background,
+                                  fontSize: '0.7rem',
+                                  border: `2px solid ${colors.background}`
+                                }}>
+                                  {icon}
+                                </Box>
                               </Box>
-                              {' '}{activity.message}
-                            </Typography>
-                            <Typography variant="caption" sx={{
-                              color: colors.textSecondary,
-                              fontSize: '0.8rem'
-                            }}>
-                              {activity.time}
-                            </Typography>
-                          </Box>
 
-                          {/* Live Indicator */}
-                          <Box sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            backgroundColor: '#4caf50',
-                            animation: 'pulse 2s ease-in-out infinite'
-                          }} />
-                        </Box>
-                      </motion.div>
-                    ))}
+                              {/* Activity Content */}
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body1" sx={{
+                                  color: colors.text,
+                                  fontWeight: 500,
+                                  fontSize: '0.95rem',
+                                  lineHeight: 1.4
+                                }}>
+                                  <Box component="span" sx={{
+                                    color: colors.accent,
+                                    fontWeight: 600
+                                  }}>
+                                    {activity.name}
+                                  </Box>
+                                  {' '}{activity.message}
+                                </Typography>
+                                <Typography variant="caption" sx={{
+                                  color: colors.textSecondary,
+                                  fontSize: '0.8rem'
+                                }}>
+                                  {activity.time}
+                                </Typography>
+                              </Box>
+
+                              {/* Live Indicator */}
+                              <Box sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                backgroundColor: '#4caf50',
+                                animation: 'pulse 2s ease-in-out infinite'
+                              }} />
+                            </Box>
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      // Loading placeholder for activities
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 4,
+                        color: colors.textSecondary
+                      }}>
+                        <Typography variant="body2">
+                          Loading recent activities...
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
 
                   {/* Join Community CTA */}
@@ -2560,6 +3344,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2583,6 +3376,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2605,6 +3407,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2631,6 +3442,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2657,6 +3477,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2681,6 +3510,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
                         }
                       }}
                     />
@@ -2705,6 +3543,19 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           '&.Mui-focused fieldset': {
                             borderColor: colors.accent
                           }
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: colors.textSecondary,
+                          '&.Mui-focused': {
+                            color: colors.accent
+                          }
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: colors.text
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: colors.textSecondary,
+                          opacity: 0.7
                         }
                       }}
                     />
@@ -2783,142 +3634,259 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
 
       {/* Footer */}
       <Box sx={{
-        backgroundColor: colors.primary,
+        background: `linear-gradient(135deg, ${colors.primary} 0%, ${isDarkMode ? '#1a1a1a' : '#2a2a2a'} 100%)`,
         color: colors.background,
-        padding: '4rem 0 2rem',
-        position: 'relative'
+        padding: '6rem 0 3rem',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `url('/coffee-beans.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.1,
+          zIndex: 1
+        }
       }}>
-        <Container maxWidth="lg">
-          <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+          <Grid container spacing={6} sx={{ mb: 4 }}>
             <Grid item xs={12} md={4}>
-              <Typography variant="h4" sx={{
-                fontWeight: 700,
-                color: colors.accent,
-                mb: 2,
-                fontFamily: 'Playfair Display, serif'
-              }}>
-                Cafert
-              </Typography>
-              <Typography variant="body2" sx={{
-                color: colors.textSecondary,
-                mb: 3,
-                lineHeight: 1.6
-              }}>
-                Experience the perfect blend of tradition and innovation in every cup. 
-                Join our community of coffee lovers.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <IconButton sx={{ color: colors.accent, '&:hover': { color: colors.accentLight } }}>
-                  <FacebookIcon />
-                </IconButton>
-                <IconButton sx={{ color: colors.accent, '&:hover': { color: colors.accentLight } }}>
-                  <InstagramIcon />
-                </IconButton>
-                <IconButton sx={{ color: colors.accent, '&:hover': { color: colors.accentLight } }}>
-                  <TwitterIcon />
-                </IconButton>
-              </Box>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                <Typography variant="h3" sx={{
+                  fontWeight: 700,
+                  color: colors.accent,
+                  mb: 3,
+                  fontFamily: 'Playfair Display, serif',
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+                }}>
+                  Cafert
+                </Typography>
+                <Typography variant="h6" sx={{
+                  color: colors.background,
+                  mb: 4,
+                  lineHeight: 1.8,
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 400,
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                  background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.accent} 100%)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {t('hero.experiencePerfect')}
+                  {t('hero.joinCommunity')}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <motion.div whileHover={{ scale: 1.1, y: -2 }}>
+                    <IconButton sx={{ 
+                      color: colors.accent, 
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: `1px solid ${colors.accent}40`,
+                      '&:hover': { 
+                        color: colors.background,
+                        backgroundColor: colors.accent,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <FacebookIcon />
+                    </IconButton>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.1, y: -2 }}>
+                    <IconButton sx={{ 
+                      color: colors.accent, 
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: `1px solid ${colors.accent}40`,
+                      '&:hover': { 
+                        color: colors.background,
+                        backgroundColor: colors.accent,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <InstagramIcon />
+                    </IconButton>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.1, y: -2 }}>
+                    <IconButton sx={{ 
+                      color: colors.accent, 
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: `1px solid ${colors.accent}40`,
+                      '&:hover': { 
+                        color: colors.background,
+                        backgroundColor: colors.accent,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <TwitterIcon />
+                    </IconButton>
+                  </motion.div>
+                </Box>
+              </motion.div>
             </Grid>
             
             <Grid item xs={12} md={4}>
-              <Typography variant="h6" sx={{ 
-                color: colors.text,
-                fontWeight: 600,
-                marginBottom: '1rem',
-                fontSize: { xs: '1rem', md: '1.1rem' },
-                fontFamily: 'Playfair Display, serif'
-              }}>Quick Links</Typography>
-              <Typography variant="body2" sx={{
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                transition: 'color 0.3s ease',
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                mb: 1,
-                '&:hover': { color: colors.accent }
-              }}>Our Menu</Typography>
-              <Typography variant="body2" sx={{
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                transition: 'color 0.3s ease',
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                mb: 1,
-                '&:hover': { color: colors.accent }
-              }}>Services</Typography>
-              <Typography variant="body2" sx={{
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                transition: 'color 0.3s ease',
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                mb: 1,
-                '&:hover': { color: colors.accent }
-              }}>Gallery</Typography>
-              <Typography variant="body2" sx={{
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                transition: 'color 0.3s ease',
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                '&:hover': { color: colors.accent }
-              }}>Contact</Typography>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <Typography variant="h5" sx={{ 
+                  color: colors.accent,
+                  fontWeight: 600,
+                  marginBottom: '2rem',
+                  fontSize: { xs: '1.2rem', md: '1.4rem' },
+                  fontFamily: 'Playfair Display, serif',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                }}>Quick Links</Typography>
+                <Typography variant="body1" sx={{
+                  color: colors.background,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  mb: 2,
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: colors.accent,
+                    transform: 'translateX(5px)'
+                  }
+                }}>Our Menu</Typography>
+                <Typography variant="body1" sx={{
+                  color: colors.background,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  mb: 2,
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: colors.accent,
+                    transform: 'translateX(5px)'
+                  }
+                }}>Services</Typography>
+                <Typography variant="body1" sx={{
+                  color: colors.background,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  mb: 2,
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: colors.accent,
+                    transform: 'translateX(5px)'
+                  }
+                }}>Gallery</Typography>
+                <Typography variant="body1" sx={{
+                  color: colors.background,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  '&:hover': { 
+                    color: colors.accent,
+                    transform: 'translateX(5px)'
+                  }
+                }}>Contact</Typography>
+              </motion.div>
             </Grid>
             
             <Grid item xs={12} md={4}>
-              <Typography variant="h6" sx={{ 
-                color: colors.text,
-                fontWeight: 600,
-                marginBottom: '1rem',
-                fontSize: { xs: '1rem', md: '1.1rem' },
-                fontFamily: 'Playfair Display, serif'
-              }}>Contact Info</Typography>
-              <Typography variant="body2" sx={{ 
-                color: colors.textSecondary,
-                marginBottom: '0.5rem',
-                fontSize: { xs: '0.9rem', md: '1rem' }
-              }}>
-                123 Coffee Street, Brewtown, BT 12345
-              </Typography>
-              <Typography variant="body2" sx={{ 
-                color: colors.textSecondary,
-                marginBottom: '1rem',
-                fontSize: { xs: '0.9rem', md: '1rem' }
-              }}>
-                Phone: (555) 123-4567 | Email: info@cafert.com
-              </Typography>
-              <Typography variant="h6" sx={{ 
-                color: colors.text,
-                fontWeight: 600,
-                marginBottom: '1rem',
-                fontSize: { xs: '1rem', md: '1.1rem' },
-                fontFamily: 'Playfair Display, serif'
-              }}>Hours</Typography>
-              <Typography variant="body2" sx={{ 
-                color: colors.textSecondary,
-                marginBottom: '0.5rem',
-                fontSize: { xs: '0.9rem', md: '1rem' }
-              }}>
-                Monday - Friday: 7:00 AM - 8:00 PM
-              </Typography>
-              <Typography variant="body2" sx={{ 
-                color: colors.textSecondary,
-                fontSize: { xs: '0.9rem', md: '1rem' }
-              }}>
-                Saturday - Sunday: 8:00 AM - 9:00 PM
-              </Typography>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                <Typography variant="h5" sx={{ 
+                  color: colors.accent,
+                  fontWeight: 600,
+                  marginBottom: '2rem',
+                  fontSize: { xs: '1.2rem', md: '1.4rem' },
+                  fontFamily: 'Playfair Display, serif',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                }}>Contact Info</Typography>
+                <Typography variant="body1" sx={{ 
+                  color: colors.background,
+                  marginBottom: '1rem',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.6
+                }}>
+                  123 Coffee Street, Brewtown, BT 12345
+                </Typography>
+                <Typography variant="body1" sx={{ 
+                  color: colors.background,
+                  marginBottom: '2rem',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.6
+                }}>
+                  Phone: (555) 123-4567 | Email: info@cafert.com
+                </Typography>
+                <Typography variant="h5" sx={{ 
+                  color: colors.accent,
+                  fontWeight: 600,
+                  marginBottom: '1.5rem',
+                  fontSize: { xs: '1.2rem', md: '1.4rem' },
+                  fontFamily: 'Playfair Display, serif',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                }}>Hours</Typography>
+                <Typography variant="body1" sx={{ 
+                  color: colors.background,
+                  marginBottom: '0.5rem',
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.6
+                }}>
+                  Monday - Friday: 7:00 AM - 8:00 PM
+                </Typography>
+                <Typography variant="body1" sx={{ 
+                  color: colors.background,
+                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.6
+                }}>
+                  Saturday - Sunday: 8:00 AM - 9:00 PM
+                </Typography>
+              </motion.div>
             </Grid>
           </Grid>
           
-          <Box sx={{ 
-            borderTop: `1px solid ${colors.border}`,
-            marginTop: '3rem',
-            paddingTop: '2rem',
-            textAlign: 'center'
-          }}>
-            <Typography variant="body2" sx={{ 
-              color: colors.textSecondary,
-              fontSize: { xs: '0.9rem', md: '1rem' }
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Box sx={{ 
+              borderTop: `2px solid ${colors.accent}40`,
+              marginTop: '4rem',
+              paddingTop: '3rem',
+              textAlign: 'center'
             }}>
-              © 2024 Cafert. All rights reserved.
-            </Typography>
-          </Box>
+              <Typography variant="body1" sx={{ 
+                color: colors.background,
+                fontSize: { xs: '1rem', md: '1.1rem' },
+                fontWeight: 500
+              }}>
+                © 2024 Cafert. All rights reserved.
+              </Typography>
+            </Box>
+          </motion.div>
         </Container>
       </Box>
 
@@ -2948,6 +3916,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
           <ArrowDownIcon sx={{ transform: 'rotate(180deg)' }} />
         </IconButton>
       )}
+
     </Box>
   );
 };

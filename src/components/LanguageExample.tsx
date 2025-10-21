@@ -8,7 +8,7 @@ import {
   Button,
   Grid,
   Paper,
-} from '@material-ui/core';
+} from '@mui/material';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const LanguageExample: React.FC = () => {

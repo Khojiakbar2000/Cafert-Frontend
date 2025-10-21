@@ -2,6 +2,9 @@
   "nav": {
     "home": "Home",
     "menu": "Menu",
+    "orders": "Orders",
+    "profile": "Profile",
+    "analytics": "Analytics",
     "about": "About",
     "contact": "Contact",
     "reservations": "Reservations"
@@ -9,9 +12,15 @@
   "hero": {
     "title": "Welcome to Cafert",
     "subtitle": "Experience the perfect blend of tradition and innovation",
-    "description": "Discover our carefully curated selection of premium coffee beans and artisanal brewing methods",
+    "description": "Experience the perfect blend of tradition and innovation in every cup. Our artisanal coffee and warm atmosphere create moments of pure delight.",
     "cta": "Explore Our Menu",
-    "reservation": "Make a Reservation"
+    "reservation": "Make a Reservation",
+    "welcome": "Welcome to",
+    "happyCoffeeTime": "Happy Coffee Time",
+    "whereEverySip": "Where every sip tells a story",
+    "experiencePerfect": "Experience the perfect blend of tradition and innovation in every cup. Our artisanal coffee creates moments of pure delight that awaken your senses.",
+    "reserveTable": "Reserve your table and experience the perfect blend of tradition and innovation",
+    "joinCommunity": "Join our community of coffee lovers."
   },
   "about": {
     "title": "Our Story",
@@ -25,11 +34,16 @@
     "community": "Community",
     "communityText": "Building meaningful connections through shared coffee experiences",
     "sustainability": "Sustainability",
-    "sustainabilityText": "Committed to environmentally responsible practices"
+    "sustainabilityText": "Committed to environmentally responsible practices",
+    "story": "Our Story",
+    "journeyTitle": "Our Coffee Journey",
+    "journeySubtitle": "From humble beginnings to becoming a beloved coffee destination"
   },
   "menu": {
     "title": "Our Menu",
     "subtitle": "Discover our carefully crafted selection",
+    "popular": "Popular",
+    "fresh": "Fresh",
     "coffee": "Coffee",
     "espresso": "Espresso",
     "espressoDesc": "Strong and authentic Italian espresso",
@@ -121,6 +135,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "login": "Login",
+    "signup": "Sign Up",
     "logout": "Logout",
     "all": "All Items",
     "sortBy": "Sort By",
@@ -132,7 +147,15 @@
     "ascending": "Ascending",
     "showing": "Showing",
     "of": "of",
-    "items": "items"
+    "items": "items",
+    "communityStats": "Community Stats",
+    "active": "Active",
+    "online": "Online",
+    "new": "New",
+    "popular": "Popular",
+    "welcome": "Welcome",
+    "user": "User",
+    "help": "Help"
   },
   "navigation": {
     "home": "Home",
@@ -142,10 +165,25 @@
     "salads": "Salads",
     "products": "Products",
     "orders": "Orders",
+    "analytics": "Analytics",
     "profile": "Profile",
+    "myPage": "My Page",
+    "profileSettings": "Profile Settings",
     "settings": "Settings",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "searchProducts": "Search Products",
+    "searchPlaceholder": "Search for coffee, desserts, or any product...",
+    "noResults": "No results found",
+    "trySearching": "Try searching for something else",
+    "myOrders": "My Orders",
+    "helpSupport": "Help & Support",
+    "logout": "Logout",
+    "signup": "Sign Up",
+    "login": "Login",
+    "addToCart": "Add to Cart",
+    "startSearching": "Start searching",
+    "enterProductName": "Enter a product name to find what you're looking for"
   },
   "home": {
     "welcome": "Welcome to Cafert",
@@ -156,7 +194,10 @@
     "viewMenu": "View Menu",
     "featuredDrinks": "Featured Drinks",
     "featuredDesserts": "Featured Desserts",
-    "featuredSalads": "Fresh Salads"
+    "featuredSalads": "Fresh Salads",
+    "joinCommunity": "Join Our Active Community",
+    "communityDescription": "See what's happening right now in our coffee community",
+    "activeUsers": "Active Users"
   },
   "drinks": {
     "title": "Our Drinks",

@@ -442,6 +442,11 @@ export default function CoffeeHomePage() {
                           image={imagePath} 
                           alt={product.productName}
                           sx={{ height: 200 }}
+                          onError={(e) => {
+                            console.error('Image failed to load:', imagePath);
+                            e.target.src = '/coffee-placeholder.jpg';
+                          }}
+                          onLoad={() => console.log('Image loaded successfully:', imagePath)}
                         />
                         {isFeatured && (
                           <Chip 
@@ -552,6 +557,11 @@ export default function CoffeeHomePage() {
                           image={imagePath} 
                           alt={product.productName}
                           sx={{ height: 200 }}
+                          onError={(e) => {
+                            console.error('Image failed to load:', imagePath);
+                            e.target.src = '/coffee-placeholder.jpg';
+                          }}
+                          onLoad={() => console.log('Image loaded successfully:', imagePath)}
                         />
                         <Chip 
                           label="NEW"

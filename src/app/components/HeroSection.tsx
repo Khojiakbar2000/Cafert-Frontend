@@ -1,20 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
   Typography,
   Button,
-  Grid,
-  IconButton
+  Grid
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
 import { useTheme } from '../../mui-coffee/context/ThemeContext';
+import { useHistory } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-const HeroSection: React.FC = () => {
-  const [isPlaying, setIsPlaying] = useState(true);
+interface HeroSectionProps {
+  onReservationClick?: () => void;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
+  const { t } = useTranslation();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isDarkMode } = useTheme();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const history = useHistory();
+
+  // Use the original coffee placeholder image
+  const heroImages = [
+    '/coffee-placeholder.jpg',    // Original hero image
+  ];
+
+
+
+  const handleExploreMenu = () => {
+    history.push('/coffees');
+  };
+
+  // No auto-rotation needed for single image
+  useEffect(() => {
+    // Keep the single image static
+  }, []);
+
+  // Ensure video is muted on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.volume = 0;
+    }
+  }, []);
 
   return (
     <Box
@@ -24,26 +54,28 @@ const HeroSection: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         overflow: 'hidden',
-        backgroundImage: isDarkMode 
-          ? `url('/coffee-placeholder.jpg')`
-          : `url('/coffee-placeholder.jpg')`,
+        backgroundImage: `url('${heroImages[currentImageIndex]}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        transition: 'all 0.5s ease-in-out',
-        '&::before': isDarkMode ? {
+        transition: 'all 1.5s ease-in-out',
+        '&::before': {
           content: '""',
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.2) 100%)',
+          background: isDarkMode 
+            ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.3) 100%)'
+            : 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.2) 100%)',
           zIndex: 1,
           pointerEvents: 'none'
-        } : {}
+        }
       }}
     >
+
+
       {/* Decorative SVG Elements */}
       <Box
         sx={{
@@ -77,7 +109,7 @@ const HeroSection: React.FC = () => {
               <Box sx={{ color: 'white', mb: 4 }}>
                 <Typography
                   variant="overline"
-          sx={{
+                  sx={{
                     fontSize: { xs: '0.875rem', md: '1rem' },
                     fontWeight: 500,
                     color: isDarkMode ? '#ffd700' : '#d4af37',
@@ -87,21 +119,21 @@ const HeroSection: React.FC = () => {
                     textShadow: isDarkMode ? '0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)' : 'none',
                     animation: isDarkMode ? 'glowPulse 2s ease-in-out infinite alternate' : 'none',
                     '@keyframes glowPulse': {
-                  '0%': {
+                      '0%': {
                         textShadow: '0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)',
-                  },
-                  '100%': {
+                      },
+                      '100%': {
                         textShadow: '0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.6), 0 0 35px rgba(255, 215, 0, 0.3)',
-                  },
-                },
-              }}
+                      },
+                    },
+                  }}
                 >
-                  Breakfast
+                  {t('hero.welcome')}
                 </Typography>
-          
+        
                 <Typography
                   variant="h1"
-            sx={{
+                  sx={{
                     fontSize: { xs: '2.25rem', sm: '3rem', md: '3.5rem', lg: '4rem', xl: '4.5rem' },
                     fontWeight: 400,
                     fontFamily: '"Playfair Display", serif',
@@ -118,16 +150,16 @@ const HeroSection: React.FC = () => {
                       },
                       '100%': {
                         textShadow: '0 0 30px rgba(255, 255, 255, 1), 0 0 50px rgba(255, 255, 255, 0.6), 0 0 70px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0,0,0,0.5)',
-                },
-              },
-            }}
+                      },
+                    },
+                  }}
                 >
-                  Welcome to Cafert
+                  Cafert
                 </Typography>
-          
+        
                 <Typography
                   variant="body1"
-            sx={{
+                  sx={{
                     fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem', lg: '1.375rem' },
                     color: isDarkMode ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.9)',
                     mb: 4,
@@ -147,52 +179,57 @@ const HeroSection: React.FC = () => {
                     },
                   }}
                 >
-                  Experience the perfect blend of tradition and innovation in every cup. 
-                  Our artisanal coffee and warm atmosphere create moments of pure delight.
-          </Typography>
+                  {t('hero.description')}
+                </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                variant="contained"
-                size="large"
-                sx={{
-                        backgroundColor: '#d4af37',
-                        color: '#1a1a1a',
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  '&:hover': {
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleExploreMenu}
+                      sx={{
+                        backgroundColor: isDarkMode ? '#ffd700' : '#1a1a1a',
+                        color: isDarkMode ? '#000' : 'white',
+                        px: 4,
+                        py: 1.5,
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        '&:hover': {
                           backgroundColor: '#b8941f'
                         }
                       }}
                     >
-                      Reservations
-              </Button>
-            </motion.div>
+                      {t('hero.cta')}
+                    </Button>
+                  </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-                    <IconButton
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={onReservationClick}
                       sx={{
-                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderColor: 'rgba(255,255,255,0.8)',
                         color: 'white',
-                        width: 60,
-                        height: 60,
-                        border: '2px solid rgba(255,255,255,0.3)',
+                        px: 4,
+                        py: 1.5,
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
                         '&:hover': {
-                          backgroundColor: 'rgba(255,255,255,0.2)'
+                          borderColor: 'white',
+                          backgroundColor: 'rgba(255,255,255,0.1)'
                         }
                       }}
                     >
-                      <PlayArrowIcon sx={{ fontSize: '2rem' }} />
-                    </IconButton>
+                      {t('hero.reservation')}
+                    </Button>
                   </motion.div>
                 </Box>
               </Box>
@@ -223,18 +260,31 @@ const HeroSection: React.FC = () => {
               >
                 {/* Video Player */}
                 <video
+                  ref={videoRef}
                   autoPlay
                   loop
                   muted
                   playsInline
+                  onLoadedData={() => {
+                    if (videoRef.current) {
+                      videoRef.current.muted = true;
+                      videoRef.current.volume = 0;
+                    }
+                  }}
+                  onCanPlay={() => {
+                    if (videoRef.current) {
+                      videoRef.current.muted = true;
+                      videoRef.current.volume = 0;
+                    }
+                  }}
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'contain',
+                    objectFit: 'cover',
                     borderRadius: '17px'
                   }}
                 >
-                  <source src="/videos/coffee-shop-ambience.mp4" type="video/mp4" />
+                  <source src="/videos/mixkit-coffee-maker-making-coffee-3578-full-hd.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
 
@@ -251,44 +301,9 @@ const HeroSection: React.FC = () => {
                   }}
                 />
 
-                {/* Play/Pause Button Overlay */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 2
-                  }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <IconButton
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      sx={{
-                        backgroundColor: 'rgba(255,255,255,0.25)',
-                        color: 'white',
-                        width: 70,
-                        height: 70,
-                        border: '2px solid rgba(255,255,255,0.4)',
-                        backdropFilter: 'blur(10px)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255,255,255,0.35)',
-                          transform: 'scale(1.05)'
-                        },
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      {isPlaying ? (
-                        <PauseIcon sx={{ fontSize: '2rem' }} />
-                      ) : (
-                        <PlayArrowIcon sx={{ fontSize: '2rem' }} />
-                      )}
-                    </IconButton>
-                  </motion.div>
-                </Box>
+
+
+
 
                 {/* Decorative Elements */}
                 <Box
@@ -319,7 +334,7 @@ const HeroSection: React.FC = () => {
                   sx={{
                     position: 'absolute',
                     bottom: 20,
-                    left: 20,
+                    right: 20,
                     zIndex: 2
                   }}
                 >

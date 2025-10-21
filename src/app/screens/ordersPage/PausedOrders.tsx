@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Container, Stack } from "@mui/material";
 import Button from "@mui/material/Button";
-import TabPanel from "@mui/lab/TabPanel";
 
 import { useSelector} from "react-redux";
 import {createSelector} from "reselect";
@@ -14,8 +13,7 @@ import { sweetErrorHandling } from "../../../lib/sweetAlert";
 import { OrderStatus } from "../../../lib/enums/order.enum";
 import { useGlobals } from "../../hooks/useGlobals";
 import OrderService from "../../services/OrderService";
-
-
+import ProductService from "../../services/ProductService";
 
 /** REDUX SLICE & SELECTOR */
 const pausedOrdersRetriever = createSelector(
@@ -31,6 +29,59 @@ export default function PausedOrders(props: PausedOrderProps) {
   const {setValue} = props
   const {authMember, setOrderBuilder} = useGlobals();
   const {pausedOrders} = useSelector(pausedOrdersRetriever)
+  const [productCache, setProductCache] = useState<{[key: string]: Product}>({});
+
+  // Function to fetch product data if not available
+  const fetchProductData = async (productId: string): Promise<Product | null> => {
+    try {
+      // Check if we already have this product in cache
+      if (productCache[productId]) {
+        return productCache[productId];
+      }
+
+      // Fetch product from API - use a simple approach
+      const productService = new ProductService();
+      const products = await productService.getProducts({
+        order: "createdAt",
+        page: 1,
+        limit: 100
+      });
+      
+      if (products && products.length > 0) {
+        // Find the specific product by ID
+        const product = products.find(p => p._id === productId);
+        if (product) {
+          // Cache the product
+          setProductCache(prev => ({ ...prev, [productId]: product }));
+          return product;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return null;
+    }
+  };
+
+  // Fetch product data for all orders when component loads
+  useEffect(() => {
+    const loadProductData = async () => {
+      if (pausedOrders && pausedOrders.length > 0) {
+        for (const order of pausedOrders) {
+          if (order.orderItems && order.orderItems.length > 0) {
+            for (const item of order.orderItems) {
+              if (!productCache[item.productId]) {
+                await fetchProductData(item.productId);
+              }
+            }
+          }
+        }
+      }
+    };
+    
+    loadProductData();
+  }, [pausedOrders]);
 
   /** HANDLERS **/
 
@@ -74,6 +125,7 @@ export default function PausedOrders(props: PausedOrderProps) {
         await order.updateOrder(input);
          
         setOrderBuilder(new Date())
+        setValue("2") // Automatically switch to Process Orders tab
       }
 
     }catch(err){
@@ -82,24 +134,64 @@ export default function PausedOrders(props: PausedOrderProps) {
     }
   }
   return (
-    <TabPanel value={"1"}>
+    <div>
       <Stack>
         {pausedOrders?.map((order: Order) => {
           return (
             <Box key={order._id} className="order-main-box">
               <Box className="order-box-scroll">
                 {order?.orderItems?.map((item: OrderItem) => {
-                  const product: Product= order.productData.filter(
-                    (ele: Product)=>item.productId === ele._id
-                  )[0];
-                  const imagePath = `${serverApi}${product.productImages[0]}`;
+                  // Handle case where productData might not exist in real API data
+                  let product: Product | undefined;
+                  if (order.productData && order.productData.length > 0) {
+                    product = order.productData.filter(
+                      (ele: Product) => item.productId === ele._id
+                    )[0];
+                  }
+                  
+                  // If product not found in order data, check cache
+                  if (!product) {
+                    product = productCache[item.productId];
+                  }
+                  
+                  // Handle case where product is not found
+                  if (!product) {
+                    return (
+                      <Box key={item._id} className="orders-name-price">
+                        <img
+                          src="/icons/noimage-list.svg"
+                          className={"order-dish-img"}
+                        />
+                        <p className="title-dish">Product ID: {item.productId}</p>
+                        <Box className="price-box">
+                          <p>${item.itemPrice}</p>
+                          <img src="/icons/close.svg" alt="" />
+                          <p>{item.itemQuantity}</p>
+                          <img src="/icons/pause.svg" alt="" />
+                          <p style={{ marginLeft: "15px" }}>${item.itemQuantity * item.itemPrice}</p>
+                        </Box>
+                      </Box>
+                    );
+                  }
+                  
+                  // Fix image path - check if it's already a full URL or needs serverApi prefix
+                  const imagePath = product?.productImages?.[0] 
+                    ? (product.productImages[0].startsWith('http') 
+                        ? product.productImages[0] 
+                        : `${serverApi}${product.productImages[0]}`)
+                    : '/icons/noimage-list.svg';
+                  
                   return (
                     <Box key={item._id} className="orders-name-price">
                       <img
                         src={imagePath}
                         className={"order-dish-img"}
+                        alt="Product"
+                        onError={(e) => {
+                          e.currentTarget.src = '/icons/noimage-list.svg';
+                        }}
                       />
-                      <p className="title-dish">{product.productName}</p>
+                      <p className="title-dish">{product ? product.productName : `Product ID: ${item.productId}`}</p>
                       <Box className="price-box">
                         <p>${item.itemPrice}</p>
                         <img src="/icons/close.svg" alt="" />
@@ -156,6 +248,6 @@ export default function PausedOrders(props: PausedOrderProps) {
           </Box>
         ))}
       </Stack>
-    </TabPanel>
+    </div>
   );
 }

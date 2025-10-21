@@ -191,7 +191,7 @@
     cursor: pointer;
     z-index: 3;
     opacity: 0;
-    transform: opacity 0.5s ease;
+    transition: opacity 0.5s ease;
     font-family: "Poppins";
     font-style: normal;
     font-weight: 600;
@@ -208,7 +208,7 @@
     padding: 3.068px 1.333px 4.091px 1.333px;
     z-index: 3;
     opacity: 0;
-    transform: opacity 0.5s ease;
+    transition: opacity 0.5s ease;
     justify-content: center;
     align-items: center;
     flex-shrink: 0;

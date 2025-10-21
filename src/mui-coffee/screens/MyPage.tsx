@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Card,
@@ -27,21 +27,21 @@ import {
 import {
   Person as PersonIcon,
   ShoppingCart as OrdersIcon,
-  Settings as SettingsIcon,
   Help as HelpIcon,
   Logout as LogoutIcon,
   Edit as EditIcon,
-  Star as StarIcon,
   LocalShipping as ShippingIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   ArrowForward as ArrowForwardIcon,
   Add as AddIcon,
   PhotoCamera as PhotoCameraIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useGlobals } from '../../app/hooks/useGlobals';
 import { useTheme as useCoffeeTheme } from '../context/ThemeContext';
 import { serverApi } from '../../lib/config';
@@ -50,6 +50,9 @@ import MemberService from '../../app/services/MemberService';
 import OrderService from '../../app/services/OrderService';
 import { OrderInquiry } from '../../lib/types/order';
 import { OrderStatus } from '../../lib/enums/order.enum';
+import { ProductStatus, ProductCollection, ProductSize } from '../../lib/enums/product.enum';
+import { CartItem } from '../../lib/types/search';
+import { retrievePausedOrders, retrieveProcessOrders, retrieveFinishedOrders } from '../../app/screens/ordersPage/selector';
 
 interface MyPageProps {
   colors?: {
@@ -71,16 +74,20 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const history = useHistory();
 
+  // Get orders from Redux store
+  const pausedOrders = useSelector(retrievePausedOrders);
+  const processOrders = useSelector(retrieveProcessOrders);
+  const finishedOrders = useSelector(retrieveFinishedOrders);
+
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [orderStats, setOrderStats] = useState({
     total: 0,
     completed: 0,
-    inProgress: 0,
-    points: 0
+    inProgress: 0
   });
-  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -114,76 +121,133 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     surface: isDarkMode ? '#2a2a2a' : '#f8f9fa'
   };
 
-  // Fetch user orders and stats
-  const fetchUserData = async () => {
-    if (!authMember) return;
+  // Remove hardcoded mock data - now using Redux store data
+  const fetchUserData = useCallback(async () => {
+    if (!authMember?._id) {
+      console.log('No authMember._id found');
+      return;
+    }
     
+    console.log('=== MY PAGE DEBUG ===');
+    console.log('Fetching orders for user:', authMember._id);
+    setIsLoadingOrders(true);
     try {
-      setIsLoadingOrders(true);
-      
-      // Fetch recent orders
       const orderService = new OrderService();
-      const orderInquiry: OrderInquiry = {
-        page: 1,
-        limit: 5,
-        orderStatus: OrderStatus.FINISH // We'll get all orders by fetching finished ones first
-      };
       
-      const orders = await orderService.getMyOrders(orderInquiry);
-      setRecentOrders(orders || []);
+      // Try to fetch real orders first
+      console.log('=== TEST 1: Fetching orders by status ===');
+      
+      let allOrders: any[] = [];
+      
+      try {
+        const allOrdersInquiry: OrderInquiry = {
+          page: 1,
+          limit: 50,
+          orderStatus: undefined
+        };
+        
+        console.log('Fetching all orders with inquiry:', allOrdersInquiry);
+        allOrders = await orderService.getMyOrders(allOrdersInquiry);
+        console.log('Real orders received:', allOrders);
+        
+        if (!allOrders || allOrders.length === 0) {
+          console.log('No real orders found, using Redux store data');
+          // Combine all orders from Redux store
+          allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
+        }
+      } catch (error) {
+        console.log('API failed, using Redux store data:', error);
+        // Combine all orders from Redux store
+        allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
+      }
+      
+      console.log('Final orders to display:', allOrders);
+      console.log('Number of orders:', allOrders?.length || 0);
+      
+      if (allOrders && allOrders.length > 0) {
+        console.log('Order statuses found:', allOrders.map(o => o.orderStatus));
+        console.log('Completed orders:', allOrders.filter(o => o.orderStatus === OrderStatus.FINISH));
+        console.log('Process orders:', allOrders.filter(o => o.orderStatus === OrderStatus.PROCESS));
+        console.log('Paused orders:', allOrders.filter(o => o.orderStatus === OrderStatus.PAUSE));
+        
+        // Log each order details
+        allOrders.forEach((order, index) => {
+          console.log(`Order ${index + 1}:`, {
+            id: order._id,
+            status: order.orderStatus,
+            total: order.orderTotal,
+            createdAt: order.createdAt,
+            memberId: order.memberId
+          });
+        });
+      } else {
+        console.log('No orders found at all');
+      }
+      
+      // Set recent orders (show all orders, sorted by creation date)
+      const sortedOrders = allOrders?.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ) || [];
+      
+      console.log('Sorted orders for recent orders:', sortedOrders.slice(0, 5));
+      setRecentOrders(sortedOrders);
       
       // Calculate stats
-      const total = orders?.length || 0;
-      const completed = orders?.filter(o => o.orderStatus === OrderStatus.FINISH).length || 0;
-      const inProgress = orders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
+      const total = allOrders?.length || 0;
+      const completed = allOrders?.filter(o => o.orderStatus === OrderStatus.FINISH).length || 0;
+      const inProgress = allOrders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
+      
+      console.log('Final order stats:', { total, completed, inProgress });
       
       setOrderStats({
         total,
         completed,
-        inProgress,
-        points: authMember?.memberPoints || 0
+        inProgress
       });
       
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Use sample data as fallback
-      setRecentOrders([
-        {
-          _id: 'ORD-001',
-          createdAt: '2024-01-15',
-          orderStatus: OrderStatus.FINISH,
-          orderTotal: 24.50,
-          orderItems: [
-            { productName: 'Classic Espresso', itemQuantity: 2 },
-            { productName: 'Cappuccino Deluxe', itemQuantity: 1 }
-          ]
-        },
-        {
-          _id: 'ORD-002',
-          createdAt: '2024-01-14',
-          orderStatus: OrderStatus.PROCESS,
-          orderTotal: 18.90,
-          orderItems: [
-            { productName: 'Caramel Latte', itemQuantity: 1 },
-            { productName: 'Blueberry Muffin', itemQuantity: 2 }
-          ]
-        }
-      ]);
-      
+      // Use Redux store data as fallback
+      console.log('Using Redux store data as fallback');
+      const allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
+      setRecentOrders(allOrders);
       setOrderStats({
-        total: 12,
-        completed: 8,
-        inProgress: 2,
-        points: authMember?.memberPoints || 0
+        total: allOrders.length,
+        completed: allOrders.filter(o => o.orderStatus === OrderStatus.FINISH).length,
+        inProgress: allOrders.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length
       });
     } finally {
       setIsLoadingOrders(false);
     }
-  };
+  }, [authMember, pausedOrders, processOrders, finishedOrders]);
 
   useEffect(() => {
-    fetchUserData();
-  }, [authMember]);
+    if (authMember?._id) {
+      fetchUserData();
+    }
+  }, [authMember?._id, fetchUserData]);
+
+  // Add a periodic refresh to catch completed orders
+  useEffect(() => {
+    if (!authMember?._id) return;
+    
+    const interval = setInterval(() => {
+      console.log('Periodic refresh triggered');
+      fetchUserData();
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [authMember?._id, fetchUserData]);
+
+  // Ensure orders are loaded from Redux store on component mount
+  useEffect(() => {
+    if (authMember?._id && (pausedOrders.length === 0 && processOrders.length === 0 && finishedOrders.length === 0)) {
+      console.log('No orders in Redux store, fetching orders...');
+      fetchUserData();
+    }
+  }, [authMember?._id, pausedOrders.length, processOrders.length, finishedOrders.length, fetchUserData]);
+
+  // Remove createTestOrder function - no longer needed since we're using Redux data
 
   const handleLogout = async () => {
     try {
@@ -207,20 +271,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     }
   };
 
-  const handleRefreshData = async () => {
-    await fetchUserData();
-    setSnackbarMessage('Data refreshed!');
-    setSnackbarType('success');
-    setShowSnackbar(true);
-  };
-
-  const handleSettingsClick = () => {
-    setShowSettingsDialog(true);
-  };
-
-  const handleCloseSettings = () => {
-    setShowSettingsDialog(false);
-  };
+  // Remove handleRefreshData function - no longer needed since we're using Redux data
 
   const handleEditProfile = () => {
     // Initialize form with current user data
@@ -373,7 +424,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       description: 'View and edit your profile information',
       icon: <PersonIcon />,
       color: '#2196f3',
-      action: () => history.push('/member-page')
+      action: () => history.push('/user-profile')
     },
     {
       title: 'My Orders',
@@ -382,13 +433,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       color: '#4caf50',
       action: () => history.push('/orders')
     },
-    {
-      title: 'Settings',
-      description: 'Manage your account preferences',
-      icon: <SettingsIcon />,
-      color: '#9c27b0',
-      action: handleSettingsClick
-    },
+
     {
       title: 'Help & Support',
       description: 'Get help and contact support',
@@ -402,7 +447,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     { label: 'Total Orders', value: orderStats.total.toString(), icon: <OrdersIcon />, color: '#2196f3' },
     { label: 'Completed', value: orderStats.completed.toString(), icon: <CheckCircleIcon />, color: '#4caf50' },
     { label: 'In Progress', value: orderStats.inProgress.toString(), icon: <ShippingIcon />, color: '#ff9800' },
-    { label: 'Points Earned', value: orderStats.points.toString(), icon: <StarIcon />, color: '#ffd700' }
+
   ];
 
   // Temporarily comment out auth check for debugging
@@ -416,7 +461,8 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       sx={{
         minHeight: '100vh',
         backgroundColor: componentColors.background,
-        py: 4,
+        pt: 12, // Add more top padding to account for fixed navbar
+        pb: 4,
         px: isMobile ? 2 : 4
       }}
     >
@@ -425,36 +471,19 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Header with Refresh Button */}
+        {/* Header */}
         <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
-          <Button
-            variant="outlined"
-            startIcon={isLoadingOrders ? <CircularProgress size={16} /> : <AddIcon />}
-            onClick={handleRefreshData}
-            disabled={isLoadingOrders}
-            sx={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              borderColor: componentColors.accent,
-              color: componentColors.accent,
-              '&:hover': {
-                borderColor: componentColors.secondary,
-                backgroundColor: `${componentColors.accent}08`
-              }
-            }}
-          >
-            Refresh
-          </Button>
           <Typography
             variant="h3"
+            component="h1"
             sx={{
-              color: componentColors.text,
               fontWeight: 700,
+              color: componentColors.primary,
+              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
               mb: 2
             }}
           >
-            Welcome back, {authMember?.memberNick || 'Guest'}!
+            My Dashboard
           </Typography>
           <Typography
             variant="h6"
@@ -463,7 +492,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
               fontWeight: 400
             }}
           >
-            Here's what's happening with your account
+            Welcome back, {authMember?.memberNick || 'User'}! 👋
           </Typography>
         </Box>
 
@@ -514,15 +543,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <Chip
-                      label={`${authMember?.memberPoints || 0} Points`}
-                      icon={<StarIcon />}
-                      sx={{
-                        backgroundColor: `${componentColors.accent}15`,
-                        color: componentColors.accent,
-                        fontWeight: 600
-                      }}
-                    />
-                    <Chip
                       label={authMember?.memberType || 'Member'}
                       sx={{
                         backgroundColor: `${componentColors.accent}15`,
@@ -560,7 +580,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         >
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {stats.map((stat, index) => (
-              <Grid item xs={6} sm={3} key={index}>
+              <Grid item xs={12} sm={4} key={index}>
                 <Card
                   sx={{
                     backgroundColor: componentColors.surface,
@@ -795,7 +815,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                   fontWeight: 600
                                 }}
                               >
-                                Order #{order._id}
+                                Order #{String(index + 1).padStart(3, '0')}
                               </Typography>
                             }
                             secondary={
@@ -816,7 +836,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                     fontSize: '0.8rem'
                                   }}
                                 >
-                                  {order.orderItems?.slice(0, 2).map(item => item.productName).join(', ')}
+                                  {order.orderItems?.slice(0, 2).map(item => item.itemName).join(', ')}
                                   {order.orderItems?.length > 2 && ` +${order.orderItems.length - 2} more`}
                                 </Typography>
                               </Box>
@@ -905,65 +925,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         </motion.div>
       </motion.div>
 
-      {/* Settings Dialog */}
-      <Dialog
-        open={showSettingsDialog}
-        onClose={handleCloseSettings}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ color: componentColors.text }}>
-          Account Settings
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Settings functionality is coming soon! For now, you can manage your profile from the profile page.
-          </Alert>
-          <Typography variant="body2" sx={{ color: componentColors.textSecondary }}>
-            This section will include:
-          </Typography>
-          <List dense>
-            <ListItem>
-              <ListItemText 
-                primary="Notification preferences"
-                secondary="Email and push notifications"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText 
-                primary="Privacy settings"
-                secondary="Data sharing and visibility"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText 
-                primary="Payment methods"
-                secondary="Saved cards and payment options"
-              />
-            </ListItem>
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSettings} sx={{ color: componentColors.textSecondary }}>
-            Close
-          </Button>
-          <Button 
-            onClick={() => {
-              handleCloseSettings();
-              history.push('/member-page');
-            }}
-            variant="contained"
-            sx={{
-              backgroundColor: componentColors.accent,
-              '&:hover': {
-                backgroundColor: componentColors.secondary
-              }
-            }}
-          >
-            Go to Profile
-          </Button>
-        </DialogActions>
-      </Dialog>
+
 
       {/* Profile Editing Dialog */}
       <Dialog

@@ -1,6 +1,7 @@
 .coffees-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-top: 80px; /* Add top padding to account for fixed navbar */
 }
 
 .coffees-page .MuiContainer-root {

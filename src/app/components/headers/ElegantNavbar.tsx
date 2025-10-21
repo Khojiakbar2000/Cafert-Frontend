@@ -1,85 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
+  Box,
+  Container,
   Typography,
   Button,
   IconButton,
-  Badge,
   Avatar,
+  Chip,
   Menu,
   MenuItem,
-  Box,
-  Container,
+  ListItemIcon,
+  Stack,
   useTheme,
   useMediaQuery,
   Drawer,
   List,
   ListItem,
-  ListItemButton,
-  ListItemIcon,
   ListItemText,
-  Divider,
-  Chip,
-  Fade,
-  Zoom,
-  Slide
+  ListItemIcon as MuiListItemIcon,
+  Paper,
 } from '@mui/material';
 import {
+  Search as SearchIcon,
   Menu as MenuIcon,
-  ShoppingCart as CartIcon,
-  Person as PersonIcon,
+  Close as CloseIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountIcon,
   Receipt as OrdersIcon,
   Help as HelpIcon,
   Home as HomeIcon,
+  Inventory as ProductsIcon,
   Coffee as CoffeeIcon,
   Restaurant as RestaurantIcon,
   Cake as CakeIcon,
-  LocalCafe as DrinksIcon,
-  Logout as LogoutIcon,
-  Settings as SettingsIcon,
-  Star as StarIcon,
-  Notifications as NotificationsIcon
+  Language as LanguageIcon,
+  Favorite as FavoriteIcon,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useHistory, useLocation } from 'react-router-dom';
-import { useGlobals } from '../../hooks/useGlobals';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useGlobals } from '../../hooks/useGlobals';
+import { serverApi } from '../../../lib/config';
+import Basket from './Basket';
+import LanguageSwitcher from '../../../components/LanguageSwitcher';
+import { CartItem } from '../../../lib/types/search';
 
 interface ElegantNavbarProps {
-  cartItems: any[];
-  onAdd: (item: any) => void;
-  onRemove: (item: any) => void;
-  onDelete: (item: any) => void;
+  cartItems: CartItem[];
+  onAdd: (item: CartItem) => void;
+  onRemove: (item: CartItem) => void;
+  onDelete: (item: CartItem) => void;
   onDeleteAll: () => void;
-  setSignupOpen: (open: boolean) => void;
-  setLoginOpen: (open: boolean) => void;
-  handleLogoutClick: (event: React.MouseEvent<HTMLElement>) => void;
+  setSignupOpen: (isOpen: boolean) => void;
+  setLoginOpen: (isOpen: boolean) => void;
+  handleLogoutClick: (e: React.MouseEvent<HTMLElement>) => void;
   anchorEl: HTMLElement | null;
   handleCloseLogout: () => void;
   handleLogoutRequest: () => void;
 }
 
-const ElegantNavbar: React.FC<ElegantNavbarProps> = ({
-  cartItems,
-  onAdd,
-  onRemove,
-  onDelete,
-  onDeleteAll,
-  setSignupOpen,
-  setLoginOpen,
-  handleLogoutClick,
-  anchorEl,
-  handleCloseLogout,
-  handleLogoutRequest
-}) => {
+export default function ElegantNavbar(props: ElegantNavbarProps) {
+  const {
+    cartItems,
+    onAdd,
+    onRemove,
+    onDelete,
+    onDeleteAll,
+    setSignupOpen,
+    setLoginOpen,
+    handleLogoutClick,
+    anchorEl,
+    handleCloseLogout,
+    handleLogoutRequest,
+  } = props;
+
   const { authMember } = useGlobals();
-  const history = useHistory();
-  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
   const { t } = useTranslation();
-
+  
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -93,577 +92,530 @@ const ElegantNavbar: React.FC<ElegantNavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Force re-render when auth state changes
+  useEffect(() => {
+    // This ensures the component re-renders when authMember changes
+  }, [authMember]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleNavigation = (path: string) => {
-    history.push(path);
-    setMobileOpen(false);
   };
 
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const navigationItems = [
-    { path: '/', label: 'Home', icon: <HomeIcon /> },
-    { path: '/coffees', label: 'Coffees', icon: <CoffeeIcon /> },
-    { path: '/salads', label: 'Salads', icon: <RestaurantIcon /> },
-    { path: '/desserts', label: 'Desserts', icon: <CakeIcon /> },
-    { path: '/drinks', label: 'Drinks', icon: <DrinksIcon /> },
-  ];
-
-  const userMenuItems = [
-    { label: 'Profile', icon: <PersonIcon />, action: () => handleNavigation('/member-page') },
-    { label: 'Orders', icon: <OrdersIcon />, action: () => handleNavigation('/orders') },
-    { label: 'Settings', icon: <SettingsIcon />, action: () => {} },
-    { label: 'Help', icon: <HelpIcon />, action: () => handleNavigation('/help') },
+    { path: '/', label: t('navigation.home'), icon: <HomeIcon /> },
+    { path: '/products', label: t('navigation.products'), icon: <ProductsIcon /> },
+    { path: '/salads', label: t('navigation.salads'), icon: <RestaurantIcon /> },
+    { path: '/desserts', label: t('navigation.desserts'), icon: <CakeIcon /> },
+    ...(authMember ? [{ path: '/orders', label: t('navigation.orders'), icon: <OrdersIcon /> }] : []),
+    ...(authMember ? [{ path: '/my-page', label: t('navigation.profile'), icon: <AccountIcon /> }] : []),
+    { path: '/help', label: t('navigation.about'), icon: <HelpIcon /> },
   ];
 
   const drawer = (
-    <Box sx={{ width: 280, p: 2 }}>
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Avatar
-            src={authMember?.memberImage ? `/api${authMember.memberImage}` : "/icons/default-user.svg"}
+    <Paper 
+      elevation={0}
+      sx={{ 
+        width: 320, 
+        height: '100%', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        borderRadius: 0,
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+          opacity: 0.3,
+        }
+      }}
+    >
+      <Box sx={{ position: 'relative', zIndex: 1, p: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
+          <Typography
+            variant="h4"
             sx={{
-              width: 80,
-              height: 80,
-              margin: '0 auto',
-              mb: 2,
-              border: '3px solid #667eea',
-              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)'
+              color: 'white',
+              fontWeight: 300,
+              fontFamily: 'Playfair Display, serif',
+              letterSpacing: '0.05em',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}
-          />
-        </motion.div>
+          >
+            Cafert
+          </Typography>
+          <IconButton onClick={handleDrawerToggle} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
         
-        {authMember ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Typography variant="h6" sx={{ color: '#2C3E50', fontWeight: 700, mb: 1 }}>
-              {authMember.memberNick}
-            </Typography>
-            <Chip 
-              icon={<StarIcon />}
-              label={authMember.memberType} 
-              sx={{ 
-                background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                color: '#ffffff',
-                fontWeight: 600,
-                px: 2
+        <List>
+          {navigationItems.map((item) => (
+            <ListItem
+              key={item.path}
+              onClick={handleDrawerToggle}
+              sx={{
+                color: location.pathname === item.path ? '#667eea' : 'white',
+                backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                margin: '4px 0',
+                borderRadius: '16px',
+                transition: 'all 0.3s ease',
+                backdropFilter: location.pathname === item.path ? 'blur(10px)' : 'none',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  transform: 'translateX(6px)',
+                  backdropFilter: 'blur(10px)',
+                },
               }}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Typography variant="h6" sx={{ color: '#2C3E50', fontWeight: 700, mb: 2 }}>
-              Welcome Guest
+            >
+              <NavLink
+                to={item.path}
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%' }}
+              >
+                <MuiListItemIcon sx={{ color: 'inherit', minWidth: 45 }}>
+                  {item.icon}
+                </MuiListItemIcon>
+                <ListItemText 
+                  primary={item.label} 
+                  sx={{ 
+                    '& .MuiListItemText-primary': {
+                      fontWeight: location.pathname === item.path ? 600 : 400,
+                      fontSize: '1rem',
+                      fontFamily: 'Inter, sans-serif',
+                    }
+                  }}
+                />
+              </NavLink>
+            </ListItem>
+          ))}
+        </List>
+
+        <Box sx={{ mt: 'auto', pt: 3, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+            <LanguageIcon sx={{ color: 'white', fontSize: 20 }} />
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 500 }}>
+              {t('common.language')}
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          </Box>
+          <LanguageSwitcher />
+
+          {!authMember ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
               <Button
-                variant="contained"
-                onClick={() => { setSignupOpen(true); setMobileOpen(false); }}
+                fullWidth
+                variant="outlined"
+                onClick={() => {
+                  setSignupOpen(true);
+                  handleDrawerToggle();
+                }}
                 sx={{
-                  background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                  color: '#ffffff',
+                  borderColor: 'white',
+                  color: 'white',
                   borderRadius: '12px',
-                  fontWeight: 600,
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #5a6fd8, #6a4190)',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  '&:hover': { 
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    transform: 'translateY(-2px)',
                   }
                 }}
               >
                 Sign Up
               </Button>
               <Button
-                variant="outlined"
-                onClick={() => { setLoginOpen(true); setMobileOpen(false); }}
+                fullWidth
+                variant="contained"
+                onClick={() => {
+                  setLoginOpen(true);
+                  handleDrawerToggle();
+                }}
                 sx={{
-                  borderColor: '#667eea',
+                  backgroundColor: 'white',
                   color: '#667eea',
                   borderRadius: '12px',
                   fontWeight: 600,
-                  '&:hover': {
-                    borderColor: '#5a6fd8',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                  textTransform: 'none',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-2px)',
                   }
                 }}
               >
-                Sign In
+                Login
               </Button>
             </Box>
-          </motion.div>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 3, borderColor: 'rgba(0,0,0,0.08)' }} />
-
-      <List>
-        {navigationItems.map((item, index) => (
-          <motion.div
-            key={item.path}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 * index }}
-          >
-            <ListItemButton
-              onClick={() => handleNavigation(item.path)}
-              selected={location.pathname === item.path}
-              sx={{
-                borderRadius: '12px',
-                mb: 1,
-                '&.Mui-selected': {
-                  background: 'linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
-                  '& .MuiListItemIcon-root': {
-                    color: '#667eea',
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: '#667eea',
-                    fontWeight: 600,
-                  }
-                },
-                '&:hover': {
-                  background: 'rgba(102, 126, 234, 0.05)',
-                }
-              }}
-            >
-              <ListItemIcon sx={{ color: '#7F8C8D', minWidth: 40 }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.label} 
+          ) : (
+            <Box sx={{ textAlign: 'center', mt: 3 }}>
+              <Avatar
+                src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
                 sx={{ 
-                  '& .MuiListItemText-primary': {
-                    fontWeight: 500,
-                    color: '#2C3E50',
-                  }
+                  width: 80, 
+                  height: 80, 
+                  mx: 'auto', 
+                  mb: 2,
+                  border: '4px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
                 }}
               />
-            </ListItemButton>
-          </motion.div>
-        ))}
-      </List>
-
-      {authMember && (
-        <>
-          <Divider sx={{ my: 3, borderColor: 'rgba(0,0,0,0.08)' }} />
-          
-          <Typography variant="subtitle2" sx={{ color: '#7F8C8D', fontWeight: 600, mb: 2, px: 2 }}>
-            Account
-          </Typography>
-          
-          <List>
-            {userMenuItems.map((item, index) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * (index + navigationItems.length) }}
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'white' }}>
+                {authMember?.memberNick || 'User'}
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<LogoutIcon />}
+                onClick={() => {
+                  handleLogoutRequest();
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  color: 'white',
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  '&:hover': { 
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
               >
-                            <ListItemButton
-              onClick={item.action}
-              sx={{
-                borderRadius: '12px',
-                mb: 1,
-                '&:hover': {
-                  background: 'rgba(102, 126, 234, 0.05)',
-                }
-              }}
-            >
-                  <ListItemIcon sx={{ color: '#7F8C8D', minWidth: 40 }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.label} 
-                    sx={{ 
-                      '& .MuiListItemText-primary': {
-                        fontWeight: 500,
-                        color: '#2C3E50',
-                      }
-                    }}
-                  />
-                </ListItemButton>
-              </motion.div>
-            ))}
-            
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 * (userMenuItems.length + navigationItems.length) }}
-            >
-                          <ListItemButton
-              onClick={handleLogoutRequest}
-              sx={{
-                borderRadius: '12px',
-                mb: 1,
-                '&:hover': {
-                  background: 'rgba(231, 76, 60, 0.05)',
-                }
-              }}
-            >
-                <ListItemIcon sx={{ color: '#E74C3C', minWidth: 40 }}>
-                  <LogoutIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Logout" 
-                  sx={{ 
-                    '& .MuiListItemText-primary': {
-                      fontWeight: 500,
-                      color: '#E74C3C',
-                    }
-                  }}
-                />
-              </ListItemButton>
-            </motion.div>
-          </List>
-        </>
-      )}
-    </Box>
+                Logout
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Box>
+    </Paper>
   );
 
   return (
     <>
-      <motion.div
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 320 },
+        }}
       >
-        <AppBar
-          position="fixed"
-          sx={{
-            background: scrolled 
-              ? 'rgba(255, 255, 255, 0.95)' 
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backdropFilter: scrolled ? 'blur(20px)' : 'none',
-            boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.1)' : 'none',
-            transition: 'all 0.3s ease-in-out',
-            borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
-          }}
-          elevation={0}
-        >
-          <Container maxWidth="xl">
-            <Toolbar sx={{ px: { xs: 1, sm: 2 }, py: 1 }}>
-              {/* Logo */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+        {drawer}
+      </Drawer>
+
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: scrolled 
+            ? 'rgba(255, 255, 255, 0.95)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: scrolled ? '1px solid rgba(102, 126, 234, 0.2)' : 'none',
+          boxShadow: scrolled ? '0 4px 20px rgba(102, 126, 234, 0.15)' : 'none',
+          transition: 'all 0.4s ease',
+          zIndex: 1200,
+        }}
+      >
+        <Container maxWidth="xl">
+          <Box
+            sx={{ 
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              py: 2.5 
+            }}
+          >
+            {/* Logo */}
+            <Box>
+              <NavLink to="/" style={{ textDecoration: 'none' }}>
                 <Typography
-                  variant="h5"
-                  component="div"
-                  onClick={() => handleNavigation('/')}
+                  variant="h4"
                   sx={{
-                    flexGrow: 0,
-                    fontWeight: 800,
-                    color: scrolled ? '#2C3E50' : '#ffffff',
-                    cursor: 'pointer',
-                    textShadow: scrolled ? 'none' : '0 2px 4px rgba(0,0,0,0.3)',
-                    transition: 'color 0.3s ease',
-                    mr: 4
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    fontWeight: 300,
+                    fontFamily: 'Playfair Display, serif',
+                    letterSpacing: '0.05em',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      filter: 'drop-shadow(0 0 20px rgba(102, 126, 234, 0.3))',
+                    }
                   }}
                 >
-                  Coffee Shop
+                  Cafert
                 </Typography>
-              </motion.div>
+              </NavLink>
+            </Box>
 
-              {/* Desktop Navigation */}
-              {!isMobile && (
-                <Box sx={{ display: 'flex', gap: 2, flexGrow: 1 }}>
-                  {navigationItems.map((item) => (
-                    <motion.div
-                      key={item.path}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ y: 0 }}
+            {/* Desktop Navigation */}
+            {!isMobile && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {navigationItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Button
+                      sx={{
+                        color: location.pathname === item.path ? '#667eea' : '#555',
+                        backgroundColor: location.pathname === item.path 
+                          ? 'rgba(102, 126, 234, 0.1)'
+                          : 'transparent',
+                        borderRadius: '25px',
+                        px: 3,
+                        py: 1.5,
+                        minWidth: 'auto',
+                        textTransform: 'none',
+                        fontWeight: location.pathname === item.path ? 600 : 400,
+                        fontSize: '0.9rem',
+                        fontFamily: 'Inter, sans-serif',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: '-100%',
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent)',
+                          transition: 'left 0.5s',
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                          color: '#667eea',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
+                          '&::before': {
+                            left: '100%',
+                          },
+                        },
+                      }}
                     >
-                      <Button
-                        onClick={() => handleNavigation(item.path)}
-                        sx={{
-                          color: scrolled ? '#2C3E50' : '#ffffff',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          fontSize: '1rem',
-                          px: 2,
-                          py: 1,
-                          borderRadius: '12px',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            background: scrolled 
-                              ? 'rgba(102, 126, 234, 0.1)' 
-                              : 'rgba(255, 255, 255, 0.2)',
-                            transform: 'translateY(-2px)',
-                          }
-                        }}
-                      >
-                        {item.label}
-                      </Button>
-                    </motion.div>
-                  ))}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        {item.icon}
+                        <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    </Button>
+                  </NavLink>
+                ))}
+              </Box>
+            )}
+
+            {/* Right Side Actions */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {/* Cart */}
+              <Basket
+                cartItems={cartItems}
+                onAdd={onAdd}
+                onRemove={onRemove}
+                onDelete={onDelete}
+                onDeleteAll={onDeleteAll}
+              />
+
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+
+              {/* Search Icon */}
+              <IconButton
+                sx={{
+                  color: '#667eea',
+                  backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                  borderRadius: '50%',
+                  width: 45,
+                  height: 45,
+                  '&:hover': { 
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                    transform: 'scale(1.1) rotate(5deg)',
+                  }
+                }}
+                aria-label="search"
+              >
+                <SearchIcon />
+              </IconButton>
+
+              {/* User Actions */}
+              {!authMember ? (
+                <Box sx={{ display: 'flex', gap: 1.5, ml: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setSignupOpen(true)}
+                    sx={{
+                      borderColor: '#667eea',
+                      color: '#667eea',
+                      borderRadius: '20px',
+                      fontWeight: 500,
+                      px: 2.5,
+                      textTransform: 'none',
+                      '&:hover': {
+                        borderColor: '#5a6fd8',
+                        backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                        transform: 'translateY(-2px)',
+                      }
+                    }}
+                  >
+                    Sign Up
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => setLoginOpen(true)}
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      borderRadius: '20px',
+                      fontWeight: 600,
+                      px: 2.5,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
+                      }
+                    }}
+                  >
+                    Login
+                  </Button>
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2 }}>
+                  <Chip
+                    icon={<FavoriteIcon />}
+                    label={cartItemCount}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
+                    }}
+                  />
+                  <Avatar
+                    src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
+                    onClick={handleLogoutClick}
+                    sx={{
+                      width: 45,
+                      height: 45,
+                      cursor: 'pointer',
+                      border: '3px solid #667eea',
+                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        transition: 'transform 0.2s ease',
+                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
+                      }
+                    }}
+                    alt="User Avatar"
+                  />
                 </Box>
               )}
 
-              {/* Right Side Actions */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {/* Cart */}
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="start"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    color: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    ml: 1,
+                    '&:hover': { 
+                      backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                      transform: 'scale(1.1)',
+                    }
+                  }}
                 >
-                  <IconButton
-                    onClick={() => handleNavigation('/products')}
-                    sx={{
-                      color: scrolled ? '#2C3E50' : '#ffffff',
-                      background: scrolled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        background: scrolled ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255, 255, 255, 0.3)',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Badge badgeContent={cartItemCount} color="error">
-                      <CartIcon />
-                    </Badge>
-                  </IconButton>
-                </motion.div>
-
-                {/* Notifications */}
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <IconButton
-                    sx={{
-                      color: scrolled ? '#2C3E50' : '#ffffff',
-                      background: scrolled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-                      '&:hover': {
-                        background: scrolled ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255, 255, 255, 0.3)',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Badge badgeContent={3} color="error">
-                      <NotificationsIcon />
-                    </Badge>
-                  </IconButton>
-                </motion.div>
-
-                {/* User Menu */}
-                {authMember ? (
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <IconButton
-                      onClick={handleLogoutClick}
-                      sx={{
-                        p: 0,
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      <Avatar
-                        src={authMember.memberImage ? `/api${authMember.memberImage}` : "/icons/default-user.svg"}
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          border: '2px solid',
-                          borderColor: scrolled ? '#667eea' : '#ffffff',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        }}
-                      />
-                    </IconButton>
-                  </motion.div>
-                ) : (
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="outlined"
-                        onClick={() => setLoginOpen(true)}
-                        sx={{
-                          borderColor: scrolled ? '#667eea' : '#ffffff',
-                          color: scrolled ? '#667eea' : '#ffffff',
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          '&:hover': {
-                            borderColor: scrolled ? '#5a6fd8' : '#ffffff',
-                            background: scrolled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-                          }
-                        }}
-                      >
-                        Sign In
-                      </Button>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="contained"
-                        onClick={() => setSignupOpen(true)}
-                        sx={{
-                          background: scrolled ? 'linear-gradient(45deg, #667eea, #764ba2)' : 'rgba(255, 255, 255, 0.2)',
-                          color: scrolled ? '#ffffff' : '#ffffff',
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          '&:hover': {
-                            background: scrolled ? 'linear-gradient(45deg, #5a6fd8, #6a4190)' : 'rgba(255, 255, 255, 0.3)',
-                            transform: 'translateY(-2px)',
-                          }
-                        }}
-                      >
-                        Sign Up
-                      </Button>
-                    </motion.div>
-                  </Box>
-                )}
-
-                {/* Mobile Menu Button */}
-                {isMobile && (
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <IconButton
-                      color="inherit"
-                      aria-label="open drawer"
-                      edge="start"
-                      onClick={handleDrawerToggle}
-                      sx={{
-                        color: scrolled ? '#2C3E50' : '#ffffff',
-                        ml: 1,
-                      }}
-                    >
-                      <MenuIcon />
-                    </IconButton>
-                  </motion.div>
-                )}
-              </Box>
-            </Toolbar>
-          </Container>
-        </AppBar>
-      </motion.div>
+                  <MenuIcon />
+                </IconButton>
+              )}
+            </Box>
+          </Box>
+        </Container>
+      </Box>
 
       {/* User Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleCloseLogout}
+        onClick={handleCloseLogout}
         PaperProps={{
+          elevation: 8,
           sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            mt: 1.5,
+            backgroundColor: 'white',
             borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-            mt: 1,
-          }
+            minWidth: 200,
+            '&:before': {
+              content: '""',
+              display: 'block',
+              position: 'absolute',
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: 'white',
+              transform: 'translateY(-50%) rotate(45deg)',
+              zIndex: 0,
+            },
+          },
         }}
-        TransitionComponent={Zoom}
-        transitionDuration={200}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {userMenuItems.map((item) => (
-          <MenuItem
-            key={item.label}
-            onClick={() => { item.action(); handleCloseLogout(); }}
-            sx={{
-              borderRadius: '8px',
-              mx: 1,
-              my: 0.5,
-              '&:hover': {
-                background: 'rgba(102, 126, 234, 0.1)',
-              }
-            }}
-          >
-            <ListItemIcon sx={{ color: '#667eea', minWidth: 36 }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.label} 
-              sx={{ 
-                '& .MuiListItemText-primary': {
-                  fontWeight: 500,
-                  color: '#2C3E50',
-                }
-              }}
-            />
-          </MenuItem>
-        ))}
-        <Divider sx={{ my: 1 }} />
-        <MenuItem
-          onClick={() => { handleLogoutRequest(); handleCloseLogout(); }}
-          sx={{
-            borderRadius: '8px',
-            mx: 1,
-            my: 0.5,
-            '&:hover': {
-              background: 'rgba(231, 76, 60, 0.1)',
-            }
-          }}
-        >
-          <ListItemIcon sx={{ color: '#E74C3C', minWidth: 36 }}>
-            <LogoutIcon />
+        <MenuItem onClick={() => window.location.href = '/my-page'} sx={{ '&:hover': { backgroundColor: 'rgba(102, 126, 234, 0.08)' } }}>
+          <ListItemIcon>
+            <AccountIcon fontSize="small" sx={{ color: '#667eea' }} />
           </ListItemIcon>
-          <ListItemText 
-            primary="Logout" 
-            sx={{ 
-              '& .MuiListItemText-primary': {
-                fontWeight: 500,
-                color: '#E74C3C',
-              }
-            }}
-          />
+          My Page
+        </MenuItem>
+        <MenuItem onClick={() => window.location.href = '/orders'} sx={{ '&:hover': { backgroundColor: 'rgba(102, 126, 234, 0.08)' } }}>
+          <ListItemIcon>
+            <OrdersIcon fontSize="small" sx={{ color: '#667eea' }} />
+          </ListItemIcon>
+          My Orders
+        </MenuItem>
+        <MenuItem onClick={() => window.location.href = '/help'} sx={{ '&:hover': { backgroundColor: 'rgba(102, 126, 234, 0.08)' } }}>
+          <ListItemIcon>
+            <HelpIcon fontSize="small" sx={{ color: '#667eea' }} />
+          </ListItemIcon>
+          Help & Support
+        </MenuItem>
+        <MenuItem onClick={handleLogoutRequest} sx={{ '&:hover': { backgroundColor: 'rgba(255, 107, 107, 0.08)' } }}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" sx={{ color: '#ff6b6b' }} />
+          </ListItemIcon>
+          Logout
         </MenuItem>
       </Menu>
 
-      {/* Mobile Drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
-        PaperProps={{
-          sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-          }
-        }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { 
-            boxSizing: 'border-box', 
-            width: 280 
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
-
-      {/* Toolbar spacer */}
-      <Toolbar />
+      {/* Toolbar Spacer */}
+      <Box sx={{ height: 90 }} />
     </>
   );
-};
-
-export default ElegantNavbar; 
+} 

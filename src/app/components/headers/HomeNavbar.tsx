@@ -21,7 +21,6 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Notifications as NotificationsIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
   Logout as LogoutIcon,
@@ -42,6 +41,8 @@ import { serverApi } from '../../../lib/config';
 import Basket from './Basket';
 import LanguageSwitcher from '../../../components/LanguageSwitcher';
 import { CartItem } from '../../../lib/types/search';
+import { Member } from '../../../lib/types/member';
+import { MemberType, MemberStatus } from '../../../lib/enums/member.enum';
 
 interface HomeNavbarProps {
   cartItems: CartItem[];
@@ -72,12 +73,13 @@ export default function HomeNavbar(props: HomeNavbarProps) {
     handleLogoutRequest,
   } = props;
 
-  const { authMember } = useGlobals();
+  const { authMember, setAuthMember } = useGlobals();
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
   const { t } = useTranslation();
-  
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -101,11 +103,10 @@ export default function HomeNavbar(props: HomeNavbarProps) {
   const navigationItems = [
     { path: '/', label: t('navigation.home'), icon: <HomeIcon /> },
     { path: '/products', label: t('navigation.products'), icon: <ProductsIcon /> },
-    { path: '/coffees', label: t('navigation.drinks'), icon: <CoffeeIcon /> },
     { path: '/salads', label: t('navigation.salads'), icon: <RestaurantIcon /> },
     { path: '/desserts', label: t('navigation.desserts'), icon: <CakeIcon /> },
-    { path: '/drinks', label: t('navigation.drinks'), icon: <CoffeeIcon /> },
     ...(authMember ? [{ path: '/orders', label: t('navigation.orders'), icon: <OrdersIcon /> }] : []),
+    ...(authMember ? [{ path: '/my-page', label: t('navigation.profile'), icon: <AccountIcon /> }] : []),
     { path: '/help', label: t('navigation.about'), icon: <HelpIcon /> },
   ];
 
@@ -251,6 +252,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
 
       {/* Main Navbar */}
       <Box
+        key={`navbar-${authMember ? 'authenticated' : 'guest'}`}
         sx={{
           position: 'fixed',
           top: 0,
@@ -298,7 +300,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
 
             {/* Desktop Navigation */}
             {!isMobile && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {navigationItems.map((item) => (
                   <NavLink
                     key={item.path}
@@ -313,8 +315,8 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                         color: '#333',
                         fontWeight: location.pathname === item.path ? 600 : 400,
                         position: 'relative',
-                        px: 2,
-                        py: 1,
+                        px: 3,
+                        py: 1.5,
                         borderRadius: '8px',
                         backgroundColor: location.pathname === item.path 
                           ? 'rgba(139, 69, 19, 0.08)'
@@ -379,22 +381,9 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                 <SearchIcon />
               </IconButton>
 
-              {/* Notifications */}
-              <IconButton
-                sx={{
-                  color: '#666',
-                  '&:hover': { 
-                    color: '#8B4513',
-                    backgroundColor: 'rgba(139, 69, 19, 0.05)'
-                  }
-                }}
-                aria-label="notifications"
-              >
-                <NotificationsIcon />
-              </IconButton>
-
               {/* User Actions */}
-              {!authMember ? (
+              <Box>
+                {!authMember ? (
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
                     variant="text"
@@ -431,6 +420,36 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                   >
                     Login
                   </Button>
+                  {/* Test button to manually set auth state */}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      const testUser: Member = {
+                        _id: 'test123',
+                        memberNick: 'TestUser',
+                        memberPhone: '1234567890',
+                        memberType: MemberType.USER,
+                        memberStatus: MemberStatus.ACTIVE,
+                        memberPoints: 0,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                      };
+                      setAuthMember(testUser);
+                    }}
+                    sx={{
+                      borderColor: '#ff0000',
+                      color: '#ff0000',
+                      fontSize: '0.7rem',
+                      px: 1,
+                      '&:hover': {
+                        borderColor: '#cc0000',
+                        backgroundColor: 'rgba(255, 0, 0, 0.05)',
+                      }
+                    }}
+                  >
+                    Test Auth
+                  </Button>
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -462,6 +481,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                   />
                 </Box>
               )}
+              </Box>
 
               {/* Mobile Menu Button */}
               {isMobile && (
@@ -519,25 +539,25 @@ export default function HomeNavbar(props: HomeNavbarProps) {
           <ListItemIcon>
             <AccountIcon fontSize="small" />
           </ListItemIcon>
-          My Page
+          {t('navigation.myPage')}
         </MenuItem>
         <MenuItem onClick={() => window.location.href = '/orders'}>
           <ListItemIcon>
             <OrdersIcon fontSize="small" />
           </ListItemIcon>
-          My Orders
+          {t('navigation.myOrders')}
         </MenuItem>
         <MenuItem onClick={() => window.location.href = '/help'}>
           <ListItemIcon>
             <HelpIcon fontSize="small" />
           </ListItemIcon>
-          Help & Support
+          {t('navigation.helpSupport')}
         </MenuItem>
         <MenuItem onClick={handleLogoutRequest}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>
-          Logout
+          {t('navigation.logout')}
         </MenuItem>
       </Menu>
 

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import Modal from "@material-ui/core/Modal";
-import Backdrop from "@material-ui/core/Backdrop";
-import Fade from "@material-ui/core/Fade";
-import { Fab, Stack, TextField } from "@mui/material";
+import Modal from "@mui/material/Modal";
+import Backdrop from "@mui/material/Backdrop";
+import Fade from "@mui/material/Fade";
+import { Fab, Stack, TextField, useTheme } from "@mui/material";
 import styled from "styled-components";
 import LoginIcon from "@mui/icons-material/Login";
 import { T } from "../../../lib/types/common";
@@ -13,20 +12,7 @@ import MemberService from "../../services/MemberService";
 import { sweetErrorHandling } from "../../../lib/sweetAlert";
 import { useGlobals } from "../../hooks/useGlobals";
 import PostSignupNavigation from "../PostSignupNavigation";
-
-const useStyles = makeStyles((theme) => ({
-  modal: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  paper: {
-    backgroundColor: theme.palette.background.paper,
-    border: "2px solid #000",
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 2, 2),
-  },
-}));
+import { useTheme as useCoffeeTheme } from "../../../mui-coffee/context/ThemeContext";
 
 const ModalImg = styled.img`
   width: 62%;
@@ -46,22 +32,21 @@ interface AuthenticationModalProps {
 
 export default function AuthenticationModal(props: AuthenticationModalProps) {
   const { signupOpen, loginOpen, handleSignupClose, handleLoginClose } = props;
-  const classes = useStyles();
   const [memberNick, setMemberNick]= useState<string>("");
   const [memberPhone, setMemberPhone]=useState<string>("");
   const [memberPassword, setMemberPassword]=useState<string>("");
   const [showPostSignupNav, setShowPostSignupNav] = useState<boolean>(false);
   const {setAuthMember}=useGlobals()
+  const theme = useTheme();
+  const { isDarkMode, colors } = useCoffeeTheme();
 
   /** HANDLERS **/
   const handleUserName=(e:T)=>{
-    console.log(e.target.value);
     setMemberNick(e.target.value)
     
   }
 
   const handlePhone=(e:T)=>{
-    console.log(e.target.value);
     setMemberPhone(e.target.value)
     
   }
@@ -77,14 +62,12 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
   
 
   const handlePassword=(e:T)=>{
-    console.log(e.target.value);
     setMemberPassword(e.target.value)
     
   }
 
   const handleSignupRequest =async ()=>{
     try{
-      console.log("input:", memberNick, memberPhone, memberPassword)
       const isFulfill = memberNick !== "" && memberPhone !== "" && memberPassword !=="";
       if(!isFulfill) throw new Error(Messages.error3)
 
@@ -97,12 +80,12 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
 
         const member = new MemberService()
         const result = await member.signup(signupInput);
-      //Saving Authenticated user
-      setAuthMember(result)
-      handleSignupClose();
-      setShowPostSignupNav(true);
+        
+        //Saving Authenticated user
+        setAuthMember(result)
+        handleSignupClose();
+        setShowPostSignupNav(true);
     }catch(err){
-     console.log(err)
      handleSignupClose()
      sweetErrorHandling(err).then()
     }
@@ -131,7 +114,6 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
          setAuthMember(result)
         handleLoginClose();
     }catch(err){
-     console.log(err)
      handleLoginClose()
      sweetErrorHandling(err).then()
     }
@@ -143,39 +125,115 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
-        className={classes.modal}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         open={signupOpen}
         onClose={handleSignupClose}
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{
           timeout: 500,
+          sx: {
+            backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+          },
         }}
       >
         <Fade in={signupOpen}>
           <Stack
-            className={classes.paper}
+            sx={{
+              width: "800px",
+              backgroundColor: "#ffffff",
+              border: "2px solid #000",
+              boxShadow: "5px 5px 10px rgba(0,0,0,0.5)",
+              padding: "10px 10px 10px",
+              color: "#000000",
+            }}
             direction={"row"}
-            sx={{ width: "800px" }}
           >
             <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
             <Stack sx={{ marginLeft: "69px", alignItems: "center" }}>
-              <h2>Signup Form</h2>
+              <h2 style={{ color: "#000000" }}>Signup Form</h2>
               <TextField
-                sx={{ marginTop: "7px" }}
+                sx={{ 
+                  marginTop: "7px",
+                  "& .MuiOutlinedInput-root": {
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "#000000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#666666",
+                    "&.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  },
+                }}
                 id="outlined-basic"
                 label="username"
                 variant="outlined"
                 onChange={handleUserName}
               />
               <TextField
-                sx={{ my: "17px" }}
+                sx={{ 
+                  my: "17px",
+                  "& .MuiOutlinedInput-root": {
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "#000000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#666666",
+                    "&.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  },
+                }}
                 id="outlined-basic"
                 label="phone number"
                 variant="outlined"
                 onChange={handlePhone}
               />
               <TextField
+                sx={{ 
+                  "& .MuiOutlinedInput-root": {
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "#000000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#666666",
+                    "&.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  },
+                }}
                 id="outlined-basic"
                 label="password"
                 variant="outlined"
@@ -183,9 +241,16 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
                 onKeyDown={handlePasswordKeyDown}
               />
               <Fab
-                sx={{ marginTop: "30px", width: "120px" }}
+                sx={{ 
+                  marginTop: "30px", 
+                  width: "120px",
+                  backgroundColor: "#1976d2",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#1565c0",
+                  },
+                }}
                 variant="extended"
-                color="primary"
                 onClick={handleSignupRequest}
               >
                 <LoginIcon sx={{ mr: 1 }} />
@@ -199,20 +264,33 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
-        className={classes.modal}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         open={loginOpen}
         onClose={handleLoginClose}
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{
           timeout: 500,
+          sx: {
+            backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+          },
         }}
       >
         <Fade in={loginOpen}>
           <Stack
-            className={classes.paper}
+            sx={{
+              width: "700px",
+              backgroundColor: "#ffffff",
+              border: "2px solid #000",
+              boxShadow: "5px 5px 10px rgba(0,0,0,0.5)",
+              padding: "10px 10px 10px",
+              color: "#000000",
+            }}
             direction={"row"}
-            sx={{ width: "700px" }}
           >
             <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
             <Stack
@@ -222,12 +300,33 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
                 alignItems: "center",
               }}
             >
-              <h2>Login Form</h2>
+              <h2 style={{ color: "#000000" }}>Login Form</h2>
               <TextField
                 id="outlined-basic"
                 label="username"
                 variant="outlined"
-                sx={{ my: "10px" }}
+                sx={{ 
+                  my: "10px",
+                  "& .MuiOutlinedInput-root": {
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "#000000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#666666",
+                    "&.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  },
+                }}
                 onChange={handleUserName}
               />
               <TextField
@@ -235,13 +334,41 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
                 label={"password"}
                 variant={"outlined"}
                 type={"password"}
+                sx={{ 
+                  "& .MuiOutlinedInput-root": {
+                    color: "#000000",
+                    backgroundColor: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "#000000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1976d2",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#666666",
+                    "&.Mui-focused": {
+                      color: "#1976d2",
+                    },
+                  },
+                }}
                 onChange={handlePassword}
                 onKeyDown={handlePasswordKeyDown}
               />
               <Fab
-                sx={{ marginTop: "27px", width: "120px" }}
+                sx={{ 
+                  marginTop: "27px", 
+                  width: "120px",
+                  backgroundColor: "#1976d2",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#1565c0",
+                  },
+                }}
                 variant={"extended"}
-                color={"primary"}
                 onClick={handleLoginRequest}
               >
                 <LoginIcon sx={{ mr: 1 }} />

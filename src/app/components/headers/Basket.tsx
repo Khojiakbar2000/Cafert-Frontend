@@ -1,14 +1,26 @@
 import React from "react";
-import { Box, Button, Stack } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
-import Badge from "@mui/material/Badge";
-import Menu from "@mui/material/Menu";
+import { 
+  Box, 
+  Button, 
+  Stack, 
+  Typography, 
+  IconButton, 
+  Badge, 
+  Menu, 
+  Divider,
+  Chip,
+  Avatar,
+  Fade,
+  useTheme,
+  useMediaQuery
+} from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 import { useHistory } from "react-router-dom";
 import { CartItem } from "../../../lib/types/search";
-import { isTemplateMiddle } from "typescript";
 import { Messages, serverApi } from "../../../lib/config";
 import { sweetErrorHandling } from "../../../lib/sweetAlert";
 import { useGlobals } from "../../hooks/useGlobals";
@@ -17,18 +29,21 @@ import OrderService from "../../services/OrderService";
 interface BasketProps {
   cartItems: CartItem[];
   onAdd: (item: CartItem)=> void;
-    onRemove: (item: CartItem)=> void;
-    onDelete: (item: CartItem)=> void;
-    onDeleteAll: ()=> void;
+  onRemove: (item: CartItem)=> void;
+  onDelete: (item: CartItem)=> void;
+  onDeleteAll: ()=> void;
 }
 
 export default function Basket(props:BasketProps) {
   const {cartItems, onAdd, onRemove, onDelete, onDeleteAll} = props;
   const {authMember, setOrderBuilder} = useGlobals();
   const history = useHistory();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const itemsPrice: number = cartItems.reduce((a: number, c: CartItem)=> a + c.quantity*c.price,0);
   const shippingCost: number = itemsPrice < 100 ? 5 : 0;
-const totalPrice = (itemsPrice + shippingCost).toFixed(1)
+  const totalPrice = (itemsPrice + shippingCost).toFixed(1);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -43,222 +58,316 @@ const totalPrice = (itemsPrice + shippingCost).toFixed(1)
 
   const proceedOrderHandler = async () => {
     try{
-    handleClose()
-    if(!authMember) throw new Error(Messages.error2);
+      handleClose()
+      
+      if(!authMember) throw new Error(Messages.error2);
 
-    const order = new OrderService();
-    await order.createOrder(cartItems)
+      const order = new OrderService();
+      const createdOrder = await order.createOrder(cartItems);
+      console.log("Order created successfully:", createdOrder);
 
-    onDeleteAll();
-    
-    setOrderBuilder(new Date())
-    history.push("orders");
-
-    //REFRESH VIA CONTEXT
+      onDeleteAll();
+      setOrderBuilder(new Date())
+      history.push("orders");
 
     }catch(err){
-      console.log(err)
+      console.log("=== ORDER CREATION ERROR ===");
+      console.log("Error details:", err);
       sweetErrorHandling(err).then();
-
     }
   }
 
   return (
-    <Box className={"hover-line"}>
+    <Box sx={{ position: 'relative' }}>
       <IconButton
         aria-label="cart"
-        id="basic-button"
-        aria-controls={open ? "basic-menu" : undefined}
+        id="floating-cart-button"
+        aria-controls={open ? "cart-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
         sx={{
-          animation: 'float 3s ease-in-out infinite',
-          '@keyframes float': {
-            '0%, 100%': {
-              transform: 'translateY(0px) rotate(0deg)',
-            },
-            '25%': {
-              transform: 'translateY(-3px) rotate(2deg)',
-            },
-            '50%': {
-              transform: 'translateY(-1px) rotate(-1deg)',
-            },
-            '75%': {
-              transform: 'translateY(-2px) rotate(1deg)',
-            },
-          },
-          '&:hover': {
-            animation: 'bounce 0.6s ease-in-out',
-            '@keyframes bounce': {
-              '0%, 20%, 50%, 80%, 100%': {
-                transform: 'translateY(0px) scale(1)',
-              },
-              '40%': {
-                transform: 'translateY(-8px) scale(1.1)',
-              },
-              '60%': {
-                transform: 'translateY(-4px) scale(1.05)',
-              },
-            },
-          },
+          width: 56,
+          height: 56,
+          backgroundColor: 'rgba(139, 69, 19, 0.1)',
+          color: '#8b4513',
+          borderRadius: '50%',
+          border: '2px solid #8b4513',
           transition: 'all 0.3s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(139, 69, 19, 0.2)',
+            transform: 'scale(1.1)',
+            boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
+          },
           '&:active': {
-            animation: 'shake 0.5s ease-in-out',
-            '@keyframes shake': {
-              '0%, 100%': {
-                transform: 'translateX(0px)',
-              },
-              '25%': {
-                transform: 'translateX(-3px)',
-              },
-              '75%': {
-                transform: 'translateX(3px)',
-              },
-            },
+            transform: 'scale(0.95)',
           },
         }}
       >
         <Badge 
           badgeContent={cartItems.length} 
-          color="secondary"
+          color="error"
           sx={{
             '& .MuiBadge-badge': {
-              animation: 'pulse 2s infinite',
+              backgroundColor: '#e74c3c',
+              color: '#ffffff',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              minWidth: 20,
+              height: 20,
+              animation: cartItems.length > 0 ? 'pulse 2s infinite' : 'none',
               '@keyframes pulse': {
                 '0%': {
-                  boxShadow: '0 0 0 0 rgba(255, 193, 7, 0.7)',
+                  boxShadow: '0 0 0 0 rgba(231, 76, 60, 0.7)',
                 },
                 '70%': {
-                  boxShadow: '0 0 0 10px rgba(255, 193, 7, 0)',
+                  boxShadow: '0 0 0 10px rgba(231, 76, 60, 0)',
                 },
                 '100%': {
-                  boxShadow: '0 0 0 0 rgba(255, 193, 7, 0)',
+                  boxShadow: '0 0 0 0 rgba(231, 76, 60, 0)',
                 },
               },
             },
           }}
         >
-          <Box
-            component="img"
-            src={"/icons/shopping-cart.svg"}
-            sx={{
-              animation: 'swing 2s ease-in-out infinite',
-              '@keyframes swing': {
-                '0%, 100%': {
-                  transform: 'rotate(-2deg)',
-                },
-                '50%': {
-                  transform: 'rotate(2deg)',
-                },
-              },
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                animation: 'wiggle 0.5s ease-in-out',
-                '@keyframes wiggle': {
-                  '0%, 100%': {
-                    transform: 'rotate(0deg)',
-                  },
-                  '25%': {
-                    transform: 'rotate(-5deg)',
-                  },
-                  '75%': {
-                    transform: 'rotate(5deg)',
-                  },
-                },
-              },
-            }}
-          />
+          <ShoppingCartIcon sx={{ fontSize: 24 }} />
         </Badge>
       </IconButton>
+
       <Menu
         anchorEl={anchorEl}
-        id="account-menu"
+        id="cart-menu"
         open={open}
         onClose={handleClose}
-        // onClick={handleClose}
         PaperProps={{
-          elevation: 0,
+          elevation: 8,
           sx: {
             overflow: "visible",
-            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
-            mt: 1.5,
-            "& .MuiAvatar-root": {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
+            filter: "drop-shadow(0px 4px 20px rgba(0,0,0,0.15))",
+            mt: 2,
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            minWidth: 350,
+            maxWidth: 400,
+            maxHeight: 500,
+            border: '1px solid #e0e0e0',
             "&:before": {
               content: '""',
               display: "block",
               position: "absolute",
               top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: "background.paper",
+              right: 20,
+              width: 12,
+              height: 12,
+              bgcolor: '#ffffff',
               transform: "translateY(-50%) rotate(45deg)",
               zIndex: 0,
+              borderLeft: '1px solid #e0e0e0',
+              borderTop: '1px solid #e0e0e0',
             },
           },
         }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <Stack className={"basket-frame"}>
-          <Box className={"all-check-box"}>
-            {cartItems.length === 0 ?(
-              <div>Cart is empty!</div>
-            ):(
-            <Stack direction={"row"}> <div>Cart Products:</div>
-             <DeleteForeverIcon 
-             sx={{ml:"5px", cursor:"pointer"}}
-             color={"primary"}
-                  onClick={()=>onDeleteAll()}/>
-            </Stack>
+        <Box sx={{ p: 3 }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
+              Shopping Cart
+            </Typography>
+            {cartItems.length > 0 && (
+              <IconButton
+                onClick={onDeleteAll}
+                sx={{
+                  color: '#e74c3c',
+                  '&:hover': {
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                  }
+                }}
+              >
+                <DeleteForeverIcon />
+              </IconButton>
             )}
-            
           </Box>
 
-          <Box className={"orders-main-wrapper"}>
-            <Box className={"orders-wrapper"}>
-            {cartItems.map((item: CartItem)=>{
-            const imagePath = `${serverApi}${item.image}`
-              return  (
-                <Box className={"basket-info-box"} key={item._id}>
-                <div className={"cancel-btn"}>
-                  <CancelIcon 
-                  color={"primary"}
-                  onClick={()=>onDelete(item)} />
-                </div>
-                <img src={imagePath} className={"product-img"} />
-                <span className={"product-name"}>{item.name}</span>
-                <p className={"product-price"}>${item.price} x {item.quantity}</p>
-                <Box sx={{ minWidth: 120 }}>
-                  <div className="col-2">
-                    <button onClick={()=> onRemove(item)} className="remove"
-                      >
-                      -
-                      </button>{" "}
-                    <button onClick={()=> onAdd(item)}  className="add">+</button>
-                  </div>
-                </Box>
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Cart Items */}
+          <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+            {cartItems.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <ShoppingCartIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
+                <Typography variant="body1" sx={{ color: '#666' }}>
+                  Your cart is empty
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#999', mt: 1 }}>
+                  Add some delicious items to get started!
+                </Typography>
               </Box>
-              );
-            })}
-            </Box>
+            ) : (
+              <Stack spacing={2}>
+                {cartItems.map((item: CartItem) => {
+                  const imagePath = `${serverApi}${item.image}`;
+                  return (
+                    <Box
+                      key={item._id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        borderRadius: '12px',
+                        backgroundColor: '#fafafa',
+                        border: '1px solid #f0f0f0',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          backgroundColor: '#f5f5f5',
+                          transform: 'translateX(-4px)',
+                        }
+                      }}
+                    >
+                      <Avatar
+                        src={imagePath}
+                        sx={{ width: 50, height: 50, borderRadius: '8px' }}
+                        variant="rounded"
+                      />
+                      
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50', mb: 0.5 }}>
+                          {item.name}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#8b4513', fontWeight: 600 }}>
+                          ${item.price}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => onRemove(item)}
+                          sx={{
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            color: '#e74c3c',
+                            width: 28,
+                            height: 28,
+                            '&:hover': {
+                              backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                            }
+                          }}
+                        >
+                          <RemoveIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                        
+                        <Chip
+                          label={item.quantity}
+                          size="small"
+                          sx={{
+                            backgroundColor: '#8b4513',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            minWidth: 32,
+                          }}
+                        />
+                        
+                        <IconButton
+                          size="small"
+                          onClick={() => onAdd(item)}
+                          sx={{
+                            backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                            color: '#8b4513',
+                            width: 28,
+                            height: 28,
+                            '&:hover': {
+                              backgroundColor: 'rgba(139, 69, 19, 0.2)',
+                            }
+                          }}
+                        >
+                          <AddIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                        
+                        <IconButton
+                          size="small"
+                          onClick={() => onDelete(item)}
+                          sx={{
+                            color: '#999',
+                            width: 28,
+                            height: 28,
+                            '&:hover': {
+                              color: '#e74c3c',
+                              backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            }
+                          }}
+                        >
+                          <CancelIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
           </Box>
-          {cartItems.length !==0 ? (  <Box className={"basket-order"}>
-            <span className={"price"}>Total: ${totalPrice} ({itemsPrice}+{shippingCost})</span>
-            <Button 
-            onClick={proceedOrderHandler}
-            startIcon={<ShoppingCartIcon />} variant={"contained"}>
-              Order
-            </Button>
-          </Box>) : ("")}
-        
-        </Stack>
+
+          {/* Footer */}
+          {cartItems.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Divider sx={{ mb: 2 }} />
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  Subtotal:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  ${itemsPrice.toFixed(2)}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  Shipping:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  ${shippingCost.toFixed(2)}
+                </Typography>
+              </Box>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
+                  Total:
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
+                  ${totalPrice}
+                </Typography>
+              </Box>
+              
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={proceedOrderHandler}
+                startIcon={<ShoppingCartIcon />}
+                sx={{
+                  backgroundColor: '#8b4513',
+                  color: '#ffffff',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
+                  '&:hover': {
+                    backgroundColor: '#a0522d',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(139, 69, 19, 0.4)',
+                  }
+                }}
+              >
+                Proceed to Order
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Menu>
     </Box>
   );

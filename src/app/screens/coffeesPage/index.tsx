@@ -4,7 +4,7 @@ import { Route, Switch, useRouteMatch } from "react-router-dom";
 import Coffees from "./Coffees";
 import ChosenCoffee from "./ChosenCoffee";
 import { CartItem } from "../../../lib/types/search";
-import VerticalMovingBasket from "../../../mui-coffee/components/VerticalMovingBasket";
+
 import "../../../css/coffees.css";
 
 // Simple placeholder component for testing
@@ -17,21 +17,22 @@ const SimpleChosenCoffee = ({ onAdd }: { onAdd: (item: CartItem) => void }) => (
 
 interface CoffeesPageProps {
   onAdd: (item: CartItem) => void;
+  defaultCategory?: 'all' | 'drinks' | 'desserts' | 'salads' | 'dishes' | 'other';
 }
 
 export default function CoffeesPage(props: CoffeesPageProps) {
-  const { onAdd } = props;
+  const { onAdd, defaultCategory } = props;
   const coffees = useRouteMatch();
 
   return (
     <div className="coffees-page">
-      <VerticalMovingBasket itemCount={3} />
+      
       <Switch>
         <Route path={`${coffees.path}/:coffeeId`}>
           <ChosenCoffee onAdd={onAdd} />
         </Route>
         <Route path={`${coffees.path}`}>
-          <Coffees onAdd={onAdd} />
+          <Coffees onAdd={onAdd} defaultCategory={defaultCategory} />
         </Route>
       </Switch>
     </div>

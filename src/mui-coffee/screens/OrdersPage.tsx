@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -8,10 +8,8 @@ import {
   Grid,
   Chip,
   Button,
-  IconButton,
   Tabs,
   Tab,
-  Badge,
   Avatar,
   Divider,
   useTheme,
@@ -23,25 +21,23 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar
+  ListItemAvatar,
+  Snackbar,
+  Alert
 } from '@mui/material';
+import OrderService from '../../app/services/OrderService';
+import { Order as ApiOrder } from '../../lib/types/order';
+import { OrderStatus } from '../../lib/enums/order.enum';
 import {
   LocalCafe as CafeIcon,
   ShoppingCart as CartIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
-  LocalShipping as ShippingIcon,
   Receipt as ReceiptIcon,
-  Star as StarIcon,
-  Favorite as FavoriteIcon,
-  Visibility as VisibilityIcon,
   Close as CloseIcon,
-  Refresh as RefreshIcon,
-  FilterList as FilterIcon,
-  Search as SearchIcon,
-  Sort as SortIcon
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface OrderItem {
   id: number;
@@ -85,6 +81,8 @@ interface OrdersPageProps {
 }
 
 const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
+  console.log('🔄 OrdersPage component loaded - VERSION WITH NEW BUTTONS');
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -107,9 +105,40 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+
+  // Function to get a real product ID from the menu
+  const getRealProductId = async () => {
+    try {
+      const productService = new (await import('../../app/services/ProductService')).default();
+      const products = await productService.getProducts({
+        page: 1,
+        limit: 1,
+        order: 'productViews'
+      });
+      
+      if (products && products.length > 0) {
+        console.log('🎯 Found real product:', products[0]);
+        return products[0]._id;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Error getting real product ID:', error);
+      return null;
+    }
+  };
 
   // Sample orders data
-  const sampleOrders: Order[] = [
+  const sampleOrders: Order[] = useMemo(() => [
     {
       id: 'ORD-001',
       date: '2024-01-15',
@@ -185,12 +214,138 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
       customerPhone: '(555) 321-6547',
       estimatedTime: '11:50'
     }
-  ];
+  ], []);
+
+  // Fetch real orders from API
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const orderService = new OrderService();
+      const orderInquiry = {
+        page: 1,
+        limit: 50,
+        orderStatus: undefined // Get all orders
+      };
+      
+      console.log('=== FETCHING ORDERS DEBUG ===');
+      console.log('🔍 Order inquiry:', orderInquiry);
+      
+      // Check current user authentication
+      const memberData = localStorage.getItem("memberData");
+      if (memberData) {
+        const member = JSON.parse(memberData);
+        console.log('✅ Current user when fetching orders:', member);
+        console.log('✅ User ID:', member._id);
+        console.log('✅ User email:', member.memberEmail);
+        console.log('✅ User nick:', member.memberNick);
+        console.log('✅ Member data type:', typeof member);
+        console.log('✅ Member data keys:', Object.keys(member));
+      } else {
+        console.log('❌ No member data found when fetching orders');
+        setSnackbar({
+          open: true,
+          message: 'Please login to view your orders',
+          severity: 'warning'
+        });
+        return;
+      }
+      
+      // Check cookies
+      console.log('🍪 All cookies:', document.cookie);
+      
+      console.log('🌐 Making API call to:', `${orderService['path']}order/all?page=1&limit=50`);
+      
+      const apiOrders = await orderService.getMyOrders(orderInquiry);
+      console.log('📦 API Orders response:', apiOrders);
+      console.log('📊 Number of orders:', apiOrders?.length || 0);
+      console.log('📋 Orders type:', typeof apiOrders);
+      console.log('📋 Is array:', Array.isArray(apiOrders));
+      
+      if (apiOrders && apiOrders.length > 0) {
+        console.log('✅ First order sample:', apiOrders[0]);
+        console.log('✅ First order keys:', Object.keys(apiOrders[0]));
+        console.log('✅ First order memberId:', apiOrders[0].memberId);
+        console.log('✅ First order status:', apiOrders[0].orderStatus);
+      } else {
+        console.log('⚠️ No orders returned from API');
+        console.log('⚠️ This could mean:');
+        console.log('   - No orders exist for this user');
+        console.log('   - Orders exist but belong to different users');
+        console.log('   - Backend filtering is working correctly');
+      }
+      
+      // Transform API orders to match our interface
+      const transformedOrders: Order[] = apiOrders.map((apiOrder: ApiOrder, index: number) => {
+        console.log(`🔄 Transforming order ${index}:`, apiOrder);
+        return {
+          id: apiOrder._id,
+          date: new Date(apiOrder.createdAt).toLocaleDateString(),
+          time: new Date(apiOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: apiOrder.orderStatus.toLowerCase() as 'pause' | 'process' | 'finish' | 'delete',
+          total: apiOrder.orderTotal || 0,
+          items: apiOrder.orderItems?.map((item: any, index: number) => ({
+            id: index + 1,
+            name: item.productName || `Product ${index + 1}`,
+            price: item.itemPrice || 0,
+            quantity: item.itemQuantity || 1,
+            image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=100&h=100&fit=crop'
+          })) || [],
+          orderType: 'dine-in',
+          paymentMethod: 'card',
+          customerName: 'You',
+          customerEmail: '',
+          customerPhone: '',
+          estimatedTime: new Date(new Date(apiOrder.createdAt).getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+      });
+      
+      console.log('🎯 Transformed orders:', transformedOrders);
+      console.log('📈 Final orders count:', transformedOrders.length);
+      
+      setOrders(transformedOrders);
+      setFilteredOrders(transformedOrders);
+      
+      // Show a message if no orders are found
+      if (transformedOrders.length === 0) {
+        setSnackbar({
+          open: true,
+          message: 'No orders found for this account. Try placing an order first!',
+          severity: 'info'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `Found ${transformedOrders.length} orders!`,
+          severity: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error fetching orders:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      
+      // Fallback to sample data if API fails
+      setOrders(sampleOrders);
+      setFilteredOrders(sampleOrders);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load orders. Showing sample data.',
+        severity: 'warning'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [sampleOrders]);
 
   useEffect(() => {
-    setOrders(sampleOrders);
-    setFilteredOrders(sampleOrders);
-  }, []);
+    fetchOrders();
+  }, [fetchOrders]);
+
+
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -262,6 +417,38 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
     setSelectedOrder(null);
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      const orderService = new OrderService();
+      await orderService.updateOrder({
+        orderId: orderId,
+        orderStatus: OrderStatus.DELETE
+      });
+      
+      // Refresh orders after cancellation
+      await fetchOrders();
+      
+      setSnackbar({
+        open: true,
+        message: 'Order cancelled successfully!',
+        severity: 'success'
+      });
+      
+      // Close order details if it was the cancelled order
+      if (selectedOrder?.id === orderId) {
+        setOrderDetailsOpen(false);
+        setSelectedOrder(null);
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to cancel order. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -296,29 +483,278 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
           transition={{ duration: 0.6 }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                color: componentColors.text,
-                fontWeight: 700,
-                mb: 2,
-                fontFamily: 'Playfair Display, serif',
-                fontSize: { xs: '2rem', md: '2.5rem' }
-              }}
-            >
-              Your Orders
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                color: componentColors.textSecondary,
-                maxWidth: '600px',
-                mx: 'auto',
-                lineHeight: 1.6
-              }}
-            >
-              Track your coffee orders and stay updated on their status
-            </Typography>
+                          <Typography
+                variant="h3"
+                sx={{
+                  color: componentColors.text,
+                  fontWeight: 700,
+                  mb: 2,
+                  fontFamily: 'Playfair Display, serif',
+                  fontSize: { xs: '2rem', md: '2.5rem' }
+                }}
+              >
+                Your Orders
+              </Typography>
+              {(() => {
+                const memberData = localStorage.getItem("memberData");
+                if (memberData) {
+                  const member = JSON.parse(memberData);
+                  return (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: componentColors.textSecondary,
+                        mb: 2
+                      }}
+                    >
+                      Logged in as: {member.memberNick || member.memberEmail || 'Unknown User'}
+                    </Typography>
+                  );
+                }
+                return null;
+              })()}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: componentColors.textSecondary,
+                  maxWidth: '600px',
+                  lineHeight: 1.6
+                }}
+              >
+                Track your coffee orders and stay updated on their status
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => {
+                  console.log('Manual refresh clicked');
+                  fetchOrders();
+                }}
+                disabled={loading}
+                sx={{
+                  borderColor: componentColors.accent,
+                  color: componentColors.accent,
+                  '&:hover': {
+                    borderColor: componentColors.secondary,
+                    backgroundColor: `${componentColors.accent}08`
+                  }
+                }}
+              >
+                {loading ? 'Loading...' : 'Refresh'}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={async () => {
+                  try {
+                    console.log('=== TEST ORDER CREATION ===');
+                    const orderService = new OrderService();
+                    
+                    // Get a real product ID from the menu
+                    const realProductId = await getRealProductId();
+                    if (!realProductId) {
+                      setSnackbar({
+                        open: true,
+                        message: 'Could not find a real product. Check if products exist in the menu.',
+                        severity: 'warning'
+                      });
+                      return;
+                    }
+                    
+                    const testOrder = [{
+                      _id: realProductId,
+                      quantity: 1,
+                      price: 5.99,
+                      name: 'Test Coffee',
+                      image: '/test-image.jpg'
+                    }];
+                    
+                    console.log('🎯 Creating test order with real product ID:', realProductId);
+                    const result = await orderService.createOrder(testOrder);
+                    console.log('✅ Test order created:', result);
+                    
+                    // Refresh orders after creating test order
+                    setTimeout(() => {
+                      fetchOrders();
+                    }, 1000);
+                    
+                    setSnackbar({
+                      open: true,
+                      message: 'Test order created successfully!',
+                      severity: 'success'
+                    });
+                  } catch (error) {
+                    console.error('❌ Test order creation failed:', error);
+                    setSnackbar({
+                      open: true,
+                      message: 'Test order creation failed. Check console for details.',
+                      severity: 'error'
+                    });
+                  }
+                }}
+                sx={{
+                  backgroundColor: componentColors.secondary,
+                  '&:hover': {
+                    backgroundColor: componentColors.primary
+                  }
+                }}
+              >
+                Test Order
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    console.log('=== CHECKING PRODUCTS ===');
+                    const productService = new (await import('../../app/services/ProductService')).default();
+                    const products = await productService.getProducts({
+                      page: 1,
+                      limit: 5,
+                      order: 'productViews'
+                    });
+                    
+                    console.log('📦 Available products:', products);
+                    console.log('📊 Number of products:', products?.length || 0);
+                    
+                    if (products && products.length > 0) {
+                      setSnackbar({
+                        open: true,
+                        message: `Found ${products.length} products in database`,
+                        severity: 'info'
+                      });
+                    } else {
+                      setSnackbar({
+                        open: true,
+                        message: 'No products found in database',
+                        severity: 'warning'
+                      });
+                    }
+                  } catch (error) {
+                    console.error('❌ Error checking products:', error);
+                    setSnackbar({
+                      open: true,
+                      message: 'Failed to check products. Check console for details.',
+                      severity: 'error'
+                    });
+                  }
+                }}
+                sx={{
+                  borderColor: componentColors.textSecondary,
+                  color: componentColors.textSecondary,
+                  '&:hover': {
+                    borderColor: componentColors.text,
+                    backgroundColor: `${componentColors.textSecondary}08`
+                  }
+                }}
+              >
+                Check Products
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    console.log('=== CHECKING RESTAURANT ORDERS ===');
+                    const orderService = new OrderService();
+                    
+                    // Try to get all orders without any filters
+                    const allOrders = await orderService.getMyOrders({
+                      page: 1,
+                      limit: 100,
+                      orderStatus: undefined
+                    });
+                    
+                    console.log('🏪 All orders in system:', allOrders);
+                    console.log('📊 Total orders found:', allOrders?.length || 0);
+                    
+                    if (allOrders && allOrders.length > 0) {
+                      console.log('🔍 Checking order ownership:');
+                      allOrders.forEach((order, index) => {
+                        console.log(`Order ${index + 1}:`, {
+                          orderId: order._id,
+                          memberId: order.memberId,
+                          status: order.orderStatus,
+                          total: order.orderTotal,
+                          createdAt: order.createdAt
+                        });
+                      });
+                      
+                      // Check if any orders belong to current user
+                      const memberData = localStorage.getItem("memberData");
+                      if (memberData) {
+                        const member = JSON.parse(memberData);
+                        const myOrders = allOrders.filter(order => order.memberId === member._id);
+                        console.log('👤 Orders belonging to current user:', myOrders);
+                        console.log('📈 My orders count:', myOrders.length);
+                        
+                        if (myOrders.length > 0) {
+                          setSnackbar({
+                            open: true,
+                            message: `Found ${myOrders.length} orders for your account!`,
+                            severity: 'success'
+                          });
+                        } else {
+                          setSnackbar({
+                            open: true,
+                            message: 'No orders found for your account. Orders may be for customers only.',
+                            severity: 'warning'
+                          });
+                        }
+                      }
+                    } else {
+                      setSnackbar({
+                        open: true,
+                        message: 'No orders found in the system',
+                        severity: 'info'
+                      });
+                    }
+                  } catch (error) {
+                    console.error('❌ Error checking restaurant orders:', error);
+                    setSnackbar({
+                      open: true,
+                      message: 'Failed to check restaurant orders. Check console for details.',
+                      severity: 'error'
+                    });
+                  }
+                }}
+                sx={{
+                  borderColor: componentColors.textSecondary,
+                  color: componentColors.textSecondary,
+                  '&:hover': {
+                    borderColor: componentColors.text,
+                    backgroundColor: `${componentColors.textSecondary}08`
+                  }
+                }}
+              >
+                Check Restaurant Orders
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  console.log('=== CUSTOMER ACCOUNT INFO ===');
+                  console.log('To test orders properly, you need a CUSTOMER account:');
+                  console.log('1. Log out of current restaurant account');
+                  console.log('2. Sign up as a new customer (not restaurant owner)');
+                  console.log('3. Place orders as a customer');
+                  console.log('4. View orders in this page');
+                  
+                  setSnackbar({
+                    open: true,
+                    message: 'Check console for instructions to create a customer account',
+                    severity: 'info'
+                  });
+                }}
+                sx={{
+                  borderColor: '#2196f3',
+                  color: '#2196f3',
+                  '&:hover': {
+                    borderColor: '#1976d2',
+                    backgroundColor: '#2196f308'
+                  }
+                }}
+              >
+                Customer Account Info
+              </Button>
+            </Box>
           </Box>
         </motion.div>
 
@@ -600,7 +1036,7 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
                         <Button
                           variant="outlined"
                           size="medium"
-                          startIcon={<VisibilityIcon />}
+                          startIcon={<CafeIcon />}
                           sx={{
                             borderColor: componentColors.accent,
                             color: componentColors.accent,
@@ -645,16 +1081,36 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
                   mb: 1
                 }}
               >
-                No orders found
+                {activeTab === 0 ? 'No orders yet' : 'No orders in this category'}
               </Typography>
               <Typography
                 variant="body2"
                 sx={{
-                  color: componentColors.textSecondary
+                  color: componentColors.textSecondary,
+                  mb: 3
                 }}
               >
-                {activeTab === 0 ? 'You haven\'t placed any orders yet.' : 'No orders in this category.'}
+                {activeTab === 0 
+                  ? 'Ready to start your coffee journey? Browse our menu and place your first order!' 
+                  : 'No orders match this filter. Try a different category or place a new order.'
+                }
               </Typography>
+              {activeTab === 0 && (
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<CafeIcon />}
+                  onClick={() => window.location.href = '/coffees'}
+                  sx={{
+                    backgroundColor: componentColors.accent,
+                    '&:hover': {
+                      backgroundColor: componentColors.secondary
+                    }
+                  }}
+                >
+                  Browse Menu
+                </Button>
+              )}
             </Box>
           )}
         </motion.div>
@@ -845,17 +1301,8 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
                       border: `1px solid ${componentColors.border}`
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        {[...Array(5)].map((_, i) => (
-                          <StarIcon
-                            key={i}
-                            sx={{
-                              color: i < selectedOrder.rating! ? '#ffc107' : componentColors.border,
-                              fontSize: 20
-                            }}
-                          />
-                        ))}
                         <Typography variant="body2" sx={{ color: componentColors.textSecondary }}>
-                          ({selectedOrder.rating}/5)
+                          Rating: {selectedOrder.rating}/5
                         </Typography>
                       </Box>
                       {selectedOrder.review && (
@@ -880,6 +1327,24 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
               >
                 Close
               </Button>
+              {/* Cancel Order Button - only show for orders that can be cancelled */}
+              {(selectedOrder.status === 'pause' || selectedOrder.status === 'process') && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleCancelOrder(selectedOrder.id)}
+                  sx={{
+                    borderColor: '#f44336',
+                    color: '#f44336',
+                    '&:hover': {
+                      borderColor: '#d32f2f',
+                      backgroundColor: '#ffebee'
+                    }
+                  }}
+                >
+                  Cancel Order
+                </Button>
+              )}
               {selectedOrder.status === 'process' && (
                 <Button
                   variant="contained"
@@ -898,6 +1363,22 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
           </>
         )}
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
