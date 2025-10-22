@@ -7,6 +7,7 @@ git pull origin master
 
 npm i yarn -g
 yarn global add serve
-yarnyarn run build
+yarn
+yarn run build
 pm2 start "yarn run start:prod" --name=CAFERT-REACT
 
