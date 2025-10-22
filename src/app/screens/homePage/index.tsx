@@ -486,37 +486,37 @@ export default function HomePage() {
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                 {[
                                     { 
-                                        image: "/coffee-hero.jpg", 
+                                        image: "/img/coffee/coffee-hero.jpg", 
                                         title: "Morning Ritual", 
                                         desc: "Start your day with our signature blends",
                                         overlay: "rgba(139, 69, 19, 0.3)"
                                     },
                                     { 
-                                        image: "/coffee-latte.jpg", 
+                                        image: "/img/coffee/coffee-latte.jpg", 
                                         title: "Artisanal Latte", 
                                         desc: "Perfectly crafted lattes with rich flavors",
                                         overlay: "rgba(101, 67, 33, 0.3)"
                                     },
                                     { 
-                                        image: "/coffee-cappuccino.jpg", 
+                                        image: "/img/coffee/coffee-cappuccino.jpg", 
                                         title: "Classic Cappuccino", 
                                         desc: "Traditional Italian coffee experience",
                                         overlay: "rgba(160, 82, 45, 0.3)"
                                     },
                                     { 
-                                        image: "/coffee-espresso.jpg", 
+                                        image: "/img/coffee/coffee-espresso.jpg", 
                                         title: "Pure Espresso", 
                                         desc: "Strong and authentic espresso shots",
                                         overlay: "rgba(139, 69, 19, 0.3)"
                                     },
                                     { 
-                                        image: "/coffee-beans.jpg", 
+                                        image: "/img/coffee/coffee-beans.jpg", 
                                         title: "Fresh Coffee Beans", 
                                         desc: "Premium quality beans from around the world",
                                         overlay: "rgba(101, 67, 33, 0.3)"
                                     },
                                     { 
-                                        image: "/coffee-shop.jpg", 
+                                        image: "/img/coffee/coffee-shop.jpg", 
                                         title: "Cozy Atmosphere", 
                                         desc: "Perfect place to relax and enjoy coffee",
                                         overlay: "rgba(160, 82, 45, 0.3)"

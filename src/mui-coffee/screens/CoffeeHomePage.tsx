@@ -183,21 +183,21 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
   const transformProduct = (product: Product, isPopular: boolean = false, isFresh: boolean = false) => {
     // Use your beautiful coffee images as fallbacks
     const coffeeImages = [
-      '/img/coffee-1.webp',
-      '/img/coffee-2.webp', 
-      '/img/coffee-3.webp',
-      '/img/coffee-4.webp',
-      '/coffee-latte.jpg',
-      '/coffee-espresso.jpg'
+      '/img/coffee/coffee-1.webp',
+      '/img/coffee/coffee-2.webp', 
+      '/img/coffee/coffee-3.webp',
+      '/img/coffee/coffee-4.webp',
+      '/img/coffee/coffee-latte.jpg',
+      '/img/coffee/coffee-espresso.jpg'
     ];
     
     const foodImages = [
-      '/img/kebab.webp',
-      '/img/lavash.webp',
-      '/img/cutlet.webp',
-      '/img/doner.webp',
-      '/img/seafood.webp',
-      '/img/sweets.webp'
+      '/img/food/kebab.webp',
+      '/img/food/lavash.webp',
+      '/img/food/cutlet.webp',
+      '/img/food/doner.webp',
+      '/img/food/seafood.webp',
+      '/img/food/sweets.webp'
     ];
     
     const fallbackImage = isPopular 
@@ -233,7 +233,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 1, 
         name: 'Classic Espresso', 
         price: '$3.50', 
-        image: '/img/coffee-1.webp', 
+        image: '/img/coffee/coffee-1.webp', 
         description: 'Rich and bold Italian espresso with perfect crema', 
         ingredients: 'Premium Arabica beans, filtered water',
         rating: 4.9,
@@ -244,7 +244,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 2, 
         name: 'Cappuccino Deluxe', 
         price: '$4.80', 
-        image: '/img/coffee-2.webp', 
+        image: '/img/coffee/coffee-2.webp', 
         description: 'Perfectly balanced with velvety steamed milk and rich foam', 
         ingredients: 'Espresso, whole milk, microfoam',
         rating: 4.8,
@@ -255,7 +255,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 3, 
         name: 'Caramel Latte', 
         price: '$5.20', 
-        image: '/img/coffee-3.webp', 
+        image: '/img/coffee/coffee-3.webp', 
         description: 'Smooth espresso with caramel and steamed milk', 
         ingredients: 'Espresso, caramel syrup, steamed milk',
         rating: 4.7,
@@ -266,7 +266,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         id: 4, 
         name: 'Mocha Delight', 
         price: '$5.50', 
-        image: '/img/coffee-4.webp', 
+        image: '/img/coffee/coffee-4.webp', 
         description: 'Rich chocolate and espresso blend with steamed milk', 
         ingredients: 'Espresso, chocolate syrup, steamed milk, whipped cream',
         rating: 4.6,
@@ -383,35 +383,35 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     ][index],
     author: user.name || `User ${index + 1}`,
     rating: 5,
-    avatar: user.avatar || `/img/rose.webp`
+    avatar: user.avatar || `/img/food/rose.webp`
   })) : [
     {
       id: 1,
       text: "The best coffee I've ever tasted! The atmosphere is perfect for working and the staff is incredibly friendly.",
       author: "Sarah Johnson",
       rating: 5,
-      avatar: "/img/rose.webp"
+      avatar: "/img/food/rose.webp"
     },
     {
       id: 2,
       text: "Amazing food and coffee. This place has become my go-to spot for meetings and casual dining.",
       author: "Michael Chen",
       rating: 5,
-      avatar: "/img/martin.webp"
+      avatar: "/img/food/martin.webp"
     },
     {
       id: 3,
       text: "Perfect blend of comfort and quality. The pastries are to die for and the coffee is consistently excellent.",
       author: "Emily Rodriguez",
       rating: 5,
-      avatar: "/img/justin.webp"
+      avatar: "/img/food/justin.webp"
     },
     {
       id: 4,
       text: "Exceptional service and the most delicious coffee in town. I love the cozy atmosphere!",
       author: "Nusret Gökçe",
       rating: 5,
-      avatar: "/img/nusret.webp"
+      avatar: "/img/food/nusret.webp"
     }
   ];
 
@@ -421,21 +421,21 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       title: "Private Events",
       description: "Host your special occasions in our elegant private dining room",
       icon: <RestaurantIcon />,
-      image: "/coffee-hero.jpg"
+      image: "/img/coffee/coffee-hero.jpg"
     },
     {
       id: 2,
       title: "Catering Services",
       description: "Let us cater your next event with our delicious menu",
       icon: <CafeIcon />,
-      image: "/coffee-gallery.jpg"
+      image: "/img/coffee/coffee-gallery.jpg"
     },
     {
       id: 3,
       title: "Coffee Workshops",
       description: "Learn the art of coffee brewing from our expert baristas",
       icon: <CoffeeIcon />,
-      image: "/coffee-menu.jpg"
+      image: "/img/coffee/coffee-menu.jpg"
     }
   ];
 
@@ -1357,7 +1357,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       {/* Happy Coffee Time Section */}
       <Box sx={{
         padding: '6rem 0',
-        backgroundImage: `url('/coffee-beans.jpg')`,
+        backgroundImage: `url('/img/coffee/coffee-beans.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
@@ -1473,7 +1473,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                 >
                   <Box
                     component="img"
-                    src="/coffee-beans.jpg"
+                    src="/img/coffee/coffee-beans.jpg"
                     alt="Fresh Coffee Beans"
                     sx={{
                       width: '100%',
@@ -1516,7 +1516,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   >
                     <Box
                       component="img"
-                      src="/coffee-beans.jpg"
+                      src="/img/coffee/coffee-beans.jpg"
                       alt=""
                       sx={{
                         width: 60,
@@ -1548,7 +1548,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                   >
                     <Box
                       component="img"
-                      src="/coffee-beans.jpg"
+                      src="/img/coffee/coffee-beans.jpg"
                       alt=""
                       sx={{
                         width: 40,
@@ -1716,7 +1716,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       }}
                       onError={(e) => {
                         console.error('Image failed to load:', item.image);
-                        (e.target as HTMLImageElement).src = '/coffee-placeholder.jpg';
+                        (e.target as HTMLImageElement).src = '/img/coffee/coffee-placeholder.jpg';
                       }}
                       onLoad={() => console.log('Image loaded successfully:', item.image)}
                     />
@@ -1794,7 +1794,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       {/* Services Section */}
       <Box ref={servicesRef} sx={{
         padding: '6rem 0',
-        backgroundImage: `url('/night-mode.jpg')`,
+        backgroundImage: `url('/img/misc/night-mode.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',
@@ -2492,12 +2492,12 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             mx: 'auto'
           }}>
             {[
-              { src: '/coffee-hero.jpg', alt: 'Coffee Hero', title: 'Perfect Brew' },
-              { src: '/coffee-shop.jpg', alt: 'Coffee Shop Interior', title: 'Cozy Atmosphere' },
-              { src: '/tropical-outdoor-cafe.jpg', alt: 'Outdoor Cafe', title: 'Outdoor Dining' },
-              { src: '/istock-cafe.jpg', alt: 'Modern Cafe', title: 'Modern Design' },
-              { src: '/coffee-gallery.jpg', alt: 'Coffee Gallery', title: 'Coffee Art' },
-              { src: '/coffee-menu.jpg', alt: 'Coffee Menu', title: 'Our Menu' }
+              { src: '/img/coffee/coffee-hero.jpg', alt: 'Coffee Hero', title: 'Perfect Brew' },
+              { src: '/img/coffee/coffee-shop.jpg', alt: 'Coffee Shop Interior', title: 'Cozy Atmosphere' },
+              { src: '/img/cafe/tropical-outdoor-cafe.jpg', alt: 'Outdoor Cafe', title: 'Outdoor Dining' },
+              { src: '/img/cafe/istock-cafe.jpg', alt: 'Modern Cafe', title: 'Modern Design' },
+              { src: '/img/coffee/coffee-gallery.jpg', alt: 'Coffee Gallery', title: 'Coffee Art' },
+              { src: '/img/coffee/coffee-menu.jpg', alt: 'Coffee Menu', title: 'Our Menu' }
             ].map((image, index) => (
               <motion.div
                 key={index}
@@ -3645,7 +3645,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: `url('/coffee-beans.jpg')`,
+          background: `url('/img/coffee/coffee-beans.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.1,

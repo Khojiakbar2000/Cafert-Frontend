@@ -23,7 +23,7 @@ declare module '@mui/material/styles' {
   }
 }
 
-// Fix React Router v5 compatibility with React 18
+
 declare module 'react-router-dom' {
   export interface RouteComponentProps<P = {}, S = {}, H = History.PoorMansHistory> {
     history: H;
@@ -54,7 +54,6 @@ declare module 'react-router-dom' {
   export function useRouteMatch<P = {}>(): match<P>;
 }
 
-// Fix React Redux Provider compatibility
 declare module 'react-redux' {
   export interface ProviderProps {
     store: any;
@@ -62,11 +61,11 @@ declare module 'react-redux' {
   }
 }
 
-// Global type augmentations
+
 declare global {
   namespace React {
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-      // Add any custom attributes here
+
     }
   }
 } 
@@ -94,7 +93,6 @@ declare module '@mui/material/styles' {
   }
 }
 
-// Fix React Router v5 compatibility with React 18
 declare module 'react-router-dom' {
   export interface RouteComponentProps<P = {}, S = {}, H = History.PoorMansHistory> {
     history: H;
@@ -125,7 +123,6 @@ declare module 'react-router-dom' {
   export function useRouteMatch<P = {}>(): match<P>;
 }
 
-// Fix React Redux Provider compatibility
 declare module 'react-redux' {
   export interface ProviderProps {
     store: any;
@@ -133,11 +130,10 @@ declare module 'react-redux' {
   }
 }
 
-// Global type augmentations
 declare global {
   namespace React {
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-      // Add any custom attributes here
+
     }
   }
 } 

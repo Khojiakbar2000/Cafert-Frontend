@@ -44,7 +44,7 @@ const desserts: Dessert[] = [
     description: "Classic Italian dessert with coffee-soaked ladyfingers and mascarpone cream",
     descriptionKo: "커피에 적신 레이디핑거와 마스카포네 크림이 들어간 클래식 이탈리안 디저트",
     price: 8.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Italian",
     rating: 4.8,
     isPopular: true
@@ -56,7 +56,7 @@ const desserts: Dessert[] = [
     description: "Warm chocolate cake with molten chocolate center, served with vanilla ice cream",
     descriptionKo: "녹은 초콜릿 중심이 있는 따뜻한 초콜릿 케이크, 바닐라 아이스크림과 함께 제공",
     price: 9.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Chocolate",
     rating: 4.7,
     isNew: true
@@ -68,7 +68,7 @@ const desserts: Dessert[] = [
     description: "Creamy cheesecake with graham cracker crust and berry compote",
     descriptionKo: "그레이엄 크래커 크러스트와 베리 컴포트가 있는 크리미한 치즈케이크",
     price: 7.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Cheesecake",
     rating: 4.6
   },
@@ -79,7 +79,7 @@ const desserts: Dessert[] = [
     description: "Warm apple crumble with cinnamon and oat topping, served with custard",
     descriptionKo: "시나몬과 오트 토핑이 있는 따뜻한 애플 크럼블, 커스타드와 함께 제공",
     price: 6.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Fruit",
     rating: 4.5
   },
@@ -90,7 +90,7 @@ const desserts: Dessert[] = [
     description: "Classic French custard with caramelized sugar crust",
     descriptionKo: "캐러멜화된 설탕 크러스트가 있는 클래식 프렌치 커스타드",
     price: 8.49,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "French",
     rating: 4.7
   },
@@ -101,7 +101,7 @@ const desserts: Dessert[] = [
     description: "Moist red velvet cupcake with cream cheese frosting",
     descriptionKo: "크림 치즈 프로스팅이 있는 촉촉한 레드 벨벳 컵케이크",
     price: 4.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Cupcake",
     rating: 4.4
   },
@@ -112,7 +112,7 @@ const desserts: Dessert[] = [
     description: "Silky Italian dessert with vanilla bean and berry sauce",
     descriptionKo: "바닐라 빈과 베리 소스가 있는 실키한 이탈리안 디저트",
     price: 7.49,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Italian",
     rating: 4.6
   },
@@ -123,7 +123,7 @@ const desserts: Dessert[] = [
     description: "Light and airy chocolate mousse with chocolate shavings",
     descriptionKo: "초콜릿 셰이빙이 있는 가볍고 에어리한 초콜릿 무스",
     price: 6.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Chocolate",
     rating: 4.5
   }

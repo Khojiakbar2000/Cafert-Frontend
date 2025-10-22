@@ -44,7 +44,7 @@ const salads: Salad[] = [
     description: "Fresh mixed greens with cherry tomatoes, cucumber, olives, and feta cheese",
     descriptionKo: "체리 토마토, 오이, 올리브, 페타 치즈가 들어간 신선한 믹스 그린",
     price: 12.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Garden",
     rating: 4.5,
     isPopular: true
@@ -56,7 +56,7 @@ const salads: Salad[] = [
     description: "Classic Caesar with romaine lettuce, parmesan cheese, and croutons",
     descriptionKo: "로메인 상추, 파마산 치즈, 크루통이 들어간 클래식 시저",
     price: 11.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Classic",
     rating: 4.3
   },
@@ -67,7 +67,7 @@ const salads: Salad[] = [
     description: "Mixed greens with mandarin oranges, almonds, and ginger dressing",
     descriptionKo: "만다린 오렌지, 아몬드, 생강 드레싱이 들어간 믹스 그린",
     price: 13.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Fusion",
     rating: 4.7,
     isNew: true
@@ -79,7 +79,7 @@ const salads: Salad[] = [
     description: "Quinoa with roasted vegetables, avocado, and lemon vinaigrette",
     descriptionKo: "구운 채소, 아보카도, 레몬 비네그레트가 들어간 퀴노아",
     price: 14.99,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Healthy",
     rating: 4.6
   },
@@ -90,7 +90,7 @@ const salads: Salad[] = [
     description: "Traditional Greek salad with tomatoes, cucumber, red onion, and olives",
     descriptionKo: "토마토, 오이, 빨간 양파, 올리브가 들어간 전통 그릭 샐러드",
     price: 12.49,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Mediterranean",
     rating: 4.4
   },
@@ -101,7 +101,7 @@ const salads: Salad[] = [
     description: "Fresh spinach with strawberries, goat cheese, and balsamic glaze",
     descriptionKo: "딸기, 염소 치즈, 발사믹 글레이즈가 들어간 신선한 시금치",
     price: 13.49,
-    image: "/coffee-placeholder.jpg",
+    image: "/img/coffee/coffee-placeholder.jpg",
     category: "Fruit",
     rating: 4.8,
     isPopular: true

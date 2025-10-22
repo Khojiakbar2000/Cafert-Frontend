@@ -15,7 +15,7 @@ const ImageTest: React.FC = () => {
               <Typography variant="h6">Test 1: Coffee Placeholder</Typography>
               <Box
                 component="img"
-                src="/coffee-placeholder.jpg"
+                src="/img/coffee/coffee-placeholder.jpg"
                 alt="Test Coffee"
                 onLoad={() => console.log('✅ Coffee placeholder loaded')}
                 onError={() => console.log('❌ Coffee placeholder failed')}
@@ -39,7 +39,7 @@ const ImageTest: React.FC = () => {
               <Typography variant="h6">Test 3: Coffee Hero</Typography>
               <Box
                 component="img"
-                src="/coffee-hero.jpg"
+                src="/img/coffee/coffee-hero.jpg"
                 alt="Test Hero"
                 onLoad={() => console.log('✅ Coffee hero loaded')}
                 onError={() => console.log('❌ Coffee hero failed')}

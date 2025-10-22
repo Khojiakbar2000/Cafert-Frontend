@@ -5,7 +5,7 @@ export const plans = [
 		author: 'Barista Sarah',
 		date: '30 min ago',
 		location: 'Turkey, Istanbul',
-		img: '/img/coffee-1.webp',
+		img: '/img/coffee/coffee-1.webp',
 	},
 	{
 		title: 'New Coffee Arrivals',
@@ -13,7 +13,7 @@ export const plans = [
 		author: 'Coffee Master Alex',
 		date: '2 days ago',
 		location: 'Turkey, Istanbul',
-		img: '/img/coffee-2.webp',
+		img: '/img/coffee/coffee-2.webp',
 	},
 	{
 		title: 'New Coffee Shop Opening',
@@ -21,7 +21,7 @@ export const plans = [
 		author: 'Coffee News',
 		date: '5 days ago',
 		location: 'USA, Florida',
-		img: '/img/coffee-3.webp',
+		img: '/img/coffee/coffee-3.webp',
 	},
 	{
 		title: 'Join us on social media',
@@ -29,6 +29,6 @@ export const plans = [
 		author: 'Cafert Team',
 		date: 'A week ago',
 		location: 'Europe, France',
-		img: '/img/coffee-4.webp',
+		img: '/img/coffee/coffee-4.webp',
 	},
 ];

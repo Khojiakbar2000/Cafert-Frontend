@@ -214,116 +214,86 @@ export default function ChosenCoffee(props: ChosenCoffeeProps) {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" className="product-detail-container">
       <Stack spacing={4}>
         {/* Back Button */}
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => history.goBack()}
-          sx={{
-            alignSelf: 'flex-start',
-            color: colors.textSecondary,
-            '&:hover': {
-              color: colors.primary,
-            },
-          }}
+          className="btn-outlined"
+          style={{ alignSelf: 'flex-start' }}
         >
           Back to Coffees
         </Button>
 
         {/* Main Content */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <Box className="product-detail-content">
           {/* Image Section */}
-          <Box sx={{ flex: '1', minWidth: 300 }}>
-            <Box sx={{ position: 'relative' }}>
-              <img
-                src={coffee.image}
-                alt={coffee.name}
-                style={{
-                  width: '100%',
-                  height: '400px',
-                  objectFit: 'cover',
-                  borderRadius: '12px',
-                }}
-              />
-              <IconButton
-                sx={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  backgroundColor: 'rgba(255,255,255,0.9)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,1)',
-                  },
-                }}
-                onClick={toggleFavorite}
-              >
-                {isFavorite ? (
-                  <FavoriteIcon sx={{ color: '#e91e63' }} />
-                ) : (
-                  <FavoriteBorderIcon />
-                )}
-              </IconButton>
-              {!coffee.inStock && (
-                <Chip
-                  label="Out of Stock"
-                  color="error"
-                  sx={{
-                    position: 'absolute',
-                    top: 16,
-                    left: 16,
-                  }}
-                />
+          <Box className="product-detail-image">
+            <img
+              src={coffee.image}
+              alt={coffee.name}
+              className="product-detail-image img"
+            />
+            <IconButton
+              className="coffee-card-favorite"
+              onClick={toggleFavorite}
+            >
+              {isFavorite ? (
+                <FavoriteIcon style={{ color: '#e91e63' }} />
+              ) : (
+                <FavoriteBorderIcon />
               )}
-            </Box>
+            </IconButton>
+            {!coffee.inStock && (
+              <Chip
+                label="Out of Stock"
+                color="error"
+                className="coffee-card-badge out-of-stock"
+                style={{ position: 'absolute', top: 16, left: 16 }}
+              />
+            )}
           </Box>
 
           {/* Details Section */}
-          <Box sx={{ flex: '1', minWidth: 300 }}>
+          <Box className="product-detail-info">
             <Stack spacing={3}>
               {/* Header */}
               <Box>
                 <Typography 
                   variant="h3" 
                   component="h1"
-                  sx={{ 
-                    color: colors.text,
-                    fontWeight: 700,
-                    mb: 1
-                  }}
+                  className="product-detail-title"
                 >
                   {coffee.name}
                 </Typography>
                 <Typography 
                   variant="h6"
-                  sx={{ 
-                    color: colors.textSecondary,
-                    mb: 2
-                  }}
+                  className="product-detail-description"
                 >
                   {coffee.description}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box className="flex-container" style={{ alignItems: 'center', marginBottom: '16px' }}>
                   <Rating value={coffee.rating} precision={0.1} readOnly />
-                  <Typography variant="body2" sx={{ ml: 1, color: colors.textSecondary }}>
+                  <Typography variant="body2" style={{ marginLeft: '8px', color: 'var(--text-secondary)' }}>
                     {coffee.rating} ({coffee.reviews} reviews)
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Box className="flex-container" style={{ gap: '8px', flexWrap: 'wrap' }}>
                   <Chip 
                     label={coffee.category} 
                     variant="outlined"
-                    sx={{ borderColor: colors.primary, color: colors.primary }}
+                    className="chip"
                   />
                   <Chip 
                     label={coffee.origin} 
                     variant="outlined"
-                    sx={{ borderColor: colors.secondary, color: colors.secondary }}
+                    className="chip"
                   />
                   <Chip 
                     label={coffee.roast} 
                     variant="outlined"
-                    sx={{ borderColor: colors.accent, color: colors.accent }}
+                    className="chip"
                   />
                 </Box>
               </Box>
@@ -332,34 +302,32 @@ export default function ChosenCoffee(props: ChosenCoffeeProps) {
               <Box>
                 <Typography 
                   variant="h4" 
-                  sx={{ 
-                    color: colors.primary,
-                    fontWeight: 700,
-                    mb: 2
-                  }}
+                  className="product-detail-price"
                 >
                   ${coffee.price}
                 </Typography>
                 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  <Typography variant="body1" sx={{ color: colors.text }}>
+                <Box className="product-detail-actions">
+                  <Typography variant="body1" style={{ color: 'var(--text-primary)' }}>
                     Quantity:
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', border: `1px solid ${colors.border}`, borderRadius: 1 }}>
+                  <Box className="quantity-selector">
                     <IconButton
                       onClick={() => handleQuantityChange(quantity - 1)}
                       disabled={quantity <= 1}
                       size="small"
+                      className="quantity-button"
                     >
                       <RemoveIcon />
                     </IconButton>
-                    <Typography sx={{ px: 2, minWidth: 40, textAlign: 'center' }}>
+                    <Typography className="quantity-display">
                       {quantity}
                     </Typography>
                     <IconButton
                       onClick={() => handleQuantityChange(quantity + 1)}
                       disabled={quantity >= 10}
                       size="small"
+                      className="quantity-button"
                     >
                       <AddIcon />
                     </IconButton>
@@ -373,16 +341,8 @@ export default function ChosenCoffee(props: ChosenCoffeeProps) {
                   fullWidth
                   disabled={!coffee.inStock}
                   onClick={handleAddToCart}
-                  sx={{
-                    backgroundColor: colors.primary,
-                    py: 1.5,
-                    '&:hover': {
-                      backgroundColor: colors.accentDark,
-                    },
-                    '&:disabled': {
-                      backgroundColor: '#ccc',
-                    },
-                  }}
+                  className="btn-primary"
+                  style={{ padding: '12px 0' }}
                 >
                   {coffee.inStock ? `Add ${quantity} to Cart - $${(coffee.price * quantity).toFixed(2)}` : 'Out of Stock'}
                 </Button>

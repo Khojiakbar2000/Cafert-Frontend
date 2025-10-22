@@ -118,7 +118,7 @@ const mockOrders: Order[] = [
         productSize: 'MEDIUM' as any,
         productVolume: 30,
         productDesc: 'Strong and bold espresso',
-        productImages: ['/coffee-placeholder.jpg'],
+        productImages: ['/img/coffee/coffee-placeholder.jpg'],
         productViews: 120,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -133,7 +133,7 @@ const mockOrders: Order[] = [
         productSize: 'LARGE' as any,
         productVolume: 350,
         productDesc: 'Creamy cappuccino with foam',
-        productImages: ['/coffee-placeholder.jpg'],
+        productImages: ['/img/coffee/coffee-placeholder.jpg'],
         productViews: 85,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -170,7 +170,7 @@ const mockOrders: Order[] = [
         productSize: 'MEDIUM' as any,
         productVolume: 200,
         productDesc: 'Rich chocolate cake with cream',
-        productImages: ['/coffee-placeholder.jpg'],
+        productImages: ['/img/coffee/coffee-placeholder.jpg'],
         productViews: 200,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -207,7 +207,7 @@ const mockOrders: Order[] = [
         productSize: 'MEDIUM' as any,
         productVolume: 400,
         productDesc: 'Refreshing iced latte',
-        productImages: ['/coffee-placeholder.jpg'],
+        productImages: ['/img/coffee/coffee-placeholder.jpg'],
         productViews: 150,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -386,7 +386,7 @@ const EnhancedOrdersPageWithMock: React.FC = () => {
                 <ListItem key={itemIndex} sx={{ px: 0 }}>
                   <ListItemAvatar>
                     <Avatar
-                      src={productData?.productImages?.[0] ? `${serverApi}${productData.productImages[0]}` : "/coffee-placeholder.jpg"}
+                      src={productData?.productImages?.[0] ? `${serverApi}${productData.productImages[0]}` : "/img/coffee/coffee-placeholder.jpg"}
                       sx={{ width: 40, height: 40 }}
                     />
                   </ListItemAvatar>

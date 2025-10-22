@@ -153,7 +153,7 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
             }}
             direction={"row"}
           >
-            <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
+            <ModalImg src={"/img/coffee/coffee-placeholder.jpg"} alt="coffee" />
             <Stack sx={{ marginLeft: "69px", alignItems: "center" }}>
               <h2 style={{ color: "#000000" }}>Signup Form</h2>
               <TextField
@@ -292,7 +292,7 @@ export default function AuthenticationModal(props: AuthenticationModalProps) {
             }}
             direction={"row"}
           >
-            <ModalImg src={"/coffee-placeholder.jpg"} alt="coffee" />
+            <ModalImg src={"/img/coffee/coffee-placeholder.jpg"} alt="coffee" />
             <Stack
               sx={{
                 marginLeft: "65px",

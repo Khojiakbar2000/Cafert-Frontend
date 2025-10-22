@@ -24,7 +24,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
 
   // Use the original coffee placeholder image
   const heroImages = [
-    '/coffee-placeholder.jpg',    // Original hero image
+    '/img/coffee/coffee-placeholder.jpg',    // Original hero image
   ];
 
 
