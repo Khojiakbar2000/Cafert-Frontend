@@ -16,8 +16,7 @@ import ContextProvider from "./app/context/ContextProvider";
 import "./i18n";
 import { SocketProvider } from "./app/context/SocketContext";
 
-
-(function () {
+window.addEventListener("load", () => {
   const devWidth = 2160;
   const devDPR = 1.3333;
   const currentWidth = window.innerWidth;
@@ -25,13 +24,9 @@ import { SocketProvider } from "./app/context/SocketContext";
   const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
   const zoom = baseZoom * 0.66;
 
-
-  document.body.style.transformOrigin = "0 0";
-  document.body.style.transform = `scale(${zoom.toFixed(2)})`;
-  document.body.style.width = `${100 / zoom}%`;
-
-  console.log(" Applied VPS scaling (transform):", zoom.toFixed(2));
-})();
+  console.log('VPS scaling applied:', zoom.toFixed(2));
+  document.documentElement.style.zoom = zoom.toFixed(2);
+});
 
 
 const container = document.getElementById("root")!;
