@@ -48,12 +48,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
 
   return (
     <Box
-      className="hero-section"
       sx={{
         position: 'relative',
+        height: '100vh',
         minHeight: '100vh',
+        maxHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         overflow: 'hidden',
         backgroundImage: `url('${heroImages[currentImageIndex]}')`,
         backgroundSize: 'cover',
@@ -98,8 +102,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
         </svg>
       </Box>
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-        <Grid container spacing={4} alignItems="center" sx={{ minHeight: '80vh' }}>
+      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center' }}>
+        <Grid container spacing={4} alignItems="center" sx={{ height: '100%', minHeight: '100%' }}>
           {/* Main Content */}
           <Grid item xs={12} md={6}>
             <motion.div

@@ -151,15 +151,19 @@ export default function HomePage() {
             {/* Hero Section with Parallax */}
             <Box
                 component={motion.div}
-                className="hero-section"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1.5 }}
                 sx={{
+                    height: '100vh',
                     minHeight: '100vh',
+                    maxHeight: '100vh',
+                    width: '100%',
+                    maxWidth: '100%',
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     position: 'relative',
                     overflow: 'hidden'
                 }}

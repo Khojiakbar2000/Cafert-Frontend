@@ -1341,7 +1341,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       </Drawer>
 
       {/* Hero Section */}
-      <Box ref={heroRef} className="hero-section">
+      <Box ref={heroRef}>
         <HeroSection onReservationClick={handleReservationOpen} />
       </Box>
 
