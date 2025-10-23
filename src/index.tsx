@@ -21,7 +21,6 @@ import { SocketProvider } from "./app/context/SocketContext";
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 
-
 (function() {
   const allowedHosts = ["72.60.236.97", "cafert.uz"]; // optional safety
   if (!allowedHosts.includes(window.location.hostname)) return;
@@ -35,6 +34,8 @@ const root = createRoot(container);
   document.documentElement.style.zoom = zoom.toFixed(2);
   console.log(" Applied VPS zoom:", zoom.toFixed(2));
 })();
+
+
 
 root.render(
   <React.StrictMode>

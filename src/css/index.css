@@ -30,11 +30,9 @@ code {
   background-size: cover;
   background-position: center;
   
-  /* VPS Height Override - Freeze to dev screen ratio (Desktop only) */
+  /* VPS Scale Fix - Scale down for better VPS compatibility */
   @media (min-width: 1024px) {
-    min-height: 1080px !important;
-    height: 1080px !important;
-    background-size: cover !important;
-    background-position: center !important;
+    transform: scale(0.75);
+    transform-origin: top center;
   }
 }

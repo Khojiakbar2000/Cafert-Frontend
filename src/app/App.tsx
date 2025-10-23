@@ -13,6 +13,7 @@ import "../css/footer.css";
 import OtherNavbar from "./components/headers/OtherNavbar";
 import Footer from "./components/footer";
 import { ThemeProvider } from "../mui-coffee/context/ThemeContext";
+import useVpsZoom from "./useVpsZoom";
 
 // Services and utilities
 import { useGlobals } from "./hooks/useGlobals";
@@ -46,6 +47,7 @@ function App() {
   const location = useLocation();
   const { authMember, setAuthMember } = useGlobals();
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
+  useVpsZoom()
 
 
 
