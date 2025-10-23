@@ -48,14 +48,14 @@ class ProductService {
     public async getProduct(productId: string): Promise<Product>{
         try{
             const url = `${this.path}product/${productId}`;
-            console.log("🔍 Fetching product from URL:", url);
+            console.log(" Fetching product from URL:", url);
             const result = await axios.get(url);
-            console.log("✅ getProduct result:", result.data);
+            console.log(" getProduct result:", result.data);
             return result.data;
         }catch(err){
-            console.log("❌ Error, getProduct:", err);
-            console.log("❌ Error response:", err.response?.data);
-            console.log("❌ Error status:", err.response?.status);
+            console.log(" Error, getProduct:", err);
+            console.log(" Error response:", err.response?.data);
+            console.log(" Error status:", err.response?.status);
             throw err;
         }
     }

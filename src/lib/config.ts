@@ -1,5 +1,5 @@
 export const serverApi: string =
-  (process.env.REACT_APP_API_URL || "http://localhost:3003").replace(/\/$/, "");
+  (process.env.REACT_APP_API_URL || "http://localhost:3003").replace(/\/$/, "") + "/";
 
 export const Messages = {
     error1: "Something went wrong!",
