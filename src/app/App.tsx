@@ -21,6 +21,22 @@ import MemberService from "./services/MemberService";
 import { sweetTopSuccessAlert, sweetErrorHandling } from "../lib/sweetAlert";
 import { Messages } from "../lib/config";
 
+useEffect(() => {
+  const timer = setTimeout(() => {
+    const devWidth = 2160;
+    const devDPR = 1.3333;
+    const currentWidth = window.innerWidth;
+    const currentDPR = window.devicePixelRatio;
+    const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
+    const zoom = baseZoom * 0.66;
+
+    document.documentElement.style.zoom = zoom.toFixed(2);
+    console.log(" Applied VPS zoom:", zoom.toFixed(2));
+  }, 800);
+
+  return () => clearTimeout(timer);
+}, []);
+
 // Components
 import AuthenticationModal from "./components/auth";
 import LoadingSpinner from "./components/LoadingSpinner";
