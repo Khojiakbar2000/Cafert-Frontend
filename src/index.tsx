@@ -21,18 +21,32 @@ import { SocketProvider } from "./app/context/SocketContext";
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 
-(function() {
-  const allowedHosts = ["72.60.236.97", "cafert.uz"]; // optional safety
+(function () {
+  const allowedHosts = ["72.60.236.97", "cafert.uz"];
   if (!allowedHosts.includes(window.location.hostname)) return;
 
-  const devWidth = 2160;
-  const devDPR = 1.3333;
-  const currentWidth = window.innerWidth;
-  const currentDPR = window.devicePixelRatio;
-  const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
-  const zoom = baseZoom * 0.66;
-  document.documentElement.style.zoom = zoom.toFixed(2);
-  console.log(" Applied VPS zoom:", zoom.toFixed(2));
+  const applyZoom = () => {
+    const devWidth = 2160;
+    const devDPR = 1.3333;
+    const currentWidth = window.innerWidth;
+    const currentDPR = window.devicePixelRatio;
+    const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
+    const zoom = baseZoom * 0.66;
+    document.documentElement.style.zoom = zoom.toFixed(2);
+    console.log("[VPS Zoom] Applied zoom:", zoom.toFixed(2));
+  };
+
+
+  applyZoom();
+
+  
+  window.addEventListener("load", applyZoom);
+
+
+  window.addEventListener("resize", () => {
+    clearTimeout(window.__zoomTimeout);
+    window.__zoomTimeout = setTimeout(applyZoom, 200);
+  });
 })();
 
 
