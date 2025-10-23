@@ -25,8 +25,12 @@ import { SocketProvider } from "./app/context/SocketContext";
   const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
   const zoom = baseZoom * 0.66;
 
-  document.documentElement.style.zoom = zoom.toFixed(2);
-  console.log(" VPS scaling applied:", document.documentElement.style.zoom);
+
+  document.body.style.transformOrigin = "0 0";
+  document.body.style.transform = `scale(${zoom.toFixed(2)})`;
+  document.body.style.width = `${100 / zoom}%`;
+
+  console.log(" Applied VPS scaling (transform):", zoom.toFixed(2));
 })();
 
 
