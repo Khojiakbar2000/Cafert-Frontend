@@ -19,3 +19,33 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Hero Section VPS Zoom Independence Fix */
+.hero-section {
+  min-height: 100vh !important;
+  background-size: cover !important;
+  background-position: center !important;
+  transform: none !important;
+  zoom: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure hero content is zoom-independent */
+.hero-section * {
+  font-size: inherit !important;
+}
+
+/* Override any zoom effects on hero text */
+.hero-section h1,
+.hero-section h2,
+.hero-section h3,
+.hero-section h4,
+.hero-section h5,
+.hero-section h6,
+.hero-section p,
+.hero-section span,
+.hero-section div {
+  transform: none !important;
+  zoom: 1 !important;
+}
