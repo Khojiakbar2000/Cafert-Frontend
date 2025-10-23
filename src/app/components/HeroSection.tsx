@@ -48,6 +48,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
 
   return (
     <Box
+      className="hero-section"
       sx={{
         position: 'relative',
         minHeight: '100vh',

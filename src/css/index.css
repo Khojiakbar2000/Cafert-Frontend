@@ -19,3 +19,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Hero Section VPS Fix */
+.hero-section {
+  /* Your existing hero styles */
+  width: 100%;
+  height: 100vh;
+  min-height: 600px;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  
+  /* VPS Height Override - Freeze to dev screen ratio (Desktop only) */
+  @media (min-width: 1024px) {
+    min-height: 1080px !important;
+    height: 1080px !important;
+    background-size: cover !important;
+    background-position: center !important;
+  }
+}
