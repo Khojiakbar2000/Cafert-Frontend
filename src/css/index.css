@@ -4,8 +4,6 @@
 @import './layouts.css';
 @import './animations.css';
 @import './coffee-shop.css';
-@import './coffees-page.css';
-@import './chosen-product.css';
 
 /* Base styles */
 body {
@@ -52,13 +50,18 @@ code {
   zoom: 1 !important;
 }
 
-/* VPS Fix for Hero Section - Desktop */
+/* --- Hero Section: Desktop Freeze to Dev Ratio --- */
+.hero-section {
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  overflow: hidden;
+}
+
 @media (min-width: 1024px) {
   .hero-section {
-    min-height: 1080px !important;
     height: 1080px !important;
-    background-size: cover !important;
-    background-position: center !important;
-    overflow: hidden;
+    min-height: 1080px !important;
+    max-height: 1080px !important;
   }
 }
