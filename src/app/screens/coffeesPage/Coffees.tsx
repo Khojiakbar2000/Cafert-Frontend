@@ -377,7 +377,7 @@ export default function Coffees(props: CoffeesProps) {
         zIndex: 0
       }
     }}>
-      <Container maxWidth="xl" sx={{ py: 6, position: 'relative', zIndex: 1 }}>
+      <Box sx={{ py: 6, position: 'relative', zIndex: 1 }}>
         <Stack spacing={6}>
           {/* Header Section */}
           <Box sx={{ mb: 6, textAlign: 'center' }}>
@@ -1446,7 +1446,7 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           </Box>
         </Stack>
-      </Container>
+      </Box>
     </Box>
   );
 } 

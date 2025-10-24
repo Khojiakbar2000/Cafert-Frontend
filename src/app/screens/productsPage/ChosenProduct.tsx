@@ -190,15 +190,24 @@ export default function ChosenProduct(props: ChosenProductProps) {
   };
 
   return (
-    <Box className={`chosen-product-container ${isDarkMode ? 'dark' : ''}`}>
+    <Box sx={{
+      backgroundColor: colors.background,
+      color: colors.text,
+      minHeight: '100vh',
+      py: 4
+    }}>
       <Container maxWidth="lg">
         {/* Breadcrumbs */}
-        <Breadcrumbs className="chosen-product-breadcrumbs">
+        <Breadcrumbs sx={{ mb: 3, color: colors.textSecondary }}>
           <Link
             component="button"
             variant="body1"
             onClick={handleBackClick}
-            className="chosen-product-breadcrumb-link"
+            sx={{ 
+              color: colors.textSecondary,
+              textDecoration: 'none',
+              '&:hover': { color: colors.accent }
+            }}
           >
             Products
           </Link>
@@ -209,26 +218,36 @@ export default function ChosenProduct(props: ChosenProductProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="chosen-product-animated"
         >
-          <Grid container spacing={4} className="chosen-product-grid">
+          <Grid container spacing={4}>
             {/* Product Images */}
             <Grid item xs={12} md={6}>
-              <Card className={`chosen-product-image-card ${isDarkMode ? 'dark' : ''}`}>
+              <Card sx={{
+                backgroundColor: colors.surface,
+                borderRadius: 3,
+                overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+              }}>
                 <Swiper
                   loop={true}
                   spaceBetween={10}
                   navigation={true}
                   modules={[FreeMode, Navigation, Thumbs]}
-                  className="chosen-product-swiper"
+                  className="swiper-area"
+                  style={{ height: '400px' }}
                 >
                   {chosenProduct?.productImages.map((ele: string, index: number) => {
                     const imagePath = `${serverApi}${ele}`;
                     return (
                       <SwiperSlide key={index}>
                         <img 
-                          className="chosen-product-slider-image" 
+                          className="slider-image" 
                           src={imagePath}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
                           alt={`${chosenProduct.productName} - Image ${index + 1}`}
                         />
                       </SwiperSlide>
@@ -240,49 +259,65 @@ export default function ChosenProduct(props: ChosenProductProps) {
 
             {/* Product Information */}
             <Grid item xs={12} md={6}>
-              <Stack spacing={3} className="chosen-product-info">
+              <Stack spacing={3}>
                 {/* Product Header */}
                 <Box>
-                  <Box className="chosen-product-header">
-                    <Typography variant="h3" className={`chosen-product-title ${isDarkMode ? 'dark' : ''}`}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Typography variant="h3" sx={{
+                      fontWeight: 700,
+                      color: colors.text,
+                      fontFamily: 'Playfair Display, serif'
+                    }}>
                       {chosenProduct?.productName}
                     </Typography>
                     <IconButton
                       onClick={toggleFavorite}
-                      className={`chosen-product-favorite-button ${isFavorite ? 'favorited' : ''}`}
+                      sx={{ color: isFavorite ? '#ff6b6b' : colors.textSecondary }}
                     >
                       {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </IconButton>
                   </Box>
 
                   {/* Category and Status */}
-                  <Box className="chosen-product-chips">
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <Chip 
                       label={chosenProduct.productCollection} 
                       size="small"
-                      className="chosen-product-chip category"
+                      sx={{ 
+                        backgroundColor: colors.accent,
+                        color: 'white',
+                        fontWeight: 600
+                      }}
                     />
                     {chosenProduct.productLeftCount > 0 ? (
                       <Chip 
                         label="In Stock" 
                         size="small"
-                        className="chosen-product-chip in-stock"
+                        sx={{ 
+                          backgroundColor: '#4caf50',
+                          color: 'white',
+                          fontWeight: 600
+                        }}
                       />
                     ) : (
                       <Chip 
                         label="Out of Stock" 
                         size="small"
-                        className="chosen-product-chip out-of-stock"
+                        sx={{ 
+                          backgroundColor: '#f44336',
+                          color: 'white',
+                          fontWeight: 600
+                        }}
                       />
                     )}
                   </Box>
 
                   {/* Rating and Views */}
-                  <Box className="chosen-product-rating-section">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 2 }}>
                     <Rating name="half-rating" defaultValue={4.5} precision={0.5} readOnly />
-                    <Box className="chosen-product-views">
-                      <RemoveRedEyeIcon className="chosen-product-views-icon" />
-                      <Typography variant="body2" className="chosen-product-views-text">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <RemoveRedEyeIcon sx={{ fontSize: 20, color: colors.textSecondary }} />
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                         {localViews || chosenProduct?.productViews || 0} views
                       </Typography>
                     </Box>
@@ -290,64 +325,67 @@ export default function ChosenProduct(props: ChosenProductProps) {
                 </Box>
 
                 {/* Description */}
-                <Box className="chosen-product-description-section">
-                  <Typography variant="h6" className={`chosen-product-description-title ${isDarkMode ? 'dark' : ''}`}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                     Description
                   </Typography>
-                  <Typography variant="body1" className="chosen-product-description-text">
+                  <Typography variant="body1" sx={{ 
+                    color: colors.textSecondary,
+                    lineHeight: 1.6
+                  }}>
                     {chosenProduct?.productDesc || "No description available for this product."}
                   </Typography>
                 </Box>
 
                 {/* Product Details */}
-                <Card className={`chosen-product-details-card ${isDarkMode ? 'dark' : ''}`}>
-                  <Grid container spacing={2} className="chosen-product-details-grid">
+                <Card sx={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 2,
+                  p: 2
+                }}>
+                  <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <Box className="chosen-product-detail-item">
-                        <Typography variant="body2" className="chosen-product-detail-label">
-                          Size
-                        </Typography>
-                        <Typography variant="body1" className={`chosen-product-detail-value ${isDarkMode ? 'dark' : ''}`}>
-                          {chosenProduct.productSize}
-                        </Typography>
-                      </Box>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                        Size
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {chosenProduct.productSize}
+                      </Typography>
                     </Grid>
                     <Grid item xs={6}>
-                      <Box className="chosen-product-detail-item">
-                        <Typography variant="body2" className="chosen-product-detail-label">
-                          Volume
-                        </Typography>
-                        <Typography variant="body1" className={`chosen-product-detail-value ${isDarkMode ? 'dark' : ''}`}>
-                          {chosenProduct.productVolume}ml
-                        </Typography>
-                      </Box>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                        Volume
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {chosenProduct.productVolume}ml
+                      </Typography>
                     </Grid>
                     <Grid item xs={6}>
-                      <Box className="chosen-product-detail-item">
-                        <Typography variant="body2" className="chosen-product-detail-label">
-                          Stock
-                        </Typography>
-                        <Typography variant="body1" className={`chosen-product-detail-value ${isDarkMode ? 'dark' : ''}`}>
-                          {chosenProduct.productLeftCount} available
-                        </Typography>
-                      </Box>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                        Stock
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {chosenProduct.productLeftCount} available
+                      </Typography>
                     </Grid>
                     <Grid item xs={6}>
-                      <Box className="chosen-product-detail-item">
-                        <Typography variant="body2" className="chosen-product-detail-label">
-                          Category
-                        </Typography>
-                        <Typography variant="body1" className={`chosen-product-detail-value ${isDarkMode ? 'dark' : ''}`}>
-                          {chosenProduct.productCollection}
-                        </Typography>
-                      </Box>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                        Category
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {chosenProduct.productCollection}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Card>
 
                 {/* Price and Add to Cart */}
-                <Box className="chosen-product-price-section">
-                  <Typography variant="h2" className="chosen-product-price">
+                <Box>
+                  <Typography variant="h2" sx={{
+                    fontWeight: 700,
+                    color: colors.accent,
+                    mb: 2
+                  }}>
                     ${chosenProduct?.productPrice}
                   </Typography>
 
@@ -357,7 +395,21 @@ export default function ChosenProduct(props: ChosenProductProps) {
                     startIcon={<ShoppingCartIcon />}
                     onClick={handleAddToCart}
                     disabled={chosenProduct.productLeftCount === 0}
-                    className="chosen-product-add-to-cart-button"
+                    sx={{
+                      borderRadius: 2,
+                      backgroundColor: colors.accent,
+                      color: 'white',
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: colors.accentDark
+                      },
+                      '&:disabled': {
+                        backgroundColor: colors.textSecondary
+                      }
+                    }}
                   >
                     {chosenProduct.productLeftCount > 0 ? 'Add to Cart' : 'Out of Stock'}
                   </Button>
@@ -365,18 +417,22 @@ export default function ChosenProduct(props: ChosenProductProps) {
 
                 {/* Restaurant Info */}
                 {restaurant && (
-                  <Card className={`chosen-product-restaurant-card ${isDarkMode ? 'dark' : ''}`}>
-                    <Typography variant="h6" className={`chosen-product-restaurant-title ${isDarkMode ? 'dark' : ''}`}>
+                  <Card sx={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 2,
+                    p: 2
+                  }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                       Restaurant Information
                     </Typography>
-                    <Typography variant="body1" className={`chosen-product-restaurant-name ${isDarkMode ? 'dark' : ''}`}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
                       {restaurant?.memberNick}
                     </Typography>
-                    <Typography variant="body2" className="chosen-product-restaurant-info">
+                    <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                       Phone: {restaurant?.memberPhone}
                     </Typography>
                     {restaurant?.memberAddress && (
-                      <Typography variant="body2" className="chosen-product-restaurant-info">
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                         Address: {restaurant.memberAddress}
                       </Typography>
                     )}

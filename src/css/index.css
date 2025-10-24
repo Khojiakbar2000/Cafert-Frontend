@@ -50,18 +50,15 @@ code {
   zoom: 1 !important;
 }
 
-/* --- Hero Section: Desktop Freeze to Dev Ratio --- */
-.hero-section {
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  overflow: hidden;
-}
-
+/* --- VPS Height Override: Hero Section Lock --- */
 @media (min-width: 1024px) {
   .hero-section {
     height: 1080px !important;
     min-height: 1080px !important;
     max-height: 1080px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    overflow: hidden;
   }
 }
