@@ -4,6 +4,8 @@
 @import './layouts.css';
 @import './animations.css';
 @import './coffee-shop.css';
+@import './coffees-page.css';
+@import './chosen-product.css';
 
 /* Base styles */
 body {
@@ -48,4 +50,15 @@ code {
 .hero-section div {
   transform: none !important;
   zoom: 1 !important;
+}
+
+/* VPS Fix for Hero Section - Desktop */
+@media (min-width: 1024px) {
+  .hero-section {
+    min-height: 1080px !important;
+    height: 1080px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    overflow: hidden;
+  }
 }

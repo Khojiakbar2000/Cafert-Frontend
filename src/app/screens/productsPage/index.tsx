@@ -19,16 +19,17 @@ export default function ProductsPage(props:ProductsPageProps ) {
   console.log("products:", products);
 
   return (
-    <div className="products-page">
-      
-      <Switch>
-        <Route path={`${products.path}/:productId`}>
-          <ChosenProduct onAdd={onAdd}/>
-        </Route>
-        <Route path={`${products.path}`}>
-          <Coffees onAdd={onAdd} defaultCategory="all"/>
-        </Route>
-      </Switch>
-    </div>
+    <Container maxWidth="xl" sx={{ overflowX: "hidden" }}>
+      <div className="products-page">
+        <Switch>
+          <Route path={`${products.path}/:productId`}>
+            <ChosenProduct onAdd={onAdd}/>
+          </Route>
+          <Route path={`${products.path}`}>
+            <Coffees onAdd={onAdd} defaultCategory="all"/>
+          </Route>
+        </Switch>
+      </div>
+    </Container>
   );
 }
