@@ -44,3 +44,45 @@ code {
     flex-shrink: 0;
   }
 }
+
+/* Hero Section Text Alignment Fix */
+.hero-section .hero-content {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 5vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+
+  height: 100%;
+  transform: translateY(-4%);
+}
+
+@media (min-width: 1280px) {
+  .hero-section .hero-content {
+    transform: translateY(-6%);
+  }
+}
+
+/* Products Page Wrapping Fix */
+.products-container,
+.menu-grid {
+  display: flex;
+  flex-wrap: wrap !important;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1.5rem;
+  overflow: visible !important;
+}
+
+.products-container > * {
+  flex: 1 1 300px;
+  max-width: 320px;
+}
