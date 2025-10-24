@@ -48,26 +48,30 @@ code {
 /* Hero Section Text Alignment Fix */
 .hero-section .hero-content {
   position: relative;
-  top: 0;
-  left: 0;
+  z-index: 2;
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 5vw;
-
+  padding-left: 3vw;     /* reduced from 6–8vw to bring text closer */
+  padding-right: 1vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   text-align: left;
-
   height: 100%;
   transform: translateY(-4%);
 }
 
 @media (min-width: 1280px) {
   .hero-section .hero-content {
-    transform: translateY(-6%);
+    transform: translateY(-6%) translateX(2%);
+  }
+}
+
+@media (min-width: 1440px) {
+  .hero-section .hero-content {
+    padding-left: 2.5vw;  /* even closer on ultrawide VPS monitors */
   }
 }
 
@@ -85,4 +89,9 @@ code {
 .products-container > * {
   flex: 1 1 300px;
   max-width: 320px;
+}
+
+/* Remove underline effect from category tabs */
+.MuiTabs-indicator {
+  display: none !important;
 }

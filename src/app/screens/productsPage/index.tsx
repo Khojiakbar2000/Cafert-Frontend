@@ -19,7 +19,14 @@ export default function ProductsPage(props:ProductsPageProps ) {
   console.log("products:", products);
 
   return (
-    <Container maxWidth="xl" sx={{ overflowX: "hidden" }}>
+    <Container
+      maxWidth="xl"
+      sx={{
+        overflowX: "hidden",
+        paddingTop: "2rem",
+        paddingBottom: "4rem",
+      }}
+    >
       <div className="products-page">
         <Switch>
           <Route path={`${products.path}/:productId`}>
