@@ -22,6 +22,9 @@ import {
   Toolbar,
   Avatar,
   Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +52,9 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTheme as useThemeContext } from '../context/ThemeContext';
 import { useGlobals } from '../../app/hooks/useGlobals';
 import ActivityService from '../../app/services/ActivityService';
@@ -61,6 +67,8 @@ import NewsletterSubscription from '../components/NewsletterSubscription';
 import FloatingStyleSwitcher from '../components/FloatingStyleSwitcher';
 import StorytellingTimeline from '../components/StorytellingTimeline';
 import { coffeeShopTimelineData } from '../components/TimelineData';
+import Showcase from '../components/Showcase';
+import CollageHero from '../components/CollageHero';
 import { Product } from '../../lib/types/product';
 import { UserActivity, RecentActivity, ActiveUsersStats } from '../../app/services/ActivityService';
 import { serverApi } from '../../lib/config';
@@ -69,6 +77,7 @@ interface CoffeeHomePageProps {
   setSignupOpen?: (isOpen: boolean) => void;
   setLoginOpen?: (isOpen: boolean) => void;
 }
+
 
 const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({ 
   setSignupOpen, 
@@ -80,6 +89,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
   const [activeMenuTab, setActiveMenuTab] = useState('popular-coffees');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
@@ -420,6 +431,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       id: 1,
       title: "Private Events",
       description: "Host your special occasions in our elegant private dining room",
+      fullDescription: "Our private events service offers an exclusive experience for your special occasions. Whether it's a birthday celebration, anniversary, corporate gathering, or intimate dinner party, we provide a sophisticated atmosphere with personalized service. Our elegant private dining room can accommodate up to 50 guests and features custom menu options, professional catering staff, and a dedicated event coordinator to ensure everything runs smoothly.",
+      features: [
+        "Accommodates up to 50 guests",
+        "Custom menu options available",
+        "Professional catering staff",
+        "Dedicated event coordinator",
+        "Flexible event packages",
+        "Audio/visual equipment available"
+      ],
       icon: <RestaurantIcon />,
       image: "/img/coffee/coffee-hero.jpg"
     },
@@ -427,6 +447,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       id: 2,
       title: "Catering Services",
       description: "Let us cater your next event with our delicious menu",
+      fullDescription: "Bring the exceptional taste of our café to your location with our professional catering services. We offer a wide range of menu options from light refreshments to full-course meals, all prepared with the same attention to quality and presentation that you experience in our café. Perfect for office meetings, conferences, weddings, and any special occasion where you want to impress your guests.",
+      features: [
+        "Wide range of menu options",
+        "Office and corporate events",
+        "Wedding catering available",
+        "Custom menu planning",
+        "Professional presentation",
+        "Delivery and setup included"
+      ],
       icon: <CafeIcon />,
       image: "/img/coffee/coffee-gallery.jpg"
     },
@@ -434,6 +463,15 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       id: 3,
       title: "Coffee Workshops",
       description: "Learn the art of coffee brewing from our expert baristas",
+      fullDescription: "Join our expert baristas for hands-on coffee workshops where you'll learn the art and science of coffee brewing. From espresso basics to advanced latte art techniques, our workshops cover everything you need to know to create café-quality coffee at home. Each session includes practical demonstrations, hands-on practice, and take-home materials. Perfect for coffee enthusiasts of all skill levels.",
+      features: [
+        "Hands-on learning experience",
+        "Expert barista instruction",
+        "Espresso and latte art techniques",
+        "Take-home materials included",
+        "Small class sizes for personalized attention",
+        "Suitable for all skill levels"
+      ],
       icon: <CoffeeIcon />,
       image: "/img/coffee/coffee-menu.jpg"
     }
@@ -560,6 +598,16 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
 
   const goToEvent = (index: number) => {
     setCurrentEventIndex(index);
+  };
+
+  const handleEventClick = (index: number) => {
+    setSelectedEvent(index);
+    setEventDetailsOpen(true);
+  };
+
+  const handleCloseEventDetails = () => {
+    setEventDetailsOpen(false);
+    setSelectedEvent(null);
   };
 
   const nextUser = () => {
@@ -1791,6 +1839,9 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         </Container>
       </Box>
 
+      {/* Showcase Section with GSAP Animation */}
+      <Showcase />
+
       {/* Services Section */}
       <Box ref={servicesRef} sx={{
         padding: '6rem 0',
@@ -1926,9 +1977,9 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       transition={{ duration: 0.5, ease: "easeInOut" }}
                       style={{
                         position: 'relative',
-                        cursor: isActive ? 'default' : 'pointer'
+                        cursor: 'pointer'
                       }}
-                      onClick={() => !isActive && goToEvent(index)}
+                      onClick={() => handleEventClick(index)}
                     >
                       <Card sx={{
                         width: { xs: 280, sm: 320, md: 350 },
@@ -2045,6 +2096,10 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                           {/* CTA Button */}
                           <Button
                             variant="contained"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEventClick(index);
+                            }}
                             sx={{
                               backgroundColor: colors.accent,
                               color: colors.background,
@@ -2061,7 +2116,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                               transition: 'all 0.3s ease'
                             }}
                           >
-                            Learn More
+                            View Details
                           </Button>
                         </CardContent>
                       </Card>
@@ -2100,6 +2155,132 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
           </Box>
         </Container>
       </Box>
+
+      {/* Collage Hero Section - Starbucks Style Polaroid */}
+      <CollageHero />
+
+      {/* Event Details Dialog */}
+      <Dialog
+        open={eventDetailsOpen}
+        onClose={handleCloseEventDetails}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            backgroundColor: colors.surface,
+          }
+        }}
+      >
+        {selectedEvent !== null && (
+          <>
+            <DialogTitle sx={{
+              fontSize: '2rem',
+              fontWeight: 700,
+              color: colors.text,
+              fontFamily: 'Playfair Display, serif',
+              pb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2
+            }}>
+              <Box sx={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                backgroundColor: colors.accent,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.background,
+              }}>
+                {services[selectedEvent].icon}
+              </Box>
+              {services[selectedEvent].title}
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mb: 3 }}>
+                <CardMedia
+                  component="img"
+                  height="300"
+                  image={services[selectedEvent].image}
+                  alt={services[selectedEvent].title}
+                  sx={{
+                    borderRadius: '15px',
+                    objectFit: 'cover',
+                    mb: 3
+                  }}
+                />
+                <Typography variant="body1" sx={{
+                  color: colors.text,
+                  lineHeight: 1.8,
+                  fontSize: '1.1rem',
+                  mb: 3
+                }}>
+                  {services[selectedEvent].fullDescription}
+                </Typography>
+                <Typography variant="h6" sx={{
+                  color: colors.text,
+                  fontWeight: 600,
+                  mb: 2,
+                  fontSize: '1.2rem'
+                }}>
+                  Features:
+                </Typography>
+                <List>
+                  {services[selectedEvent].features.map((feature, index) => (
+                    <ListItem key={index} sx={{ px: 0 }}>
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <CheckCircleIcon sx={{ color: colors.accent }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={feature}
+                        primaryTypographyProps={{
+                          sx: {
+                            color: colors.textSecondary,
+                            fontSize: '1rem'
+                          }
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 0 }}>
+              <Button
+                onClick={handleCloseEventDetails}
+                sx={{
+                  color: colors.textSecondary,
+                  textTransform: 'none',
+                  fontSize: '1rem'
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  handleCloseEventDetails();
+                  setReservationOpen(true);
+                }}
+                sx={{
+                  backgroundColor: colors.accent,
+                  color: colors.background,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: colors.accentDark
+                  }
+                }}
+              >
+                Book Now
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
 
       {/* Testimonials Section */}
       <Box ref={testimonialsRef} sx={{
@@ -2437,6 +2618,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         </Container>
       </Box>
 
+      {/* Horizontal Scroll Gallery Section */}
       {/* Image Gallery Section */}
       <Box sx={{
         padding: '6rem 0',

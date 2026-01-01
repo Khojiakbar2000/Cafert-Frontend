@@ -2,26 +2,37 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
+  Popover,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Typography,
   Box,
   Tooltip,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
 } from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const LanguageSwitcher: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [accordionExpanded, setAccordionExpanded] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    setAccordionExpanded(true);
   };
 
   const handleClose = () => {
     setAnchorEl(null);
+    setAccordionExpanded(false);
+  };
+
+  const handleAccordionChange = (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setAccordionExpanded(isExpanded);
   };
 
   const handleLanguageChange = (language: string) => {
@@ -35,6 +46,7 @@ const LanguageSwitcher: React.FC = () => {
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const open = Boolean(anchorEl);
 
   return (
     <Box>
@@ -42,48 +54,101 @@ const LanguageSwitcher: React.FC = () => {
         <IconButton
           color="inherit"
           onClick={handleClick}
-          aria-controls="language-menu"
+          aria-controls="language-accordion"
           aria-haspopup="true"
         >
           <LanguageIcon />
         </IconButton>
       </Tooltip>
       
-      <Menu
-        id="language-menu"
+      <Popover
+        id="language-accordion"
+        open={open}
         anchorEl={anchorEl}
-        keepMounted
-        open={Boolean(anchorEl)}
         onClose={handleClose}
-        style={{
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
           zIndex: 9999,
         }}
-        PaperProps={{
-          style: {
-            minWidth: 150,
-            zIndex: 9999,
-          },
-        }}
       >
-        {languages.map((language) => (
-          <MenuItem
-            key={language.code}
-            onClick={() => handleLanguageChange(language.code)}
-            selected={i18n.language === language.code}
+        <Box sx={{ minWidth: 200, p: 1 }}>
+          <Accordion 
+            expanded={accordionExpanded} 
+            onChange={handleAccordionChange}
+            sx={{
+              boxShadow: 'none',
+              '&:before': {
+                display: 'none',
+              },
+              '&.Mui-expanded': {
+                margin: 0,
+              },
+            }}
           >
-            <ListItemIcon>
-              <Typography variant="h6" style={{ fontSize: '1.2rem' }}>
-                {language.flag}
-              </Typography>
-            </ListItemIcon>
-            <ListItemText>
-              <Typography variant="body2">
-                {language.name}
-              </Typography>
-            </ListItemText>
-          </MenuItem>
-        ))}
-      </Menu>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="language-accordion-content"
+              id="language-accordion-header"
+              sx={{
+                minHeight: 48,
+                '&.Mui-expanded': {
+                  minHeight: 48,
+                },
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0',
+                  '&.Mui-expanded': {
+                    margin: '12px 0',
+                  },
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LanguageIcon />
+                <Typography variant="body2">
+                  {t('common.language')}: {currentLanguage.name}
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 0, pb: 1 }}>
+              {languages.map((language) => (
+                <ListItemButton
+                  key={language.code}
+                  onClick={() => handleLanguageChange(language.code)}
+                  selected={i18n.language === language.code}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 0.5,
+                    '&.Mui-selected': {
+                      backgroundColor: 'action.selected',
+                      '&:hover': {
+                        backgroundColor: 'action.selected',
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
+                      {language.flag}
+                    </Typography>
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Typography variant="body2">
+                      {language.name}
+                    </Typography>
+                  </ListItemText>
+                </ListItemButton>
+              ))}
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+      </Popover>
     </Box>
   );
 };

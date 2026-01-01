@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Box,
   Card,
@@ -22,7 +22,11 @@ import {
   CircularProgress,
   Snackbar,
   TextField,
-  IconButton
+  IconButton,
+  Stack,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -37,7 +41,17 @@ import {
   Add as AddIcon,
   PhotoCamera as PhotoCameraIcon,
   Delete as DeleteIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Replay as ReplayIcon,
+  TrackChanges as TrackChangesIcon,
+  LocationOn as LocationOnIcon,
+  Receipt as ReceiptIcon,
+  Payment as PaymentIcon,
+  PlayArrow as PlayArrowIcon,
+  TrendingUp as TrendingUpIcon,
+  AttachMoney as AttachMoneyIcon,
+  Star as StarIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useHistory } from 'react-router-dom';
@@ -85,7 +99,11 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   const [orderStats, setOrderStats] = useState({
     total: 0,
     completed: 0,
-    inProgress: 0
+    inProgress: 0,
+    active: 0,
+    monthly: 0,
+    totalSpent: 0,
+    loyaltyPoints: 0
   });
 
   const [showProfileDialog, setShowProfileDialog] = useState(false);
@@ -192,17 +210,35 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       console.log('Sorted orders for recent orders:', sortedOrders.slice(0, 5));
       setRecentOrders(sortedOrders);
       
-      // Calculate stats
+      // Calculate enhanced stats
       const total = allOrders?.length || 0;
       const completed = allOrders?.filter(o => o.orderStatus === OrderStatus.FINISH).length || 0;
       const inProgress = allOrders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
+      const active = allOrders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
       
-      console.log('Final order stats:', { total, completed, inProgress });
+      // Calculate monthly orders
+      const now = new Date();
+      const thisMonth = allOrders?.filter(o => {
+        const orderDate = new Date(o.createdAt);
+        return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+      }).length || 0;
+      
+      // Calculate total spent
+      const totalSpent = allOrders?.reduce((sum, o) => sum + (o.orderTotal || 0), 0) || 0;
+      
+      // Calculate loyalty points (1 point per $1 spent)
+      const loyaltyPoints = Math.floor(totalSpent);
+      
+      console.log('Final order stats:', { total, completed, inProgress, active, monthly: thisMonth, totalSpent, loyaltyPoints });
       
       setOrderStats({
         total,
         completed,
-        inProgress
+        inProgress,
+        active,
+        monthly: thisMonth,
+        totalSpent,
+        loyaltyPoints
       });
       
     } catch (error) {
@@ -211,10 +247,20 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       console.log('Using Redux store data as fallback');
       const allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
       setRecentOrders(allOrders);
+      const now = new Date();
+      const thisMonth = allOrders.filter(o => {
+        const orderDate = new Date(o.createdAt);
+        return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+      }).length;
+      const totalSpent = allOrders.reduce((sum, o) => sum + (o.orderTotal || 0), 0);
       setOrderStats({
         total: allOrders.length,
         completed: allOrders.filter(o => o.orderStatus === OrderStatus.FINISH).length,
-        inProgress: allOrders.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length
+        inProgress: allOrders.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length,
+        active: allOrders.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length,
+        monthly: thisMonth,
+        totalSpent,
+        loyaltyPoints: Math.floor(totalSpent)
       });
     } finally {
       setIsLoadingOrders(false);
@@ -400,6 +446,16 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     }
   };
 
+  const getStatusLabel = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.PAUSE: return 'Paused';
+      case OrderStatus.PROCESS: return 'Processing';
+      case OrderStatus.FINISH: return 'Finished';
+      case OrderStatus.DELETE: return 'Cancelled';
+      default: return 'Unknown';
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case OrderStatus.PAUSE: return <ScheduleIcon />;
@@ -418,36 +474,86 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     });
   };
 
-  const quickActions = [
-    {
-      title: 'My Profile',
-      description: 'View and edit your profile information',
-      icon: <PersonIcon />,
-      color: '#2196f3',
-      action: () => history.push('/user-profile')
-    },
-    {
-      title: 'My Orders',
-      description: 'Track your order history and status',
-      icon: <OrdersIcon />,
-      color: '#4caf50',
-      action: () => history.push('/orders')
-    },
+  // Get last order for reorder action
+  const lastOrder = recentOrders.length > 0 ? recentOrders[0] : null;
+  const activeOrder = recentOrders.find(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus));
 
-    {
-      title: 'Help & Support',
-      description: 'Get help and contact support',
-      icon: <HelpIcon />,
-      color: '#ff9800',
-      action: () => history.push('/help')
+  // Smart Actions based on user state
+  const smartActions = useMemo(() => {
+    const actions: Array<{
+      title: string;
+      description: string;
+      icon: React.ReactElement;
+      color: string;
+      action: () => void;
+    }> = [];
+    
+    if (lastOrder) {
+      actions.push({
+        title: 'Reorder Last Order',
+        description: `Quick reorder from ${formatDate(lastOrder.createdAt)}`,
+        icon: <ReplayIcon />,
+        color: componentColors.accent,
+        action: () => {
+          history.push('/orders');
+        }
+      });
     }
-  ];
+    
+    if (activeOrder) {
+      actions.push({
+        title: `Track Order #${activeOrder._id?.slice(-4) || '0001'}`,
+        description: 'View real-time order status',
+        icon: <TrackChangesIcon />,
+        color: '#2196f3',
+        action: () => history.push('/orders')
+      });
+    }
+    
+    if (authMember?.memberAddress) {
+      actions.push({
+        title: 'Update Delivery Info',
+        description: 'Change your delivery address',
+        icon: <LocationOnIcon />,
+        color: '#4caf50',
+        action: handleEditProfile
+      });
+    }
+    
+    return actions;
+  }, [recentOrders, authMember, componentColors.accent, history]);
 
+  // Enhanced stats with trends
   const stats = [
-    { label: 'Total Orders', value: orderStats.total.toString(), icon: <OrdersIcon />, color: '#2196f3' },
-    { label: 'Completed', value: orderStats.completed.toString(), icon: <CheckCircleIcon />, color: '#4caf50' },
-    { label: 'In Progress', value: orderStats.inProgress.toString(), icon: <ShippingIcon />, color: '#ff9800' },
-
+    { 
+      label: 'Active Orders', 
+      value: orderStats.active.toString(), 
+      icon: <ShippingIcon />, 
+      color: '#2196f3',
+      trend: '+1 today',
+      highlighted: true
+    },
+    {
+      label: 'Orders This Month', 
+      value: orderStats.monthly.toString(), 
+      icon: <OrdersIcon />,
+      color: componentColors.accent,
+      trend: '↑ from last week'
+    },
+    { 
+      label: 'Total Spent', 
+      value: `$${orderStats.totalSpent.toFixed(0)}`, 
+      icon: <AttachMoneyIcon />, 
+      color: '#4caf50',
+      trend: 'All time'
+    },
+    { 
+      label: 'Loyalty Points', 
+      value: orderStats.loyaltyPoints.toString(), 
+      icon: <StarIcon />, 
+      color: '#ff9800',
+      trend: `${Math.floor(orderStats.loyaltyPoints / 10)} free drinks`
+    },
   ];
 
   // Temporarily comment out auth check for debugging
@@ -471,155 +577,217 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Header */}
-        <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              color: componentColors.primary,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-              mb: 2
-            }}
-          >
-            My Dashboard
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{
-              color: componentColors.textSecondary,
-              fontWeight: 400
-            }}
-          >
-            Welcome back, {authMember?.memberNick || 'User'}! 👋
-          </Typography>
-        </Box>
-
-        {/* Profile Card */}
+        {/* Hero Dashboard Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ duration: 0.6 }}
         >
           <Card
             sx={{
               backgroundColor: componentColors.surface,
-              borderRadius: '20px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              borderRadius: '16px',
               border: `1px solid ${componentColors.border}`,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
               mb: 4
             }}
           >
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                {/* Left: Avatar + Name + Status */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
                   sx={{
-                    width: 80,
-                    height: 80,
-                    border: `3px solid ${componentColors.accent}`
-                  }}
-                />
-                <Box sx={{ flex: 1 }}>
+                      width: 64,
+                      height: 64,
+                      border: `2px solid ${componentColors.accent}`
+                    }}
+                  />
+                  <Box>
                   <Typography
-                    variant="h4"
+                      variant="h5"
                     sx={{
-                      color: componentColors.text,
+                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
                       fontWeight: 700,
-                      mb: 1
+                        mb: 0.5,
+                        fontSize: '1.5rem'
                     }}
                   >
                     {authMember?.memberNick || 'Guest User'}
                   </Typography>
                   <Typography
-                    variant="body1"
+                      variant="body2"
                     sx={{
                       color: componentColors.textSecondary,
-                      mb: 2
+                        fontSize: '0.9rem'
                     }}
                   >
-                    {authMember?.memberPhone || 'No phone number'}
+                      {authMember?.memberType || 'Regular customer'} • Last order {lastOrder ? `${Math.floor((Date.now() - new Date(lastOrder.createdAt).getTime()) / (1000 * 60 * 60))} hours ago` : 'never'}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Chip
-                      label={authMember?.memberType || 'Member'}
-                      sx={{
-                        backgroundColor: `${componentColors.accent}15`,
-                        color: componentColors.accent,
-                        fontWeight: 600
-                      }}
-                    />
                   </Box>
                 </Box>
-                <Button
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                  onClick={handleEditProfile}
-                  sx={{
-                    borderColor: componentColors.accent,
-                    color: componentColors.accent,
-                    '&:hover': {
-                      borderColor: componentColors.secondary,
-                      backgroundColor: `${componentColors.accent}08`
-                    }
-                  }}
-                >
-                  Edit Profile
-                </Button>
+
+                {/* Right: Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={handleEditProfile}
+                    sx={{
+                      borderColor: componentColors.border,
+                      color: componentColors.text,
+                      px: 2.5,
+                      py: 1.5,
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      fontSize: '0.9rem',
+                      '&:hover': {
+                        borderColor: componentColors.accent,
+                        backgroundColor: `${componentColors.accent}08`,
+                        transform: 'translateY(-2px)',
+                      },
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                  {activeOrder ? (
+                    <Button
+                      variant="contained"
+                      startIcon={<TrackChangesIcon />}
+                      onClick={() => history.push('/orders')}
+                      sx={{
+                        backgroundColor: componentColors.accent,
+                        color: 'white',
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        '&:hover': {
+                          backgroundColor: componentColors.secondary,
+                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      Track Active Order
+                    </Button>
+                  ) : lastOrder ? (
+                    <Button
+                      variant="contained"
+                      startIcon={<ReplayIcon />}
+                      onClick={() => history.push('/orders')}
+                      sx={{
+                        backgroundColor: componentColors.accent,
+                        color: 'white',
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        '&:hover': {
+                          backgroundColor: componentColors.secondary,
+                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      Order Again
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => history.push('/coffees')}
+                      sx={{
+                        backgroundColor: componentColors.accent,
+                        color: 'white',
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        '&:hover': {
+                          backgroundColor: componentColors.secondary,
+                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      Place First Order
+                    </Button>
+                  )}
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Stats Grid */}
+        {/* Enhanced Stats Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={2} sx={{ mb: 4 }}>
             {stats.map((stat, index) => (
-              <Grid item xs={12} sm={4} key={index}>
+              <Grid item xs={6} sm={3} key={index}>
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.2 }}
+                >
                 <Card
                   sx={{
-                    backgroundColor: componentColors.surface,
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      backgroundColor: stat.highlighted 
+                        ? (isDarkMode ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)')
+                        : componentColors.surface,
+                      borderRadius: '12px',
                     border: `1px solid ${componentColors.border}`,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                     textAlign: 'center',
-                    p: 3,
+                      p: 2.5,
                     cursor: 'pointer',
+                      transition: 'all 0.3s ease',
                     '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-                      transition: 'all 0.3s ease'
-                    }
-                  }}
-                  onClick={() => {
-                    if (stat.label === 'Total Orders' || stat.label === 'Completed' || stat.label === 'In Progress') {
-                      history.push('/orders');
-                    }
-                  }}
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                        borderColor: stat.color,
+                      },
+                      '&:active': {
+                        transform: 'scale(0.98)',
+                      }
+                    }}
+                    onClick={() => history.push('/orders')}
                 >
                   <Box
                     sx={{
                       display: 'flex',
                       justifyContent: 'center',
-                      mb: 2
+                        mb: 1.5
                     }}
                   >
                     <Box
                       sx={{
                         backgroundColor: `${stat.color}15`,
-                        borderRadius: '50%',
-                        p: 1,
+                          borderRadius: '12px',
+                          p: 1.5,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
                     >
-                      <Box sx={{ color: stat.color, fontSize: 24 }}>
+                        <Box sx={{ color: stat.color, fontSize: 20 }}>
                         {stat.icon}
                       </Box>
                     </Box>
@@ -627,9 +795,10 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                   <Typography
                     variant="h4"
                     sx={{
-                      color: componentColors.text,
+                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
                       fontWeight: 700,
-                      mb: 1
+                        mb: 0.5,
+                        fontSize: '1.75rem'
                     }}
                   >
                     {stat.value}
@@ -638,127 +807,146 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                     variant="body2"
                     sx={{
                       color: componentColors.textSecondary,
-                      fontWeight: 500
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        mb: 0.5
                     }}
                   >
                     {stat.label}
                   </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: componentColors.textSecondary,
+                        fontSize: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 0.5
+                      }}
+                    >
+                      <TrendingUpIcon sx={{ fontSize: 12 }} />
+                      {stat.trend}
+                  </Typography>
                 </Card>
+                </motion.div>
               </Grid>
             ))}
           </Grid>
         </motion.div>
 
-        <Grid container spacing={4}>
-          {/* Quick Actions */}
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={3}>
+          {/* Smart Actions Panel */}
+          {smartActions.length > 0 && (
+            <Grid item xs={12} md={4}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card
+                sx={{
+                  backgroundColor: componentColors.surface,
+                    borderRadius: '12px',
+                  border: `1px solid ${componentColors.border}`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  height: '100%'
+                }}
+              >
+                  <CardContent sx={{ p: 3 }}>
+                  <Typography
+                      variant="h6"
+                    sx={{
+                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                      fontWeight: 700,
+                        mb: 2.5,
+                        fontSize: '1.25rem'
+                    }}
+                  >
+                    Quick Actions
+                  </Typography>
+                    <Stack spacing={2}>
+                      {smartActions.map((action, index) => (
+                        <motion.div
+                        key={index}
+                          whileHover={{ x: 4 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Button
+                            fullWidth
+                            startIcon={action.icon}
+                        onClick={action.action}
+                        sx={{
+                              justifyContent: 'flex-start',
+                              textAlign: 'left',
+                              p: 2,
+                          borderRadius: '12px',
+                              backgroundColor: `${action.color}08`,
+                              color: componentColors.text,
+                              textTransform: 'none',
+                          '&:hover': {
+                              backgroundColor: `${action.color}15`,
+                                transform: 'translateX(4px)',
+                              },
+                              transition: 'all 0.3s ease',
+                            }}
+                          >
+                            <Box sx={{ flex: 1, textAlign: 'left' }}>
+                            <Typography
+                                variant="body1"
+                              sx={{
+                                  fontWeight: 600,
+                                color: componentColors.text,
+                                  mb: 0.5
+                              }}
+                            >
+                              {action.title}
+                            </Typography>
+                            <Typography
+                                variant="caption"
+                              sx={{
+                                  color: componentColors.textSecondary,
+                                  fontSize: '0.8rem',
+                                  display: 'block'
+                              }}
+                            >
+                              {action.description}
+                            </Typography>
+                            </Box>
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </Stack>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+          )}
+
+          {/* Recent Orders Timeline */}
+          <Grid item xs={12} md={smartActions.length > 0 ? 8 : 12}>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
               <Card
                 sx={{
                   backgroundColor: componentColors.surface,
-                  borderRadius: '20px',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                  borderRadius: '12px',
                   border: `1px solid ${componentColors.border}`,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                   height: '100%'
                 }}
               >
-                <CardContent sx={{ p: 4 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: componentColors.text,
-                      fontWeight: 700,
-                      mb: 3
-                    }}
-                  >
-                    Quick Actions
-                  </Typography>
-                  <List sx={{ p: 0 }}>
-                    {quickActions.map((action, index) => (
-                      <ListItem
-                        key={index}
-                        button
-                        onClick={action.action}
-                        sx={{
-                          borderRadius: '12px',
-                          mb: 2,
-                          backgroundColor: `${componentColors.accent}08`,
-                          '&:hover': {
-                            backgroundColor: `${componentColors.accent}15`,
-                            transform: 'translateX(8px)',
-                            transition: 'all 0.3s ease'
-                          }
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar
-                            sx={{
-                              backgroundColor: `${action.color}15`,
-                              color: action.color
-                            }}
-                          >
-                            {action.icon}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                color: componentColors.text,
-                                fontWeight: 600
-                              }}
-                            >
-                              {action.title}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: componentColors.textSecondary
-                              }}
-                            >
-                              {action.description}
-                            </Typography>
-                          }
-                        />
-                        <ArrowForwardIcon sx={{ color: componentColors.textSecondary }} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-
-          {/* Recent Orders */}
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <Card
-                sx={{
-                  backgroundColor: componentColors.surface,
-                  borderRadius: '20px',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                  border: `1px solid ${componentColors.border}`,
-                  height: '100%'
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
+                <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography
-                      variant="h5"
+                      variant="h6"
                       sx={{
-                        color: componentColors.text,
-                        fontWeight: 700
+                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                        fontWeight: 700,
+                        fontSize: '1.25rem'
                       }}
                     >
                       Recent Orders
@@ -768,6 +956,8 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       onClick={() => history.push('/orders')}
                       sx={{
                         color: componentColors.accent,
+                        textTransform: 'none',
+                        fontSize: '0.9rem',
                         '&:hover': {
                           backgroundColor: `${componentColors.accent}08`
                         }
@@ -781,79 +971,254 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       <CircularProgress sx={{ color: componentColors.accent }} />
                     </Box>
                   ) : recentOrders.length > 0 ? (
-                    <List sx={{ p: 0 }}>
-                      {recentOrders.map((order, index) => (
-                        <ListItem
-                          key={index}
+                    <Box sx={{ position: 'relative' }}>
+                      {/* Timeline line */}
+                      <Box
                           sx={{
-                            borderRadius: '12px',
-                            mb: 2,
-                            backgroundColor: `${componentColors.accent}08`,
+                          position: 'absolute',
+                          left: 20,
+                          top: 0,
+                          bottom: 0,
+                          width: 2,
+                          backgroundColor: componentColors.border,
+                        }}
+                      />
+                      <Stack spacing={2}>
+                        {recentOrders.slice(0, 5).map((order, index) => {
+                          const statusColor = getStatusColor(order.orderStatus);
+                          const getActionButton = () => {
+                            switch (order.orderStatus) {
+                              case OrderStatus.PAUSE:
+                                return (
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    startIcon={<PlayArrowIcon />}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      history.push('/orders');
+                                    }}
+                                    sx={{
+                                      backgroundColor: statusColor,
+                                      textTransform: 'none',
+                                      fontSize: '0.75rem',
+                                      px: 1.5,
+                                      py: 0.5,
                             '&:hover': {
-                              backgroundColor: `${componentColors.accent}15`,
-                              cursor: 'pointer'
-                            }
-                          }}
-                          onClick={() => history.push('/orders')}
-                        >
-                          <ListItemAvatar>
-                            <Avatar
+                                        backgroundColor: statusColor,
+                                        opacity: 0.9,
+                                        transform: 'scale(1.05)',
+                                      },
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    Resume
+                                  </Button>
+                                );
+                              case OrderStatus.PROCESS:
+                                return (
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    startIcon={<PaymentIcon />}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      history.push('/orders');
+                                    }}
                               sx={{
-                                backgroundColor: `${getStatusColor(order.orderStatus)}15`,
-                                color: getStatusColor(order.orderStatus)
-                              }}
-                            >
-                              {getStatusIcon(order.orderStatus)}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Typography
-                                variant="h6"
+                                      backgroundColor: statusColor,
+                                      textTransform: 'none',
+                                      fontSize: '0.75rem',
+                                      px: 1.5,
+                                      py: 0.5,
+                                      '&:hover': {
+                                        backgroundColor: statusColor,
+                                        opacity: 0.9,
+                                        transform: 'scale(1.05)',
+                                      },
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    Pay
+                                  </Button>
+                                );
+                              case OrderStatus.FINISH:
+                                return (
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    startIcon={<ReceiptIcon />}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      history.push('/orders');
+                                    }}
                                 sx={{
-                                  color: componentColors.text,
-                                  fontWeight: 600
-                                }}
-                              >
-                                Order #{String(index + 1).padStart(3, '0')}
-                              </Typography>
+                                      borderColor: statusColor,
+                                      color: statusColor,
+                                      textTransform: 'none',
+                                      fontSize: '0.75rem',
+                                      px: 1.5,
+                                      py: 0.5,
+                                      '&:hover': {
+                                        borderColor: statusColor,
+                                        backgroundColor: `${statusColor}08`,
+                                        transform: 'scale(1.05)',
+                                      },
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    Receipt
+                                  </Button>
+                                );
+                              default:
+                                return null;
                             }
-                            secondary={
-                              <Box>
-                                <Typography
-                                  variant="body2"
+                          };
+
+                          return (
+                            <motion.div
+                              key={order._id || index}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                              whileHover={{ x: 4 }}
+                            >
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  gap: 2,
+                                  alignItems: 'flex-start',
+                                  pl: 4,
+                                  position: 'relative',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    '& .order-content': {
+                                      backgroundColor: `${componentColors.accent}05`,
+                                    }
+                                  }
+                                }}
+                                onClick={() => history.push('/orders')}
+                              >
+                                {/* Timeline dot */}
+                                <Box
                                   sx={{
-                                    color: componentColors.textSecondary,
-                                    mb: 1
+                                    position: 'absolute',
+                                    left: 14,
+                                    top: 8,
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: '50%',
+                                    backgroundColor: statusColor,
+                                    border: `2px solid ${componentColors.surface}`,
+                                    zIndex: 1,
+                                  }}
+                                />
+
+                                {/* Order Content */}
+                                <Box
+                                  className="order-content"
+                                  sx={{
+                                    flex: 1,
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    border: `1px solid ${componentColors.border}`,
+                                    backgroundColor: componentColors.surface,
+                                    transition: 'all 0.3s ease',
                                   }}
                                 >
-                                  {formatDate(order.createdAt)} • ${order.orderTotal?.toFixed(2) || '0.00'}
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                              <Box>
+                                <Typography
+                                        variant="body1"
+                                  sx={{
+                                          fontWeight: 700,
+                                          color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                                          mb: 0.5
+                                  }}
+                                >
+                                        Order #{order._id?.slice(-4) || String(index + 1).padStart(3, '0')}
                                 </Typography>
                                 <Typography
-                                  variant="body2"
+                                        variant="caption"
                                   sx={{
                                     color: componentColors.textSecondary,
                                     fontSize: '0.8rem'
                                   }}
                                 >
-                                  {order.orderItems?.slice(0, 2).map(item => item.itemName).join(', ')}
-                                  {order.orderItems?.length > 2 && ` +${order.orderItems.length - 2} more`}
+                                        {formatDate(order.createdAt)} • ${order.orderTotal?.toFixed(2) || '0.00'}
                                 </Typography>
                               </Box>
-                            }
-                          />
                           <Chip
-                            label={order.orderStatus?.charAt(0).toUpperCase() + order.orderStatus?.slice(1) || 'Unknown'}
+                                      label={getStatusLabel(order.orderStatus as OrderStatus)}
                             size="small"
                             sx={{
-                              backgroundColor: `${getStatusColor(order.orderStatus)}15`,
-                              color: getStatusColor(order.orderStatus),
-                              fontWeight: 600
-                            }}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
+                                        backgroundColor: `${statusColor}15`,
+                                        color: statusColor,
+                                        fontWeight: 600,
+                                        fontSize: '0.7rem',
+                                        height: 24
+                                      }}
+                                    />
+                                  </Box>
+
+                                  {/* Order Progress Bar (for active orders) */}
+                                  {[OrderStatus.PROCESS, OrderStatus.PAUSE].includes(order.orderStatus) && (
+                                    <Box sx={{ mb: 1.5, mt: 1 }}>
+                                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
+                                          Ordered
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
+                                          {order.orderStatus === OrderStatus.PROCESS ? 'Preparing' : 'Paused'}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
+                                          Ready
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
+                                          Delivered
+                                        </Typography>
+                                      </Box>
+                                      <Box
+                                        sx={{
+                                          height: 4,
+                                          backgroundColor: componentColors.border,
+                                          borderRadius: 2,
+                                          position: 'relative',
+                                          overflow: 'hidden'
+                                        }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            height: '100%',
+                                            width: order.orderStatus === OrderStatus.PROCESS ? '50%' : '25%',
+                                            backgroundColor: statusColor,
+                                            borderRadius: 2,
+                                            transition: 'width 0.3s ease'
+                                          }}
+                                        />
+                                      </Box>
+                                    </Box>
+                                  )}
+
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        color: componentColors.textSecondary,
+                                        fontSize: '0.75rem'
+                                      }}
+                                    >
+                                      {order.orderItems?.length || 0} item(s)
+                                    </Typography>
+                                    {getActionButton()}
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </motion.div>
+                          );
+                        })}
+                      </Stack>
+                    </Box>
                   ) : (
                     <Box sx={{ textAlign: 'center', py: 4 }}>
                       <OrdersIcon sx={{ fontSize: 48, color: componentColors.textSecondary, mb: 2 }} />
@@ -895,32 +1260,42 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           </Grid>
         </Grid>
 
-        {/* Logout Button */}
+        {/* Account Actions Card (Subtle) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+            <Card
+              sx={{
+                backgroundColor: componentColors.surface,
+                borderRadius: '12px',
+                border: `1px solid ${componentColors.border}`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                p: 2,
+                maxWidth: 400
+              }}
+            >
             <Button
-              variant="outlined"
+                variant="text"
               startIcon={isLoading ? <CircularProgress size={16} /> : <LogoutIcon />}
               onClick={handleLogout}
               disabled={isLoading}
+                fullWidth
               sx={{
-                borderColor: '#f44336',
-                color: '#f44336',
-                px: 4,
-                py: 1.5,
-                borderRadius: '25px',
+                  color: componentColors.textSecondary,
+                  textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#d32f2f',
-                  backgroundColor: 'rgba(244, 67, 54, 0.05)'
-                }
+                    backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                    color: '#f44336',
+                  },
+                  transition: 'all 0.3s ease',
               }}
             >
               {isLoading ? 'Logging out...' : 'Logout'}
             </Button>
+            </Card>
           </Box>
         </motion.div>
       </motion.div>

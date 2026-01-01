@@ -18,7 +18,7 @@ import { SocketProvider } from "./app/context/SocketContext";
 
 
 
-const container = document.getElementById("root")!;
+/*const container = document.getElementById("root")!;
 const root = createRoot(container);
 
 (function () {
@@ -47,7 +47,7 @@ const root = createRoot(container);
     clearTimeout(window.__zoomTimeout);
     window.__zoomTimeout = setTimeout(applyZoom, 200);
   });
-})();
+})();*/
 
 
 

@@ -6,7 +6,10 @@ import {
   Typography, 
   IconButton, 
   Badge, 
-  Menu, 
+  Popover,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Divider,
   Chip,
   Avatar,
@@ -14,6 +17,7 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -134,11 +138,19 @@ export default function Basket(props:BasketProps) {
         </Badge>
       </IconButton>
 
-      <Menu
+      <Popover
         anchorEl={anchorEl}
-        id="cart-menu"
+        id="cart-popover"
         open={open}
         onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
         PaperProps={{
           elevation: 8,
           sx: {
@@ -167,31 +179,60 @@ export default function Basket(props:BasketProps) {
             },
           },
         }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <Box sx={{ p: 3 }}>
-          {/* Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
-              Shopping Cart
-            </Typography>
-            {cartItems.length > 0 && (
-              <IconButton
-                onClick={onDeleteAll}
-                sx={{
-                  color: '#e74c3c',
-                  '&:hover': {
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                  }
-                }}
-              >
-                <DeleteForeverIcon />
-              </IconButton>
-            )}
-          </Box>
-
-          <Divider sx={{ mb: 2 }} />
+        <Accordion
+          defaultExpanded={open}
+          sx={{
+            boxShadow: 'none',
+            '&:before': {
+              display: 'none',
+            },
+            '&.Mui-expanded': {
+              margin: 0,
+            },
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              px: 3,
+              py: 2,
+              '&.Mui-expanded': {
+                minHeight: 48,
+              },
+              '& .MuiAccordionSummary-content': {
+                margin: '12px 0',
+                '&.Mui-expanded': {
+                  margin: '12px 0',
+                },
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mr: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
+                Shopping Cart
+              </Typography>
+              {cartItems.length > 0 && (
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteAll();
+                  }}
+                  sx={{
+                    color: '#e74c3c',
+                    '&:hover': {
+                      backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    }
+                  }}
+                >
+                  <DeleteForeverIcon />
+                </IconButton>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 0 }}>
+            <Box sx={{ px: 3, pb: 3 }}>
+              <Divider sx={{ mb: 2 }} />
 
           {/* Cart Items */}
           <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
@@ -367,8 +408,10 @@ export default function Basket(props:BasketProps) {
               </Button>
             </Box>
           )}
-        </Box>
-      </Menu>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      </Popover>
     </Box>
   );
 }

@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Tooltip, Menu, MenuItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import { 
+  Box, 
+  IconButton,
+  Tooltip,
+  Popover,
+  Accordion, 
+  AccordionSummary, 
+  AccordionDetails, 
+  ListItemIcon, 
+  ListItemText, 
+  ListItemButton, 
+  Typography 
+} from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslation } from 'react-i18next';
 
 interface LanguageToggleProps {
@@ -10,13 +23,20 @@ interface LanguageToggleProps {
 const LanguageToggle: React.FC<LanguageToggleProps> = ({ isDarkMode }) => {
   const { t, i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [accordionExpanded, setAccordionExpanded] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    setAccordionExpanded(true);
   };
 
   const handleClose = () => {
     setAnchorEl(null);
+    setAccordionExpanded(false);
+  };
+
+  const handleAccordionChange = (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setAccordionExpanded(isExpanded);
   };
 
   const handleLanguageChange = (language: string) => {
@@ -30,6 +50,7 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ isDarkMode }) => {
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const open = Boolean(anchorEl);
 
   return (
     <>
@@ -99,18 +120,24 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ isDarkMode }) => {
         </IconButton>
       </Tooltip>
       
-      <Menu
-        id="language-menu"
+      <Popover
+        id="language-accordion"
+        open={open}
         anchorEl={anchorEl}
-        keepMounted
-        open={Boolean(anchorEl)}
         onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
         sx={{
           zIndex: 9999,
         }}
         PaperProps={{
           sx: {
-            minWidth: 180,
             backgroundColor: isDarkMode ? '#333333' : '#ffffff',
             border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
             boxShadow: isDarkMode 
@@ -118,58 +145,123 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ isDarkMode }) => {
               : '0 8px 32px rgba(0,0,0,0.15)',
             backdropFilter: 'blur(10px)',
             mt: 1,
-            zIndex: 9999,
           },
         }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {languages.map((language) => (
-          <MenuItem
-            key={language.code}
-            onClick={() => handleLanguageChange(language.code)}
-            selected={i18n.language === language.code}
+        <Box sx={{ minWidth: 220, p: 1 }}>
+          <Accordion 
+            expanded={accordionExpanded} 
+            onChange={handleAccordionChange}
             sx={{
-              color: isDarkMode ? '#ffffff' : '#333333',
-              backgroundColor: i18n.language === language.code 
-                ? (isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)')
-                : 'transparent',
-              '&:hover': {
-                backgroundColor: isDarkMode 
-                  ? 'rgba(255, 215, 0, 0.1)' 
-                  : 'rgba(139, 69, 19, 0.05)',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+              boxShadow: 'none',
+              border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              borderRadius: 2,
+              '&:before': {
+                display: 'none',
               },
-              '&.Mui-selected': {
-                backgroundColor: isDarkMode 
-                  ? 'rgba(255, 215, 0, 0.2)' 
-                  : 'rgba(139, 69, 19, 0.1)',
-                '&:hover': {
-                  backgroundColor: isDarkMode 
-                    ? 'rgba(255, 215, 0, 0.25)' 
-                    : 'rgba(139, 69, 19, 0.15)',
-                },
+              '&.Mui-expanded': {
+                margin: 0,
               },
             }}
           >
-            <ListItemIcon>
-              <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
-                {language.flag}
-              </Typography>
-            </ListItemIcon>
-            <ListItemText>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontWeight: i18n.language === language.code ? 600 : 400,
-                  color: isDarkMode ? '#ffffff' : '#333333',
-                }}
-              >
-                {language.name}
-              </Typography>
-            </ListItemText>
-          </MenuItem>
-        ))}
-      </Menu>
+            <AccordionSummary
+              expandIcon={
+                <ExpandMoreIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+              }
+              aria-controls="language-accordion-content"
+              id="language-accordion-header"
+              sx={{
+                minHeight: 56,
+                color: isDarkMode ? '#ffffff' : '#333333',
+                '&.Mui-expanded': {
+                  minHeight: 56,
+                },
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0',
+                  '&.Mui-expanded': {
+                    margin: '12px 0',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                <LanguageIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {t('common.language')}
+                </Typography>
+                <Box 
+                  sx={{ 
+                    ml: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
+                    {currentLanguage.flag}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {currentLanguage.name}
+                  </Typography>
+                </Box>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 1, pb: 1 }}>
+              {languages.map((language) => (
+                <ListItemButton
+                  key={language.code}
+                  onClick={() => handleLanguageChange(language.code)}
+                  selected={i18n.language === language.code}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 0.5,
+                    color: isDarkMode ? '#ffffff' : '#333333',
+                    backgroundColor: i18n.language === language.code 
+                      ? (isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)')
+                      : 'transparent',
+                    '&:hover': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(255, 215, 0, 0.1)' 
+                        : 'rgba(139, 69, 19, 0.05)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: isDarkMode 
+                        ? 'rgba(255, 215, 0, 0.2)' 
+                        : 'rgba(139, 69, 19, 0.1)',
+                      '&:hover': {
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 215, 0, 0.25)' 
+                          : 'rgba(139, 69, 19, 0.15)',
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <Typography variant="h6" sx={{ fontSize: '1.2rem' }}>
+                      {language.flag}
+                    </Typography>
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: i18n.language === language.code ? 600 : 400,
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                      }}
+                    >
+                      {language.name}
+                    </Typography>
+                  </ListItemText>
+                </ListItemButton>
+              ))}
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+      </Popover>
     </>
   );
 };

@@ -17,6 +17,12 @@ import {
   Select,
   MenuItem,
   Rating,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
   IconButton,
   Tabs,
   Tab,
@@ -191,6 +197,8 @@ export default function Coffees(props: CoffeesProps) {
   const [selectedCategory, setSelectedCategory] = useState<"all" | "desserts" | "drinks" | "salads" | "dishes" | "other">('all');
   const [sortBy, setSortBy] = useState<'new' | 'price' | 'views' | 'rating'>('new');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortAccordionExpanded, setSortAccordionExpanded] = useState(false);
+  const [orderAccordionExpanded, setOrderAccordionExpanded] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightResults, setHighlightResults] = useState(false);
@@ -583,102 +591,234 @@ export default function Coffees(props: CoffeesProps) {
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                <Typography variant="h6" sx={{ 
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'nowrap', position: 'relative', zIndex: 10 }}>
+                <Box sx={{ position: 'relative', height: 48, flexShrink: 0, width: 180 }}>
+                  <Accordion 
+                    expanded={sortAccordionExpanded} 
+                    onChange={(e, isExpanded) => setSortAccordionExpanded(isExpanded)}
+                    sx={{ 
+                      width: '100%',
+                      boxShadow: sortAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                      borderRadius: '12px',
+                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      position: 'relative',
+                      zIndex: sortAccordionExpanded ? 1000 : 1,
+                      '&:before': {
+                        display: 'none',
+                      },
+                      '&.Mui-expanded': {
+                        margin: 0,
+                        minHeight: '48px !important',
+                      },
+                    }}
+                  >
+                  <AccordionSummary sx={{ 
+                    minHeight: 48, 
+                    '&.Mui-expanded': { minHeight: 48 },
                   color: isDarkMode ? '#ffffff' : '#333333', 
-                  fontWeight: 600,
-                  fontSize: '1.1rem'
-                }}>
-                  {t('common.sortBy')}:
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {t('common.sortBy')}: {
+                          sortBy === 'new' ? t('common.newest') :
+                          sortBy === 'price' ? t('common.price') :
+                          sortBy === 'views' ? t('common.views') :
+                          t('common.rating')
+                        }
                 </Typography>
-                
-                <FormControl size="medium" sx={{ minWidth: 140 }}>
-                  <InputLabel sx={{ 
-                    color: isDarkMode ? '#b0b0b0' : '#666666',
-                    fontSize: '1rem'
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ 
+                    p: 0,
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                    border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                    borderTop: 'none',
+                    borderRadius: '0 0 12px 12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 1001,
+                    mt: 0,
                   }}>
-                    {t('common.sortBy')}
-                  </InputLabel>
-                  <Select
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    label={t('common.sortBy')}
+                    <ListItemButton
+                      selected={sortBy === 'new'}
+                      onClick={() => {
+                        handleSortChange({ target: { value: 'new' } } as any);
+                        setSortAccordionExpanded(false);
+                      }}
                     sx={{
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
                       color: isDarkMode ? '#ffffff' : '#333333',
-                      borderRadius: '12px',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#404040' : '#e0e0e0',
-                        borderWidth: '2px',
-                      },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                        borderWidth: '2px',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
                       },
                     }}
                   >
-                    <MenuItem value="new">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <ListItemIcon>
                         <WhatshotIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
-                        {t('common.newest')}
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="price">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      </ListItemIcon>
+                      <ListItemText primary={t('common.newest')} />
+                    </ListItemButton>
+                    <ListItemButton
+                      selected={sortBy === 'price'}
+                      onClick={() => {
+                        handleSortChange({ target: { value: 'price' } } as any);
+                        setSortAccordionExpanded(false);
+                      }}
+                      sx={{
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
+                        },
+                      }}
+                    >
+                      <ListItemIcon>
                         <AttachMoneyIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
-                        {t('common.price')}
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="views">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      </ListItemIcon>
+                      <ListItemText primary={t('common.price')} />
+                    </ListItemButton>
+                    <ListItemButton
+                      selected={sortBy === 'views'}
+                      onClick={() => {
+                        handleSortChange({ target: { value: 'views' } } as any);
+                        setSortAccordionExpanded(false);
+                      }}
+                      sx={{
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
+                        },
+                      }}
+                    >
+                      <ListItemIcon>
                         <VisibilityIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
-                        {t('common.views')}
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="rating">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      </ListItemIcon>
+                      <ListItemText primary={t('common.views')} />
+                    </ListItemButton>
+                    <ListItemButton
+                      selected={sortBy === 'rating'}
+                      onClick={() => {
+                        handleSortChange({ target: { value: 'rating' } } as any);
+                        setSortAccordionExpanded(false);
+                      }}
+                      sx={{
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
+                        },
+                      }}
+                    >
+                      <ListItemIcon>
                         <StarIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
-                        {t('common.rating')}
+                      </ListItemIcon>
+                      <ListItemText primary={t('common.rating')} />
+                    </ListItemButton>
+                  </AccordionDetails>
+                </Accordion>
                       </Box>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
 
-                <FormControl size="medium" sx={{ minWidth: 120 }}>
-                  <InputLabel sx={{ 
-                    color: isDarkMode ? '#b0b0b0' : '#666666',
-                    fontSize: '1rem'
-                  }}>
-                    {t('common.order')}
-                  </InputLabel>
-                  <Select
-                    value={sortOrder}
-                    onChange={handleSortOrderChange}
-                    label={t('common.order')}
+                <Box sx={{ position: 'relative', height: 48, flexShrink: 0, width: 150 }}>
+                  <Accordion 
+                    expanded={orderAccordionExpanded} 
+                    onChange={(e, isExpanded) => setOrderAccordionExpanded(isExpanded)}
                     sx={{
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                      color: isDarkMode ? '#ffffff' : '#333333',
+                      width: '100%',
+                      boxShadow: orderAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
                       borderRadius: '12px',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#404040' : '#e0e0e0',
-                        borderWidth: '2px',
+                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      position: 'relative',
+                      zIndex: orderAccordionExpanded ? 1000 : 1,
+                      '&:before': {
+                        display: 'none',
                       },
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                        borderWidth: '2px',
+                      '&.Mui-expanded': {
+                        margin: 0,
+                        minHeight: '48px !important',
                       },
                     }}
                   >
-                    <MenuItem value="desc">{t('common.descending')}</MenuItem>
-                    <MenuItem value="asc">{t('common.ascending')}</MenuItem>
-                  </Select>
-                </FormControl>
+                  <AccordionSummary sx={{ 
+                    minHeight: 48,
+                    maxHeight: 48,
+                    '&.Mui-expanded': { 
+                      minHeight: 48,
+                      maxHeight: 48,
+                    },
+                      color: isDarkMode ? '#ffffff' : '#333333',
+                  }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {t('common.order')}: {sortOrder === 'desc' ? t('common.descending') : t('common.ascending')}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ 
+                    p: 0,
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                    border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                    borderTop: 'none',
+                    borderRadius: '0 0 12px 12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 1001,
+                    mt: 0,
+                    display: orderAccordionExpanded ? 'block' : 'none',
+                  }}>
+                    <ListItemButton
+                      selected={sortOrder === 'desc'}
+                      onClick={() => {
+                        handleSortOrderChange({ target: { value: 'desc' } } as any);
+                        setOrderAccordionExpanded(false);
+                      }}
+                      sx={{
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
+                        },
+                      }}
+                    >
+                      <ListItemText primary={t('common.descending')} />
+                    </ListItemButton>
+                    <ListItemButton
+                      selected={sortOrder === 'asc'}
+                      onClick={() => {
+                        handleSortOrderChange({ target: { value: 'asc' } } as any);
+                        setOrderAccordionExpanded(false);
+                      }}
+                      sx={{
+                        color: isDarkMode ? '#ffffff' : '#333333',
+                        '&.Mui-selected': {
+                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          '&:hover': {
+                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                          },
+                      },
+                    }}
+                  >
+                      <ListItemText primary={t('common.ascending')} />
+                    </ListItemButton>
+                  </AccordionDetails>
+                </Accordion>
+                </Box>
               </Box>
 
               <Typography variant="body1" sx={{ 

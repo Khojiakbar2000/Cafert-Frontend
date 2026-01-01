@@ -140,6 +140,7 @@ function App() {
           handleLoginClose={handleLoginClose}
           handleSignupClose={handleSignupClose}
         />
+        
       </ThemeProvider>
     </ErrorBoundary>
   );

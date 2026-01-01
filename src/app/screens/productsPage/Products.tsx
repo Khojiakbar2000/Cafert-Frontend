@@ -16,6 +16,12 @@ import {
   Select,
   MenuItem,
   Rating,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
   IconButton,
   Tabs,
   Tab,
@@ -128,6 +134,8 @@ export default function Products(props: ProductsProps) {
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
   const [sortBy, setSortBy] = useState('newest');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [sortAccordionExpanded, setSortAccordionExpanded] = useState(false);
+  const [orderAccordionExpanded, setOrderAccordionExpanded] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -348,34 +356,165 @@ export default function Products(props: ProductsProps) {
             }}
           />
 
-          {/* Sort Controls */}
-          <Stack direction="row" spacing={2}>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Sort by</InputLabel>
-              <Select
-                value={sortBy}
-                onChange={handleSortChange}
-                label="Sort by"
+          {/* Sort Controls - Accordions (Overlay) */}
+          <Stack direction="row" spacing={2} sx={{ position: 'relative', zIndex: 10, alignItems: 'flex-start' }}>
+            <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 150 }}>
+              <Accordion 
+                expanded={sortAccordionExpanded} 
+                onChange={(e, isExpanded) => setSortAccordionExpanded(isExpanded)}
+                sx={{ 
+                  width: '100%',
+                  boxShadow: sortAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  position: 'relative',
+                  zIndex: sortAccordionExpanded ? 1000 : 1,
+                  backgroundColor: colors.background,
+                  '&:before': {
+                    display: 'none',
+                  },
+                  '&.Mui-expanded': {
+                    margin: 0,
+                    minHeight: '40px !important',
+                  },
+                }}
               >
+                <AccordionSummary sx={{ 
+                  minHeight: 40, 
+                  maxHeight: 40,
+                  '&.Mui-expanded': { 
+                    minHeight: 40,
+                    maxHeight: 40,
+                  } 
+                }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Sort by: {sortOptions.find(opt => opt.value === sortBy)?.label || 'Newest'}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ 
+                  p: 0,
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`,
+                  borderTop: 'none',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1001,
+                  mt: 0,
+                  display: sortAccordionExpanded ? 'block' : 'none',
+                }}>
                 {sortOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                    <ListItemButton
+                      key={option.value}
+                      selected={sortBy === option.value}
+                      onClick={() => {
+                        handleSortChange({ target: { value: option.value } } as any);
+                        setSortAccordionExpanded(false);
+                      }}
+                      sx={{
+                        '&.Mui-selected': {
+                          backgroundColor: `${colors.primary}20`,
+                          '&:hover': {
+                            backgroundColor: `${colors.primary}30`,
+                          },
+                        },
+                      }}
+                    >
+                      <ListItemText primary={option.label} />
+                    </ListItemButton>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            </Box>
             
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Order</InputLabel>
-              <Select
-                value={sortOrder}
-                onChange={handleSortOrderChange}
-                label="Order"
+            <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 150 }}>
+              <Accordion 
+                expanded={orderAccordionExpanded} 
+                onChange={(e, isExpanded) => setOrderAccordionExpanded(isExpanded)}
+                sx={{ 
+                  width: '100%',
+                  boxShadow: orderAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  position: 'relative',
+                  zIndex: orderAccordionExpanded ? 1000 : 1,
+                  backgroundColor: colors.background,
+                  '&:before': {
+                    display: 'none',
+                  },
+                  '&.Mui-expanded': {
+                    margin: 0,
+                    minHeight: '40px !important',
+                  },
+                }}
               >
-                <MenuItem value="desc">Descending</MenuItem>
-                <MenuItem value="asc">Ascending</MenuItem>
-              </Select>
-            </FormControl>
+                <AccordionSummary sx={{ 
+                  minHeight: 40, 
+                  maxHeight: 40,
+                  '&.Mui-expanded': { 
+                    minHeight: 40,
+                    maxHeight: 40,
+                  } 
+                }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Order: {sortOrder === 'desc' ? 'Descending' : 'Ascending'}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ 
+                  p: 0,
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: colors.background,
+                  border: `1px solid ${colors.border}`,
+                  borderTop: 'none',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 1001,
+                  mt: 0,
+                  display: orderAccordionExpanded ? 'block' : 'none',
+                }}>
+                  <ListItemButton
+                    selected={sortOrder === 'desc'}
+                    onClick={() => {
+                      handleSortOrderChange({ target: { value: 'desc' } } as any);
+                      setOrderAccordionExpanded(false);
+                    }}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: `${colors.primary}20`,
+                        '&:hover': {
+                          backgroundColor: `${colors.primary}30`,
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemText primary="Descending" />
+                  </ListItemButton>
+                  <ListItemButton
+                    selected={sortOrder === 'asc'}
+                    onClick={() => {
+                      handleSortOrderChange({ target: { value: 'asc' } } as any);
+                      setOrderAccordionExpanded(false);
+                    }}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: `${colors.primary}20`,
+                        '&:hover': {
+                          backgroundColor: `${colors.primary}30`,
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemText primary="Ascending" />
+                  </ListItemButton>
+                </AccordionDetails>
+              </Accordion>
+            </Box>
           </Stack>
         </Stack>
       </Box>

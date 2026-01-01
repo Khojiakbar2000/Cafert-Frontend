@@ -10,6 +10,11 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
+  Popover,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  ListItemButton,
   Stack,
   useTheme,
   useMediaQuery,
@@ -48,6 +53,7 @@ import {
   Clear as ClearIcon,
   Add as AddIcon,
   TrendingUp as AnalyticsIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { NavLink, useLocation, useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -830,67 +836,152 @@ export default function OtherNavbar(props: OtherNavbarProps) {
         </Container>
       </AppBar>
 
-      {/* User Menu */}
-      <Menu
-        anchorEl={anchorEl}
+      {/* User Profile Accordion */}
+      <Popover
         open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
         onClose={handleCloseLogout}
-        onClick={handleCloseLogout}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
         PaperProps={{
           elevation: 8,
           sx: {
-            overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
             mt: 1.5,
-            backgroundColor: '#ffffff',
-            color: '#2c3e50',
             borderRadius: '12px',
-            minWidth: 200,
+            minWidth: 240,
             border: '1px solid #e0e0e0',
-            '&:before': {
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              top: 0,
-              right: 14,
-              width: 8,
-              height: 8,
-              bgcolor: '#ffffff',
-              transform: 'translateY(-50%) rotate(45deg)',
-              zIndex: 0,
-              borderLeft: '1px solid #e0e0e0',
-              borderTop: '1px solid #e0e0e0',
-            },
+            overflow: 'hidden',
           },
         }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={() => window.location.href = '/my-page'} sx={{ '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' } }}>
+        <Accordion
+          defaultExpanded={true}
+          sx={{
+            boxShadow: 'none',
+            '&:before': {
+              display: 'none',
+            },
+            '&.Mui-expanded': {
+              margin: 0,
+            },
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon sx={{ color: '#8b4513' }} />}
+            sx={{
+              px: 2,
+              py: 1.5,
+              backgroundColor: 'rgba(139, 69, 19, 0.05)',
+              '&.Mui-expanded': {
+                borderBottom: '1px solid #e0e0e0',
+              },
+              '& .MuiAccordionSummary-content': {
+                my: 0,
+                '&.Mui-expanded': {
+                  my: 0,
+                },
+              },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Avatar
+                src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '2px solid #8b4513',
+                }}
+              />
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50' }}>
+                {authMember?.memberNick || 'User'}
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 0 }}>
+            <Box>
+              <ListItemButton
+                onClick={() => {
+                  window.location.href = '/my-page';
+                  handleCloseLogout();
+                }}
+                sx={{
+                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
           <ListItemIcon>
-            <AccountIcon sx={{ color: '#8b4513' }} />
+                  <AccountIcon sx={{ color: '#8b4513', fontSize: 20 }} />
           </ListItemIcon>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('navigation.myPage')}</Typography>
-        </MenuItem>
-        <MenuItem onClick={() => window.location.href = '/orders'} sx={{ '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' } }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {t('navigation.myPage')}
+                </Typography>
+              </ListItemButton>
+              <ListItemButton
+                onClick={() => {
+                  window.location.href = '/orders';
+                  handleCloseLogout();
+                }}
+                sx={{
+                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
           <ListItemIcon>
-            <OrdersIcon sx={{ color: '#8b4513' }} />
+                  <OrdersIcon sx={{ color: '#8b4513', fontSize: 20 }} />
           </ListItemIcon>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('navigation.myOrders')}</Typography>
-        </MenuItem>
-        <MenuItem onClick={() => window.location.href = '/help'} sx={{ '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' } }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {t('navigation.myOrders')}
+                </Typography>
+              </ListItemButton>
+              <ListItemButton
+                onClick={() => {
+                  window.location.href = '/help';
+                  handleCloseLogout();
+                }}
+                sx={{
+                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
           <ListItemIcon>
-            <HelpIcon sx={{ color: '#8b4513' }} />
+                  <HelpIcon sx={{ color: '#8b4513', fontSize: 20 }} />
           </ListItemIcon>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('navigation.helpSupport')}</Typography>
-        </MenuItem>
-        <MenuItem onClick={handleLogoutRequest} sx={{ '&:hover': { backgroundColor: 'rgba(231, 76, 60, 0.08)' } }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {t('navigation.helpSupport')}
+                </Typography>
+              </ListItemButton>
+              <Divider />
+              <ListItemButton
+                onClick={() => {
+                  handleLogoutRequest();
+                  handleCloseLogout();
+                }}
+                sx={{
+                  '&:hover': { backgroundColor: 'rgba(231, 76, 60, 0.08)' },
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
           <ListItemIcon>
-            <LogoutIcon sx={{ color: '#e74c3c' }} />
+                  <LogoutIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
           </ListItemIcon>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: '#e74c3c' }}>{t('navigation.logout')}</Typography>
-        </MenuItem>
-      </Menu>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: '#e74c3c' }}>
+                  {t('navigation.logout')}
+                </Typography>
+              </ListItemButton>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      </Popover>
 
       {/* Toolbar Spacer */}
       <Box sx={{ height: 120 }} />

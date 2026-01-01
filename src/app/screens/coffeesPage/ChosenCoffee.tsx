@@ -12,9 +12,11 @@ import {
   TextField,
   Card,
   CardContent,
+  CardMedia,
   Divider,
   IconButton,
   Badge,
+  Grid,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -175,12 +177,19 @@ export default function ChosenCoffee(props: ChosenCoffeeProps) {
   const [coffee, setCoffee] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [relatedCoffees, setRelatedCoffees] = useState<any[]>([]);
 
   useEffect(() => {
     const foundCoffee = coffeeData.find(c => c.id === coffeeId);
     if (foundCoffee) {
       setCoffee(foundCoffee);
       setIsFavorite(foundCoffee.isFavorite);
+      
+      // Get related coffees (same category, excluding current coffee)
+      const related = coffeeData
+        .filter(c => c.id !== coffeeId && c.category === foundCoffee.category)
+        .slice(0, 4);
+      setRelatedCoffees(related);
     }
   }, [coffeeId]);
 
@@ -454,6 +463,78 @@ export default function ChosenCoffee(props: ChosenCoffeeProps) {
             </Box>
           </Box>
         </Box>
+
+        {/* You might also like Section */}
+        {relatedCoffees.length > 0 && (
+          <Box sx={{ mt: 8 }}>
+            <Typography variant="h4" sx={{
+              fontWeight: 700,
+              color: colors.text,
+              mb: 4,
+              fontFamily: 'Playfair Display, serif'
+            }}>
+              You might also like
+            </Typography>
+            <Grid container spacing={3}>
+              {relatedCoffees.map((relatedCoffee: any) => (
+                <Grid item xs={6} sm={4} md={3} key={relatedCoffee.id}>
+                  <Card
+                    onClick={() => {
+                      history.push(`/coffees/${relatedCoffee.id}`);
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: colors.background,
+                      border: `1px solid ${colors.border}`,
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      }
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={relatedCoffee.image}
+                      alt={relatedCoffee.name}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography variant="h6" sx={{
+                        fontWeight: 600,
+                        color: colors.text,
+                        fontSize: '1rem',
+                        mb: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {relatedCoffee.name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Rating value={relatedCoffee.rating} precision={0.1} readOnly size="small" />
+                        <Typography variant="body2" sx={{ color: colors.textSecondary, fontSize: '0.75rem' }}>
+                          ({relatedCoffee.reviews})
+                        </Typography>
+                      </Box>
+                      <Typography variant="h6" sx={{
+                        fontWeight: 700,
+                        color: colors.accent,
+                        fontSize: '1.1rem'
+                      }}>
+                        ${relatedCoffee.price}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
       </Stack>
     </Container>
   );

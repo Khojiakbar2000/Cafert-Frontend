@@ -3,7 +3,7 @@ import { serverApi } from "../../lib/config";
 import { Product, ProductInquiry } from "../../lib/types/product";
 import { Member } from "../../lib/types/member";
 
-// Product creation input interface
+
 export interface ProductInput {
     productName: string;
     productPrice: number;
