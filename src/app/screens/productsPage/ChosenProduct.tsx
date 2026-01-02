@@ -355,23 +355,27 @@ export default function ChosenProduct(props: ChosenProductProps) {
                       opacity: 0.35,
                     }
               }}>
+                {chosenProduct?.productImages && chosenProduct.productImages.length > 0 ? (
                 <Swiper
-                      loop={chosenProduct?.productImages && chosenProduct.productImages.length > 1}
+                    loop={chosenProduct.productImages.length > 1}
                   spaceBetween={10}
-                  navigation={true}
+                    navigation={chosenProduct.productImages.length > 1}
                   modules={[FreeMode, Navigation, Thumbs]}
                   className="swiper-area"
-                      style={{ height: '500px' }}
-                      onSlideChange={(swiper) => setSelectedImageIndex(swiper.realIndex)}
-                      initialSlide={selectedImageIndex}
+                    style={{ height: '500px' }}
+                    onSlideChange={(swiper) => setSelectedImageIndex(swiper.realIndex)}
+                    initialSlide={selectedImageIndex}
                 >
-                  {chosenProduct?.productImages.map((ele: string, index: number) => {
-                    const imagePath = `${serverApi}${ele}`;
+                    {chosenProduct.productImages.map((ele: string, index: number) => {
+                      const imagePath = ele ? `${serverApi}${ele}` : '/icons/noimage-list.svg';
                     return (
                       <SwiperSlide key={index}>
                         <img 
                             className="product-main-image slider-image" 
                           src={imagePath}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
+                            }}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -384,6 +388,26 @@ export default function ChosenProduct(props: ChosenProductProps) {
                     );
                   })}
                 </Swiper>
+                ) : (
+                  <Box sx={{ 
+                    width: '100%', 
+                    height: '500px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    backgroundColor: colors.surface,
+                  }}>
+                    <img 
+                      src="/icons/noimage-list.svg"
+                      alt="No image available"
+                      style={{
+                        width: '200px',
+                        height: '200px',
+                        opacity: 0.5
+                      }}
+                    />
+                  </Box>
+                )}
                   </Box>
               </Card>
 
@@ -391,7 +415,7 @@ export default function ChosenProduct(props: ChosenProductProps) {
                 {chosenProduct?.productImages && chosenProduct.productImages.length > 1 && (
                   <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
                     {chosenProduct.productImages.map((ele: string, index: number) => {
-                      const imagePath = `${serverApi}${ele}`;
+                      const imagePath = ele ? `${serverApi}${ele}` : '/icons/noimage-list.svg';
                       return (
                         <Box
                           key={index}
@@ -414,7 +438,9 @@ export default function ChosenProduct(props: ChosenProductProps) {
                           <Box
                             component="img"
                             src={imagePath}
-                            alt={`Thumbnail ${index + 1}`}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
+                            }}
                             sx={{
                               width: '100%',
                               height: '100%',

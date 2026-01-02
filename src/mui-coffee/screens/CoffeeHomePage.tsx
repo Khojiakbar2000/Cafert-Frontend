@@ -1840,7 +1840,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       </Box>
 
       {/* Showcase Section with GSAP Animation */}
-    <Showcase />
+    {/*<Showcase />*/}
 
       {/* Services Section */}
       <Box ref={servicesRef} sx={{

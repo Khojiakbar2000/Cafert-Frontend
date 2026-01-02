@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, Typography, Paper } from "@mui/material";
 
 import { useSelector} from "react-redux";
 import {createSelector} from "reselect";
@@ -72,8 +72,7 @@ export default function FinishedOrders() {
   }, [finishedOrders]);
 
   return (
-    <div>
-      <Stack>
+    <Stack spacing={2}>
       {finishedOrders?.map((order: Order) => {
           // Filter out order items that don't have valid products
           const validItems = order?.orderItems?.filter((item: OrderItem) => {
@@ -96,10 +95,28 @@ export default function FinishedOrders() {
             return null;
           }
           
-          return (
-            <Box key={order._id} className="order-main-box">
-              <Box className="order-box-scroll">
-              {validItems.map((item: OrderItem) => {
+        return (
+          <Paper 
+            key={order._id} 
+            elevation={0}
+            sx={{
+              borderRadius: '16px',
+              border: '1px solid #e0e0e0',
+              backgroundColor: '#ffffff',
+              overflow: 'hidden',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              }
+            }}
+          >
+            {/* Order Items */}
+            <Box sx={{ 
+              maxHeight: '280px', 
+              overflowY: 'auto',
+              p: 2,
+              pb: 1.5
+            }}>
+              {validItems.map((item: OrderItem, index: number) => {
                   console.log('Processing order item:', item);
                   console.log('Order productData:', order.productData);
                   
@@ -135,57 +152,83 @@ export default function FinishedOrders() {
                   console.log('Image path:', imagePath);
                   
                   return (
-                    <Box key={item._id} className="orders-name-price">
-                      <img
+                    <Box 
+                      key={item._id} 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 2, 
+                        py: 1.5,
+                        borderBottom: index < validItems.length - 1 ? '1px solid #f0f0f0' : 'none'
+                      }}
+                    >
+                      <Box
+                        component="img"
                         src={imagePath}
-                        className="order-dish-img"
-                        alt="Product"
                         onError={(e) => {
-                          console.log('Image failed to load:', imagePath);
-                          e.currentTarget.src = '/icons/noimage-list.svg';
+                          (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
+                        }}
+                        sx={{ 
+                          width: 56, 
+                          height: 56, 
+                          borderRadius: '12px',
+                          objectFit: 'cover'
                         }}
                       />
-                     <p className="title-dish">{product ? product.productName : `Product ID: ${item.productId}`}</p>
-                      <Box className="price-box">
-                      <p>${item.itemPrice}</p>
-                        <img src="/icons/close.svg" alt="" />
-                        <p>{item.itemQuantity}</p>
-                        <img src="/icons/pause.svg" alt="" />
-                        <p style={{ marginLeft: "15px" }}>
-                        ${item.itemQuantity * item.itemPrice}
-                        </p>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem', mb: 0.5 }}>
+                          {product ? product.productName : `Product ID: ${item.productId}`}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" sx={{ color: '#666' }}>
+                            ${item.itemPrice} × {item.itemQuantity}
+                          </Typography>
+                        </Box>
                       </Box>
+                      <Typography variant="body1" sx={{ fontWeight: 700, color: '#1a1a1a', minWidth: '60px', textAlign: 'right' }}>
+                        ${(item.itemQuantity * item.itemPrice).toFixed(2)}
+                      </Typography>
                     </Box>
                   );
                 })}
-              </Box>
+            </Box>
 
-              <Box className="total-price-box">
-                <Box className="box-total">
-                  <p>Product price</p>
-                  <p>${order.orderTotal - order.orderDelivery}</p>
-                  <img src="/icons/plus.svg" style={{ marginLeft: "20px" }} />
-                  <p>Delivery Cost</p>
-                  <p>${order.orderDelivery}</p>
-                  <img src="/icons/pause.svg" style={{ marginLeft: "20px" }} />
-                  <p>Total</p>
-                  <p>${order.orderTotal}</p>
-                </Box>
+            {/* Total */}
+            <Box sx={{ 
+              borderTop: '2px solid #f0f0f0',
+              backgroundColor: '#fafafa',
+              p: 2,
+              pt: 1.5
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                flexWrap: 'wrap'
+              }}>
+                <Typography variant="body2" sx={{ color: '#666' }}>Product price:</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>${(order.orderTotal - order.orderDelivery).toFixed(2)}</Typography>
+                <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>+</Typography>
+                <Typography variant="body2" sx={{ color: '#666' }}>Delivery:</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>${order.orderDelivery.toFixed(2)}</Typography>
+                <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>=</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                  ${order.orderTotal.toFixed(2)}
+                </Typography>
               </Box>
             </Box>
-          );
-        })}
+          </Paper>
+        );
+      })}
 
-{!finishedOrders ||(finishedOrders.length === 0 && (
-          <Box display={"flex"} flexDirection={"row"} justifyContent={"center"}>
-            <img
-              src="/icons/noimage-list.svg"
-              
-              style={{ width: 300, height: 300 }}
-            />
-          </Box>
-        ))}
-      </Stack>
-    </div>
+      {(!finishedOrders || finishedOrders.length === 0) && (
+        <Box display={"flex"} flexDirection={"row"} justifyContent={"center"} sx={{ py: 6 }}>
+          <img
+            src="/icons/noimage-list.svg"
+            style={{ width: 300, height: 300 }}
+          />
+        </Box>
+      )}
+    </Stack>
   );
 }

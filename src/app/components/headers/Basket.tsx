@@ -6,18 +6,15 @@ import {
   Typography, 
   IconButton, 
   Badge, 
-  Popover,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   Divider,
   Chip,
   Avatar,
-  Fade,
   useTheme,
   useMediaQuery
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -49,20 +46,16 @@ export default function Basket(props:BasketProps) {
   const shippingCost: number = itemsPrice < 100 ? 5 : 0;
   const totalPrice = (itemsPrice + shippingCost).toFixed(1);
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const [basketAccordionExpanded, setBasketAccordionExpanded] = React.useState(false);
 
   /** HANDLERS **/
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(e.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleToggle = () => {
+    setBasketAccordionExpanded(!basketAccordionExpanded);
   };
 
   const proceedOrderHandler = async () => {
     try{
-      handleClose()
+      setBasketAccordionExpanded(false);
       
       if(!authMember) throw new Error(Messages.error2);
 
@@ -82,155 +75,115 @@ export default function Basket(props:BasketProps) {
   }
 
   return (
-    <Box sx={{ position: 'relative' }}>
-      <IconButton
-        aria-label="cart"
-        id="floating-cart-button"
-        aria-controls={open ? "cart-menu" : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? "true" : undefined}
-        onClick={handleClick}
+    <Box sx={{ position: 'relative', height: 56, width: 56 }}>
+      <Accordion
+        expanded={basketAccordionExpanded}
+        onChange={(e, isExpanded) => setBasketAccordionExpanded(isExpanded)}
         sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
           width: 56,
           height: 56,
-          backgroundColor: 'rgba(139, 69, 19, 0.1)',
-          color: '#8b4513',
+          boxShadow: basketAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+          border: 'none',
           borderRadius: '50%',
-          border: '2px solid #8b4513',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            backgroundColor: 'rgba(139, 69, 19, 0.2)',
-            transform: 'scale(1.1)',
-            boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
+          backgroundColor: 'transparent',
+          '&:before': {
+            display: 'none',
           },
-          '&:active': {
-            transform: 'scale(0.95)',
+          '&.Mui-expanded': {
+            margin: 0,
+            minHeight: '56px !important',
           },
         }}
       >
-        <Badge 
-          badgeContent={cartItems.length} 
-          color="error"
+        <AccordionSummary
           sx={{
-            '& .MuiBadge-badge': {
-              backgroundColor: '#e74c3c',
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '0.8rem',
-              minWidth: 20,
-              height: 20,
-              animation: cartItems.length > 0 ? 'pulse 2s infinite' : 'none',
-              '@keyframes pulse': {
-                '0%': {
-                  boxShadow: '0 0 0 0 rgba(231, 76, 60, 0.7)',
-                },
-                '70%': {
-                  boxShadow: '0 0 0 10px rgba(231, 76, 60, 0)',
-                },
-                '100%': {
-                  boxShadow: '0 0 0 0 rgba(231, 76, 60, 0)',
-                },
-              },
-            },
-          }}
-        >
-          <ShoppingCartIcon sx={{ fontSize: 24 }} />
-        </Badge>
-      </IconButton>
-
-      <Popover
-        anchorEl={anchorEl}
-        id="cart-popover"
-        open={open}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        PaperProps={{
-          elevation: 8,
-          sx: {
-            overflow: "visible",
-            filter: "drop-shadow(0px 4px 20px rgba(0,0,0,0.15))",
-            mt: 2,
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            minWidth: 350,
-            maxWidth: 400,
-            maxHeight: 500,
-            border: '1px solid #e0e0e0',
-            "&:before": {
-              content: '""',
-              display: "block",
-              position: "absolute",
-              top: 0,
-              right: 20,
-              width: 12,
-              height: 12,
-              bgcolor: '#ffffff',
-              transform: "translateY(-50%) rotate(45deg)",
-              zIndex: 0,
-              borderLeft: '1px solid #e0e0e0',
-              borderTop: '1px solid #e0e0e0',
-            },
-          },
-        }}
-      >
-        <Accordion
-          defaultExpanded={open}
-          sx={{
-            boxShadow: 'none',
-            '&:before': {
-              display: 'none',
-            },
+            minHeight: 56,
+            maxHeight: 56,
+            padding: 0,
             '&.Mui-expanded': {
+              minHeight: 56,
+              maxHeight: 56,
+            },
+            '& .MuiAccordionSummary-content': {
               margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             },
           }}
         >
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
+          <IconButton
+            aria-label="cart"
+            onClick={handleToggle}
             sx={{
-              px: 3,
-              py: 2,
-              '&.Mui-expanded': {
-                minHeight: 48,
+              width: 56,
+              height: 56,
+              backgroundColor: 'rgba(139, 69, 19, 0.1)',
+              color: '#8b4513',
+              borderRadius: '50%',
+              border: '2px solid #8b4513',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(139, 69, 19, 0.2)',
+                transform: 'scale(1.1)',
+                boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
               },
-              '& .MuiAccordionSummary-content': {
-                margin: '12px 0',
-                '&.Mui-expanded': {
-                  margin: '12px 0',
-                },
+              '&:active': {
+                transform: 'scale(0.95)',
               },
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', mr: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
-                Shopping Cart
-              </Typography>
-              {cartItems.length > 0 && (
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteAll();
-                  }}
-                  sx={{
-                    color: '#e74c3c',
-                    '&:hover': {
-                      backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    }
-                  }}
-                >
-                  <DeleteForeverIcon />
-                </IconButton>
-              )}
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
+            <Badge 
+              badgeContent={cartItems.length} 
+              color="error"
+              sx={{
+                '& .MuiBadge-badge': {
+                  backgroundColor: '#e74c3c',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  minWidth: 20,
+                  height: 20,
+                  animation: cartItems.length > 0 ? 'pulse 2s infinite' : 'none',
+                  '@keyframes pulse': {
+                    '0%': {
+                      boxShadow: '0 0 0 0 rgba(231, 76, 60, 0.7)',
+                    },
+                    '70%': {
+                      boxShadow: '0 0 0 10px rgba(231, 76, 60, 0)',
+                    },
+                    '100%': {
+                      boxShadow: '0 0 0 0 rgba(231, 76, 60, 0)',
+                    },
+                  },
+                },
+              }}
+            >
+              <ShoppingCartIcon sx={{ fontSize: 24 }} />
+            </Badge>
+          </IconButton>
+        </AccordionSummary>
+        <AccordionDetails
+          sx={{
+            p: 0,
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            width: 400,
+            backgroundColor: '#ffffff',
+            border: '1px solid #e0e0e0',
+            borderRadius: '16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 1001,
+            mt: 1,
+            maxHeight: 500,
+            overflow: 'auto',
+            display: basketAccordionExpanded ? 'block' : 'none',
+          }}
+        >
             <Box sx={{ px: 3, pb: 3 }}>
               <Divider sx={{ mb: 2 }} />
 
@@ -409,9 +362,8 @@ export default function Basket(props:BasketProps) {
             </Box>
           )}
             </Box>
-          </AccordionDetails>
-        </Accordion>
-      </Popover>
+        </AccordionDetails>
+      </Accordion>
     </Box>
   );
 }

@@ -21,7 +21,7 @@ import { SocketProvider } from "./app/context/SocketContext";
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 
-/*(function () {
+(function () {
   const allowedHosts = ["72.60.236.97", "cafert.uz"];
   if (!allowedHosts.includes(window.location.hostname)) return;
 
@@ -48,7 +48,7 @@ const root = createRoot(container);
     window.__zoomTimeout = setTimeout(applyZoom, 200);
   });
 })();
-*/
+
 
 
 root.render(

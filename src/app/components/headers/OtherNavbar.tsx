@@ -792,7 +792,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                       <Accordion 
                         expanded={profileAccordionExpanded} 
                         onChange={(e, isExpanded) => setProfileAccordionExpanded(isExpanded)}
-                      sx={{
+                        sx={{
                           width: '100%',
                           boxShadow: profileAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                           border: '1px solid #e0e0e0',

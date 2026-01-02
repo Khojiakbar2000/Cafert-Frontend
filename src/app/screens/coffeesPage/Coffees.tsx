@@ -61,7 +61,7 @@ import { serverApi } from "../../../lib/config";const AwardsStrip = React.lazy((
 // Loading skeleton for cards
 const CardSkeleton = () => (
   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Skeleton variant="rectangular" height={240} />
+    <Skeleton variant="rectangular" height={220} />
     <CardContent sx={{ flexGrow: 1 }}>
       <Skeleton variant="text" height={32} sx={{ mb: 1 }} />
       <Skeleton variant="text" height={20} sx={{ mb: 2 }} />
@@ -973,10 +973,10 @@ export default function Coffees(props: CoffeesProps) {
                 <Box sx={{ position: 'relative', overflow: 'hidden' }}>
                   <CardMedia
                     component="img"
-                    height="240"
                     image={item.image}
                     alt={item.name}
                     sx={{ 
+                      height: '220px',
                       objectFit: 'cover',
                       transition: 'transform 0.4s ease',
                       '&:hover': {
@@ -1099,195 +1099,93 @@ export default function Coffees(props: CoffeesProps) {
                   flexGrow: 1, 
                   display: 'flex', 
                   flexDirection: 'column',
-                  p: 3,
+                  p: 2,
                   position: 'relative',
-                  // Glassmorphism content styling
-                  backgroundColor: 'transparent',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  zIndex: 2,
                 }}>
-                  {/* Price Badge with glassmorphism */}
-                  <Box sx={{
-                    position: 'absolute',
-                    top: -20,
-                    right: 16,
-                    backgroundColor: isDarkMode 
-                      ? 'rgba(255, 215, 0, 0.9)' 
-                      : 'rgba(139, 69, 19, 0.9)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                    px: 2.5,
-                    py: 1,
-                    borderRadius: '20px',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    border: isDarkMode 
-                      ? '1px solid rgba(255, 215, 0, 0.3)' 
-                      : '1px solid rgba(139, 69, 19, 0.3)',
-                    boxShadow: isDarkMode 
-                      ? '0 8px 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                      : '0 8px 20px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                    zIndex: 3,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      boxShadow: isDarkMode 
-                        ? '0 12px 25px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
-                        : '0 12px 25px rgba(139, 69, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                    },
-                  }}>
-                    ${item.price}
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, mt: 1 }}>
+                  {/* Title and Price in same row */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                     <Typography 
-                      variant="h5" 
+                      variant="subtitle1" 
                       component="h2" 
                       sx={{ 
                         color: isDarkMode ? '#ffffff' : '#1a1a1a',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         flex: 1,
-                        fontSize: '1.3rem',
+                        fontSize: '1rem',
                         lineHeight: 1.3,
                       }}
                     >
                       {item.name}
                     </Typography>
+                  <Typography 
+                      variant="subtitle1" 
+                    sx={{ 
+                        color: isDarkMode ? '#ffd700' : '#8B4513',
+                        fontWeight: 700,
+                        ml: 1,
+                        fontSize: '1rem'
+                      }}
+                    >
+                      ${item.price}
+                  </Typography>
                   </Box>
                   
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      color: isDarkMode ? '#b0b0b0' : '#666666',
-                      mb: 3,
-                      flex: 1,
-                      fontSize: '1rem',
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {item.description}
-                  </Typography>
-                  
-                  {/* Enhanced Stats Row with glassmorphism */}
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 2, 
-                    mb: 2,
-                    p: 1.5,
-                    backgroundColor: isDarkMode 
-                      ? 'rgba(42, 42, 42, 0.6)' 
-                      : 'rgba(248, 249, 250, 0.7)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: isDarkMode 
-                      ? '1px solid rgba(255, 255, 255, 0.1)' 
-                      : '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: isDarkMode 
-                      ? 'inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
-                      : 'inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                  }}>
+                  {/* Rating and reviews - with spacing */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                     <Rating 
                       value={item.rating} 
                       precision={0.1} 
                       size="small" 
                       readOnly 
                       sx={{
+                        fontSize: '0.875rem',
                         '& .MuiRating-iconFilled': {
                           color: isDarkMode ? '#ffd700' : '#ffc107',
                         },
                       }}
                     />
-                    <Typography variant="body2" sx={{ 
+                    <Typography variant="caption" sx={{ 
                       color: isDarkMode ? '#b0b0b0' : '#666666',
-                      fontWeight: 500
+                      ml: 0.5,
+                      fontSize: '0.75rem'
                     }}>
                       ({item.reviews})
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
-                      <VisibilityIcon fontSize="small" sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
-                      <Typography variant="body2" sx={{ 
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                      <VisibilityIcon fontSize="small" sx={{ color: isDarkMode ? '#ffd700' : '#8B4513', fontSize: '0.75rem' }} />
+                      <Typography variant="caption" sx={{ 
                         color: isDarkMode ? '#b0b0b0' : '#666666',
-                        fontWeight: 500
+                        fontSize: '0.75rem'
                       }}>
                         {item.views}
                       </Typography>
                     </Box>
                   </Box>
                   
-                  {/* Enhanced Category and Origin with glassmorphism */}
-                  <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+                  {/* Category chip - with spacing */}
+                  <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
                     <Chip 
                       label={item.category.charAt(0).toUpperCase() + item.category.slice(1)} 
-                      size="medium" 
+                      size="small" 
                       variant="outlined"
                       sx={{ 
                         backgroundColor: isDarkMode 
                           ? 'rgba(255, 215, 0, 0.1)' 
                           : 'rgba(139, 69, 19, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
                         borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
                         color: isDarkMode ? '#ffd700' : '#8B4513',
                         fontWeight: 600,
-                        fontSize: '0.85rem',
-                        borderRadius: '16px',
-                        border: isDarkMode 
-                          ? '1px solid rgba(255, 215, 0, 0.3)' 
-                          : '1px solid rgba(139, 69, 19, 0.3)',
-                        '&:hover': {
-                          backgroundColor: isDarkMode 
-                            ? 'rgba(255, 215, 0, 0.2)' 
-                            : 'rgba(139, 69, 19, 0.15)',
-                          transform: 'scale(1.05)',
-                          boxShadow: isDarkMode 
-                            ? '0 4px 12px rgba(255, 215, 0, 0.3)' 
-                            : '0 4px 12px rgba(139, 69, 19, 0.2)',
-                        },
-                        transition: 'all 0.3s ease',
+                        fontSize: '0.75rem',
+                        height: 22,
+                        borderRadius: '8px',
                       }}
                     />
-                    {item.origin !== 'N/A' && (
-                      <Chip 
-                        label={item.origin} 
-                        size="medium" 
-                        variant="outlined"
-                        sx={{ 
-                          backgroundColor: isDarkMode 
-                            ? 'rgba(255, 215, 0, 0.1)' 
-                            : 'rgba(139, 69, 19, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
-                          color: isDarkMode ? '#ffd700' : '#8B4513',
-                          fontWeight: 600,
-                          fontSize: '0.85rem',
-                          borderRadius: '16px',
-                          border: isDarkMode 
-                            ? '1px solid rgba(255, 215, 0, 0.3)' 
-                            : '1px solid rgba(139, 69, 19, 0.3)',
-                          '&:hover': {
-                            backgroundColor: isDarkMode 
-                              ? 'rgba(255, 215, 0, 0.2)' 
-                              : 'rgba(139, 69, 19, 0.15)',
-                            transform: 'scale(1.05)',
-                            boxShadow: isDarkMode 
-                              ? '0 4px 12px rgba(255, 215, 0, 0.3)' 
-                              : '0 4px 12px rgba(139, 69, 19, 0.2)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      />
-                    )}
                   </Box>
                   
-                  {/* Enhanced Add to Cart Button with glassmorphism */}
+                  {/* Add to cart button - compact with margin-top */}
                   <Button
                     variant="contained"
-                    startIcon={<AddShoppingCartIcon />}
+                    startIcon={<AddShoppingCartIcon sx={{ fontSize: '0.875rem' }} />}
                     fullWidth
                     disabled={!item.inStock}
                     onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -1298,38 +1196,22 @@ export default function Coffees(props: CoffeesProps) {
                       backgroundColor: isDarkMode 
                         ? 'rgba(255, 215, 0, 0.9)' 
                         : 'rgba(139, 69, 19, 0.9)',
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)',
                       color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      py: 1.5,
-                      borderRadius: '16px',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                      height: 36,
+                      borderRadius: '8px',
                       textTransform: 'none',
-                      border: isDarkMode 
-                        ? '1px solid rgba(255, 215, 0, 0.3)' 
-                        : '1px solid rgba(139, 69, 19, 0.3)',
-                      boxShadow: isDarkMode 
-                        ? '0 8px 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                        : '0 8px 20px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                      mt: 1,
+                      py: 0,
                       '&:hover': {
                         backgroundColor: isDarkMode 
                           ? 'rgba(255, 215, 0, 1)' 
                           : 'rgba(139, 69, 19, 1)',
-                        transform: 'translateY(-2px) scale(1.02)',
-                        boxShadow: isDarkMode 
-                          ? '0 12px 25px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
-                          : '0 12px 25px rgba(139, 69, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                       },
                       '&:disabled': {
                         backgroundColor: 'rgba(204, 204, 204, 0.5)',
-                        backdropFilter: 'blur(5px)',
-                        WebkitBackdropFilter: 'blur(5px)',
-                        transform: 'none',
-                        boxShadow: 'none',
-                        border: '1px solid rgba(204, 204, 204, 0.3)',
                       },
-                      transition: 'all 0.3s ease',
                     }}
                   >
                     {item.inStock ? 'Add to Cart' : 'Out of Stock'}

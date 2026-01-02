@@ -578,6 +578,7 @@ export default function Products(props: ProductsProps) {
                 <Card 
                   sx={{ 
                     height: '100%', 
+                    maxHeight: '380px',
                     display: 'flex', 
                     flexDirection: 'column',
                     transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
@@ -587,20 +588,30 @@ export default function Products(props: ProductsProps) {
                     }
                   }}
                 >
-                  <CardMedia
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '150px',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Box
                     component="img"
-                    height="240"
-                    image={product.image}
+                      src={product.image}
                     alt={product.name}
                     sx={{ 
                       cursor: 'pointer',
-                      position: 'relative'
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block'
                     }}
                     onClick={() => handleProductClick(product.id)}
                   />
                   
                   {/* Product badges */}
-                  <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 1 }}>
+                    <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 1, zIndex: 2 }}>
                     {product.isNew && (
                       <Chip 
                         label="New" 
@@ -626,6 +637,7 @@ export default function Products(props: ProductsProps) {
                       top: 8, 
                       right: 8,
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        zIndex: 2,
                       '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 1)'
                       }
@@ -638,85 +650,78 @@ export default function Products(props: ProductsProps) {
                       <FavoriteBorderIcon />
                     )}
                   </IconButton>
+                  </Box>
 
-                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 1.5, pt: 1.5 }}>
+                    {/* Title and Price in same row */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.25 }}>
                     <Typography 
-                      variant="h6" 
+                        variant="subtitle1" 
                       component="h3" 
                       sx={{ 
                         fontWeight: 600, 
-                        mb: 1,
                         cursor: 'pointer',
+                          flex: 1,
+                          fontSize: '0.95rem',
+                          lineHeight: 1.2,
                         '&:hover': { color: colors.primary }
                       }}
                       onClick={() => handleProductClick(product.id)}
                     >
                       {product.name}
                     </Typography>
-                    
                     <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
-                        mb: 2, 
-                        flexGrow: 1,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {product.description}
+                        variant="subtitle1" 
+                        color="primary" 
+                        sx={{ fontWeight: 700, ml: 1, fontSize: '0.95rem' }}
+                      >
+                        ${product.price}
                     </Typography>
+                    </Box>
 
-                    {/* Rating and reviews */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Rating value={product.rating} precision={0.5} size="small" readOnly />
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    {/* Rating and reviews - compact */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Rating value={product.rating} precision={0.5} size="small" readOnly sx={{ fontSize: '0.875rem' }} />
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5, fontSize: '0.7rem' }}>
                         ({product.reviews})
                       </Typography>
                     </Box>
 
-                    {/* Product info */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <VisibilityIcon fontSize="small" color="action" />
-                        <Typography variant="body2" color="text.secondary">
+                    {/* Product info - very compact */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <VisibilityIcon fontSize="small" color="action" sx={{ fontSize: '0.75rem' }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                           {product.views}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AccessTimeIcon fontSize="small" color="action" />
-                        <Typography variant="body2" color="text.secondary">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <AccessTimeIcon fontSize="small" color="action" sx={{ fontSize: '0.75rem' }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                           {product.preparationTime}
                         </Typography>
                       </Box>
                     </Box>
 
-                    {/* Price and add to cart */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography 
-                        variant="h6" 
-                        color="primary" 
-                        sx={{ fontWeight: 700 }}
-                      >
-                        ${product.price}
-                      </Typography>
+                    {/* Add to cart button - very compact */}
                       <Button
                         variant="contained"
                         size="small"
-                        startIcon={<AddShoppingCartIcon />}
+                      startIcon={<AddShoppingCartIcon sx={{ fontSize: '0.875rem' }} />}
                         onClick={() => handleAddToCart(product)}
                         disabled={!product.inStock}
                         sx={{ 
-                          borderRadius: 2,
+                        height: 32,
+                        borderRadius: '8px',
                           textTransform: 'none',
-                          fontWeight: 600
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        mt: 'auto',
+                        py: 0
                         }}
                       >
                         Add to Cart
                       </Button>
-                    </Box>
                   </CardContent>
                 </Card>
               </motion.div>

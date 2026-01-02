@@ -94,7 +94,7 @@
 .product-card-image {
   cursor: pointer;
   position: relative;
-  height: 240px;
+  height: 150px;
   object-fit: cover;
 }
 

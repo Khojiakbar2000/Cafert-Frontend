@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Container, Stack } from "@mui/material";
+import { Box, Container, Stack, Typography, Divider, Paper } from "@mui/material";
 import Button from "@mui/material/Button";
 
 import { useSelector} from "react-redux";
@@ -110,13 +110,30 @@ export default function ProcessOrders(props:ProcessOrdersProps) {
   }
 
   return (
-    <div>
-      <Stack>
+    <Stack spacing={2}>
       {processOrders?.map((order: Order) => {
-          return (
-            <Box key={order._id} className="order-main-box">
-              <Box className="order-box-scroll">
-              {order?.orderItems?.map((item: OrderItem) => {
+        return (
+          <Paper 
+            key={order._id} 
+            elevation={0}
+            sx={{
+              borderRadius: '16px',
+              border: '1px solid #e0e0e0',
+              backgroundColor: '#ffffff',
+              overflow: 'hidden',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              }
+            }}
+          >
+            {/* Order Items */}
+            <Box sx={{ 
+              maxHeight: '280px', 
+              overflowY: 'auto',
+              p: 2,
+              pb: 1.5
+            }}>
+              {order?.orderItems?.map((item: OrderItem, index: number) => {
                   // Handle case where productData might not exist in real API data
                   let product: Product | undefined;
                   if (order.productData && order.productData.length > 0) {
@@ -133,19 +150,39 @@ export default function ProcessOrders(props:ProcessOrdersProps) {
                   // Handle case where product is not found
                   if (!product) {
                     return (
-                      <Box key={item._id} className="orders-name-price">
-                        <img
+                      <Box 
+                        key={item._id} 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 2, 
+                          py: 1.5,
+                          borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px solid #f0f0f0' : 'none'
+                        }}
+                      >
+                        <Box
+                          component="img"
                           src="/icons/noimage-list.svg"
-                          className={"order-dish-img"}
+                          sx={{ 
+                            width: 56, 
+                            height: 56, 
+                            borderRadius: '12px',
+                            objectFit: 'cover'
+                          }}
                         />
-                        <p className="title-dish">Product ID: {item.productId}</p>
-                        <Box className="price-box">
-                          <p>${item.itemPrice}</p>
-                          <img src="/icons/close.svg" alt="" />
-                          <p>{item.itemQuantity}</p>
-                          <img src="/icons/pause.svg" alt="" />
-                          <p style={{ marginLeft: "15px" }}>${item.itemQuantity * item.itemPrice}</p>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem', mb: 0.5 }}>
+                            Product ID: {item.productId}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" sx={{ color: '#666' }}>
+                              ${item.itemPrice} × {item.itemQuantity}
+                            </Typography>
+                          </Box>
                         </Box>
+                        <Typography variant="body1" sx={{ fontWeight: 700, color: '#1a1a1a', minWidth: '60px', textAlign: 'right' }}>
+                          ${(item.itemQuantity * item.itemPrice).toFixed(2)}
+                        </Typography>
                       </Box>
                     );
                   }
@@ -158,64 +195,103 @@ export default function ProcessOrders(props:ProcessOrdersProps) {
                     : '/icons/noimage-list.svg';
                   
                   return (
-                    <Box key={item._id} className="orders-name-price">
-                      <img
+                    <Box 
+                      key={item._id} 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 2, 
+                        py: 1.5,
+                        borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px solid #f0f0f0' : 'none'
+                      }}
+                    >
+                      <Box
+                        component="img"
                         src={imagePath}
-                        className={"order-dish-img"}
-                        alt="Product"
                         onError={(e) => {
-                          e.currentTarget.src = '/icons/noimage-list.svg';
+                          (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
+                        }}
+                        sx={{ 
+                          width: 56, 
+                          height: 56, 
+                          borderRadius: '12px',
+                          objectFit: 'cover'
                         }}
                       />
-                      <p className="title-dish">{product ? product.productName : `Product ID: ${item.productId}`}</p>
-                      <Box className="price-box">
-                      <p>${item.itemPrice}</p>
-                        <img src="/icons/close.svg" alt="" />
-                        <p>{item.itemQuantity}</p>
-                        <img src="/icons/pause.svg" alt="" />
-                        <p style={{ marginLeft: "15px" }}>
-                        ${item.itemQuantity * item.itemPrice}
-                          </p>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem', mb: 0.5 }}>
+                          {product ? product.productName : `Product ID: ${item.productId}`}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" sx={{ color: '#666' }}>
+                            ${item.itemPrice} × {item.itemQuantity}
+                          </Typography>
+                        </Box>
                       </Box>
+                      <Typography variant="body1" sx={{ fontWeight: 700, color: '#1a1a1a', minWidth: '60px', textAlign: 'right' }}>
+                        ${(item.itemQuantity * item.itemPrice).toFixed(2)}
+                      </Typography>
                     </Box>
                   );
                 })}
-              </Box>
+            </Box>
 
-              <Box className="total-price-box">
-                <Box className="box-total">
-                  <p>Product price</p>
-                  <p>${order.orderTotal - order.orderDelivery}</p>
-                  <img src="/icons/plus.svg" style={{ marginLeft: "20px" }} />
-                  <p>Delivery cost</p>
-                  <p>${order.orderDelivery}</p>
-                  <img src="/icons/pause.svg" style={{ marginLeft: "20px" }} />
-                  <p>Total</p>
-                  <p>${order.orderTotal}</p>
+            {/* Total and Actions */}
+            <Box sx={{ 
+              borderTop: '2px solid #f0f0f0',
+              backgroundColor: '#fafafa',
+              p: 2,
+              pt: 1.5
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1.5
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography variant="body2" sx={{ color: '#666' }}>Product price:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>${(order.orderTotal - order.orderDelivery).toFixed(2)}</Typography>
+                  <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>+</Typography>
+                  <Typography variant="body2" sx={{ color: '#666' }}>Delivery:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>${order.orderDelivery.toFixed(2)}</Typography>
+                  <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>=</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                    ${order.orderTotal.toFixed(2)}
+                  </Typography>
                 </Box>
-                <Button value={order._id}
+                <Button 
+                  value={order._id}
                   variant="contained"
-                  color="secondary"
-                  className="verify-button"
                   onClick={finishOrderHandler}
-                  sx={{ marginRight: "10px", marginLeft: "10px" }}
+                  sx={{ 
+                    minWidth: 160,
+                    height: 38,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    backgroundColor: '#8b4513',
+                    '&:hover': {
+                      backgroundColor: '#a0522d',
+                    }
+                  }}
                 >
-                  VERIFY TO FULFIL
+                  Verify to Fulfill
                 </Button>
               </Box>
             </Box>
-          );
-        })}
+          </Paper>
+        );
+      })}
 
-        {!processOrders || (processOrders.length === 0 && (
-          <Box display={"flex"} flexDirection={"row"} justifyContent={"center"}>
-            <img
-              src="/icons/noimage-list.svg"
-              style={{ width: 300, height: 300 }}
-            />
-          </Box>
-        ))}
-      </Stack>
-    </div>
+      {(!processOrders || processOrders.length === 0) && (
+        <Box display={"flex"} flexDirection={"row"} justifyContent={"center"} sx={{ py: 6 }}>
+          <img
+            src="/icons/noimage-list.svg"
+            style={{ width: 300, height: 300 }}
+          />
+        </Box>
+      )}
+    </Stack>
   );
 }
