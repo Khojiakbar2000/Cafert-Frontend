@@ -72,8 +72,8 @@ code {
   display: none !important;
 }
 
-/* ===== Viewport-Based Sizing Only ===== */
-/* Remove all scaling - use viewport-based sizing only */
+/* ===== Viewport-Based Sizing with Lightweight Scaling ===== */
+/* Use CSS scaling for VPS consistency, but fix extra space properly */
 
 html {
   height: 100%;
@@ -95,7 +95,27 @@ body {
 }
 
 #scale-root {
+  transform-origin: top center;
   width: 100%;
   display: block;
-  flex: 1 0 auto; /* Grow to fill, but don't shrink below content size */
+  flex: 1 0 auto;
+}
+
+/* Lightweight scaling for VPS consistency */
+@media (max-width: 1799px) {
+  #scale-root {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 1440px) {
+  #scale-root {
+    transform: scale(0.85);
+  }
+}
+
+@media (max-width: 1280px) {
+  #scale-root {
+    transform: scale(0.8);
+  }
 }

@@ -50,7 +50,6 @@ function App() {
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
 
   // Fix viewport height for mobile & VPS (critical fix)
-  // Use viewport-based sizing only - no zoom, no scaling, no DPR math
   useEffect(() => {
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
@@ -60,6 +59,49 @@ function App() {
     window.addEventListener('resize', setVh);
     return () => window.removeEventListener('resize', setVh);
   }, []);
+
+  // Fix extra space caused by CSS scaling - adjust body height dynamically
+  useEffect(() => {
+    const fixScalingHeight = () => {
+      const scaleRoot = document.getElementById('scale-root');
+      if (!scaleRoot) return;
+
+      // Get current scale from media query
+      const width = window.innerWidth;
+      let scale = 1;
+      if (width <= 1280) {
+        scale = 0.8;
+      } else if (width <= 1440) {
+        scale = 0.85;
+      } else if (width <= 1799) {
+        scale = 0.9;
+      }
+
+      // Calculate actual content height
+      const contentHeight = scaleRoot.scrollHeight;
+      // Scaled visual height
+      const scaledHeight = contentHeight * scale;
+      // Extra space
+      const extraSpace = contentHeight - scaledHeight;
+
+      // Apply negative margin to #scale-root to remove extra space
+      // This is better than limiting body height
+      if (scale < 1 && extraSpace > 0) {
+        scaleRoot.style.marginBottom = `-${extraSpace}px`;
+      } else {
+        scaleRoot.style.marginBottom = '0';
+      }
+    };
+
+    // Run after render
+    const timeoutId = setTimeout(fixScalingHeight, 100);
+    window.addEventListener('resize', fixScalingHeight);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', fixScalingHeight);
+    };
+  }, [location.pathname]);
 
 
 
