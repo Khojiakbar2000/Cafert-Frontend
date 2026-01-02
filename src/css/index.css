@@ -13,36 +13,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-/* --- VPS Height Override: Hero Section Lock --- */
-@media (min-width: 1024px) {
-  .hero-section {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    height: 1080px !important;
-    min-height: 1080px !important;
-    max-height: 1080px !important;
-
-    overflow: hidden;
-    background-size: cover !important;
-    background-position: center !important;
-  }
-
-  .hero-section > * {
-    transform: scale(1) !important;
-    transform-origin: center center;
-    flex-shrink: 0;
-  }
 }
 
 /* Hero Section Text Alignment Fix */
@@ -94,4 +70,38 @@ code {
 /* Remove underline effect from category tabs */
 .MuiTabs-indicator {
   display: none !important;
+}
+
+/* ===== CSS-Based Scaling (Safe Approach) ===== */
+#scale-root {
+  transform-origin: top center;
+  width: 100%;
+}
+
+/* Large screens – original design */
+@media (min-width: 1800px) {
+  #scale-root {
+    transform: scale(1);
+  }
+}
+
+/* Laptops */
+@media (max-width: 1799px) {
+  #scale-root {
+    transform: scale(0.9);
+  }
+}
+
+/* Smaller laptops */
+@media (max-width: 1440px) {
+  #scale-root {
+    transform: scale(0.85);
+  }
+}
+
+/* Tablets */
+@media (max-width: 1280px) {
+  #scale-root {
+    transform: scale(0.8);
+  }
 }

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Route, Switch, useLocation } from "react-router-dom";
+import { Box } from "@mui/material";
 
 // Import i18n configuration
 import "../i18n";
@@ -97,63 +98,64 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <OtherNavbar
-          cartItems={cartItems}
-          onAdd={onAdd}
-          onRemove={onRemove}
-          onDelete={onDelete}
-          onDeleteAll={onDeleteAll}
-          setSignupOpen={setSignupOpen}
-          setLoginOpen={setLoginOpen}
-          handleLogoutClick={handleLogoutClick}
-          anchorEl={anchorEl}
-          handleCloseLogout={handleCloseLogout}
-          handleLogoutRequest={handleLogoutRequest}
-        />
-        
-        <Suspense fallback={<LoadingSpinner />}>
-          {/* @ts-ignore */}
-          <Switch>
-            <Route path="/products">
-              <ProductsPage onAdd={onAdd} />
-            </Route>
-            <Route path="/orders">
-              <OrdersPage />
-            </Route>
-            <Route path="/user-profile">
-              <UserProfilePage />
-            </Route>
-            <Route path="/my-page">
-              <MyPage />
-            </Route>
-            <Route path="/stats">
-              <StatsPage />
-            </Route>
-            <Route path="/help">
-              <HelpPage />
-            </Route>
-            <Route path="/coffee-demo">
-              <CoffeeHomePage setSignupOpen={setSignupOpen} setLoginOpen={setLoginOpen} />
-            </Route>
-            <Route path="/image-test">
-              <ImageTest />
-            </Route>
-            <Route path="/vertical-basket">
-              <VerticalBasketDemo />
-            </Route>
-            <Route path="/">
-              <CoffeeHomePage setSignupOpen={setSignupOpen} setLoginOpen={setLoginOpen} />
-            </Route>
-          </Switch>
-        </Suspense>
-        
-        <AuthenticationModal
-          signupOpen={signupOpen}
-          loginOpen={loginOpen}
-          handleLoginClose={handleLoginClose}
-          handleSignupClose={handleSignupClose}
-        />
-        
+        <Box id="scale-root" sx={{ width: '100%' }}>
+          <OtherNavbar
+            cartItems={cartItems}
+            onAdd={onAdd}
+            onRemove={onRemove}
+            onDelete={onDelete}
+            onDeleteAll={onDeleteAll}
+            setSignupOpen={setSignupOpen}
+            setLoginOpen={setLoginOpen}
+            handleLogoutClick={handleLogoutClick}
+            anchorEl={anchorEl}
+            handleCloseLogout={handleCloseLogout}
+            handleLogoutRequest={handleLogoutRequest}
+          />
+          
+          <Suspense fallback={<LoadingSpinner />}>
+            {/* @ts-ignore */}
+            <Switch>
+              <Route path="/products">
+                <ProductsPage onAdd={onAdd} />
+              </Route>
+              <Route path="/orders">
+                <OrdersPage />
+              </Route>
+              <Route path="/user-profile">
+                <UserProfilePage />
+              </Route>
+              <Route path="/my-page">
+                <MyPage />
+              </Route>
+              <Route path="/stats">
+                <StatsPage />
+              </Route>
+              <Route path="/help">
+                <HelpPage />
+              </Route>
+              <Route path="/coffee-demo">
+                <CoffeeHomePage setSignupOpen={setSignupOpen} setLoginOpen={setLoginOpen} />
+              </Route>
+              <Route path="/image-test">
+                <ImageTest />
+              </Route>
+              <Route path="/vertical-basket">
+                <VerticalBasketDemo />
+              </Route>
+              <Route path="/">
+                <CoffeeHomePage setSignupOpen={setSignupOpen} setLoginOpen={setLoginOpen} />
+              </Route>
+            </Switch>
+          </Suspense>
+          
+          <AuthenticationModal
+            signupOpen={signupOpen}
+            loginOpen={loginOpen}
+            handleLoginClose={handleLoginClose}
+            handleSignupClose={handleSignupClose}
+          />
+        </Box>
       </ThemeProvider>
     </ErrorBoundary>
   );
