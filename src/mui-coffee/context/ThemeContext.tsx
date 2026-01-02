@@ -208,6 +208,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.body.style.backgroundColor = colors.background;
     document.body.style.color = colors.text;
     
+    // Set CSS variable for body background (for pseudo-element matching)
+    document.documentElement.style.setProperty('--body-background', colors.background);
+    
     // Set data attribute for CSS targeting
     document.documentElement.setAttribute('data-theme', currentTheme);
     

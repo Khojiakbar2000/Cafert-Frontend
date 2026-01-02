@@ -73,19 +73,22 @@ code {
 }
 
 /* ===== Viewport-Based Sizing with Lightweight Scaling ===== */
-/* Use CSS scaling for VPS consistency, but fix extra space properly */
+/* Use CSS scaling for VPS consistency - GSAP-safe CSS-only solution */
 
 html {
   height: 100%;
   margin: 0;
   padding: 0;
+  /* Clip extra space caused by scaling - GSAP-safe */
 }
 
 body {
   min-height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   margin: 0;
   padding: 0;
+  /* GSAP-safe: Don't interfere with layout calculations */
 }
 
 #root {
@@ -99,6 +102,8 @@ body {
   width: 100%;
   display: block;
   flex: 1 0 auto;
+  /* GSAP-safe: No overflow clipping, no DOM manipulation */
+  position: relative;
 }
 
 /* Lightweight scaling for VPS consistency */
@@ -117,5 +122,40 @@ body {
 @media (max-width: 1280px) {
   #scale-root {
     transform: scale(0.8);
+  }
+}
+
+/* GSAP-safe fix: Clip extra space caused by scaling */
+/* Set html/body height to match scaled viewport to prevent extra scrollable space */
+@media (max-width: 1799px) {
+  html {
+    height: 90vh;
+    overflow: hidden;
+  }
+  body {
+    height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #scale-root {
+    min-height: 100%;
+  }
+}
+
+@media (max-width: 1440px) {
+  html {
+    height: 85vh;
+  }
+  body {
+    height: 85vh;
+  }
+}
+
+@media (max-width: 1280px) {
+  html {
+    height: 80vh;
+  }
+  body {
+    height: 80vh;
   }
 }

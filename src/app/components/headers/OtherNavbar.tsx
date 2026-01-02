@@ -788,11 +788,11 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                         height: 40,
                       }}
                     />
-                    <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 180 }}>
+                    <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 50 }}>
                       <Accordion 
                         expanded={profileAccordionExpanded} 
                         onChange={(e, isExpanded) => setProfileAccordionExpanded(isExpanded)}
-                        sx={{ 
+                      sx={{
                           width: '100%',
                           boxShadow: profileAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                           border: '1px solid #e0e0e0',
@@ -817,18 +817,8 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                             maxHeight: 40,
                           } 
                         }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <Avatar
-                      src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
-                      sx={{
-                                width: 24,
-                                height: 24,
-                                border: '1px solid #8b4513',
-                              }}
-                            />
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {authMember?.memberNick || 'User'}
-                            </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <AccountIcon sx={{ fontSize: 24, color: '#2c3e50' }} />
                           </Box>
                         </AccordionSummary>
                         <AccordionDetails sx={{ 
@@ -836,7 +826,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                           position: 'absolute',
                           top: '100%',
                           left: 0,
-                          right: 0,
+                          width: '200px',
                           backgroundColor: '#ffffff',
                           border: '1px solid #e0e0e0',
                           borderTop: 'none',
