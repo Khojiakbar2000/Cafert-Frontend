@@ -46,14 +46,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
     }
   }, []);
 
-  // Kill accidental scaling from parents
-  useEffect(() => {
-    const heroElement = document.querySelector('.hero-section');
-    if (heroElement) {
-      (heroElement as HTMLElement).style.transform = 'none';
-      (heroElement as HTMLElement).style.scale = '1';
-    }
-  }, []);
 
   return (
     <Box
@@ -73,8 +65,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
         backgroundSize: 'cover',
         backgroundPosition: '50% 50%',
         backgroundRepeat: 'no-repeat',
-        transform: 'none',
-        scale: '1',
         transition: 'all 1.5s ease-in-out',
         '&::before': {
           content: '""',

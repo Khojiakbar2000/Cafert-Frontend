@@ -50,86 +50,16 @@ function App() {
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
 
   // Fix viewport height for mobile & VPS (critical fix)
+  // Use viewport-based sizing only - no zoom, no scaling, no DPR math
   useEffect(() => {
     const setVh = () => {
-      document.documentElement.style.setProperty(
-        '--vh',
-        `${window.innerHeight * 0.01}px`
-      );
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
     setVh();
     window.addEventListener('resize', setVh);
     return () => window.removeEventListener('resize', setVh);
   }, []);
-
-  // Fix extra space caused by CSS scaling on all pages
-  useEffect(() => {
-    const fixScalingHeight = () => {
-      const scaleRoot = document.getElementById('scale-root');
-      if (!scaleRoot) return;
-
-      // Get the computed scale value from media queries
-      const width = window.innerWidth;
-      let scale = 1;
-      
-      if (width <= 1280) {
-        scale = 0.8;
-      } else if (width <= 1440) {
-        scale = 0.85;
-      } else if (width <= 1799) {
-        scale = 0.9;
-      }
-
-      // Wait for next frame to ensure layout is complete
-      requestAnimationFrame(() => {
-        // Calculate the actual content height
-        const contentHeight = scaleRoot.scrollHeight;
-        // Calculate what the scaled height should be
-        const scaledHeight = contentHeight * scale;
-        // Calculate the difference (extra space)
-        const heightDiff = contentHeight - scaledHeight;
-
-        // Apply negative margin-bottom to remove extra space
-        if (heightDiff > 0 && scale < 1) {
-          scaleRoot.style.marginBottom = `-${heightDiff}px`;
-          console.log(`[Scaling Fix] Applied margin-bottom: -${heightDiff}px (scale: ${scale}, content: ${contentHeight}px)`);
-        } else {
-          scaleRoot.style.marginBottom = '0';
-        }
-      });
-    };
-
-    // Run multiple times to catch all render phases
-    const timeouts = [
-      setTimeout(fixScalingHeight, 100),
-      setTimeout(fixScalingHeight, 300),
-      setTimeout(fixScalingHeight, 500),
-    ];
-    
-    window.addEventListener('resize', fixScalingHeight);
-    window.addEventListener('load', fixScalingHeight);
-    
-    // Also watch for DOM changes (lazy loaded content, etc.)
-    const observer = new MutationObserver(() => {
-      setTimeout(fixScalingHeight, 100);
-    });
-    
-    const scaleRoot = document.getElementById('scale-root');
-    if (scaleRoot) {
-      observer.observe(scaleRoot, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      });
-    }
-    
-    return () => {
-      timeouts.forEach(id => clearTimeout(id));
-      window.removeEventListener('resize', fixScalingHeight);
-      window.removeEventListener('load', fixScalingHeight);
-      observer.disconnect();
-    };
-  }, [location.pathname]); // Re-run when route changes
 
 
 

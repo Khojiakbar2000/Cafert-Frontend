@@ -72,54 +72,30 @@ code {
   display: none !important;
 }
 
-/* ===== CSS-Based Scaling (Safe Approach) ===== */
-#scale-root {
-  transform-origin: top center;
-  width: 100%;
-  display: block;
+/* ===== Viewport-Based Sizing Only ===== */
+/* Remove all scaling - use viewport-based sizing only */
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* Large screens – original design */
-@media (min-width: 1800px) {
-  #scale-root {
-    transform: scale(1);
-  }
-}
-
-/* Laptops */
-@media (max-width: 1799px) {
-  #scale-root {
-    transform: scale(0.9);
-  }
-}
-
-/* Smaller laptops */
-@media (max-width: 1440px) {
-  #scale-root {
-    transform: scale(0.85);
-  }
-}
-
-/* Tablets */
-@media (max-width: 1280px) {
-  #scale-root {
-    transform: scale(0.8);
-  }
-}
-
-/* Fix extra space - ensure body doesn't create extra height */
 body {
+  min-height: 100%;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
 }
 
-html {
-  margin: 0;
-  padding: 0;
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Ensure no extra space after any content */
-#scale-root > *:last-child {
-  margin-bottom: 0 !important;
+#scale-root {
+  width: 100%;
+  display: block;
+  flex: 1 0 auto; /* Grow to fill, but don't shrink below content size */
 }

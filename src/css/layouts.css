@@ -3,7 +3,7 @@
 /* ===== HERO SECTIONS ===== */
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  /* Use viewport-based sizing only - no fixed heights */
   display: flex;
   align-items: center;
   justify-content: center;
