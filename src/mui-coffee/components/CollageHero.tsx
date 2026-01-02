@@ -3,6 +3,7 @@ import { Box, Container, Typography, Button } from '@mui/material';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useHistory } from 'react-router-dom';
 import { useTheme as useThemeContext } from '../context/ThemeContext';
 
 // Register ScrollTrigger
@@ -56,8 +57,13 @@ const cards: Card[] = [
 
 const CollageHero: React.FC = () => {
   const { colors } = useThemeContext();
+  const history = useHistory();
   const sectionRef = useRef<HTMLElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+
+  const handleExploreMenu = () => {
+    history.push('/products');
+  };
 
   // GSAP animations
   useGSAP(() => {
@@ -107,8 +113,8 @@ const CollageHero: React.FC = () => {
         minHeight: { xs: '500px', md: '600px' },
         // Fixed background with lighter overlay
         backgroundImage: {
-          xs: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/justcoffee.png)',
-          md: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/justcoffee.png)',
+          xs: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/picture.png)',
+          md: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/picture.png)',
         },
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -164,6 +170,7 @@ const CollageHero: React.FC = () => {
           <Button
             className="season-button"
             variant="contained"
+            onClick={handleExploreMenu}
             sx={{
               padding: '12px 32px',
               borderRadius: '12px',

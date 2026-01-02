@@ -76,6 +76,7 @@ code {
 #scale-root {
   transform-origin: top center;
   width: 100%;
+  display: block;
 }
 
 /* Large screens – original design */
@@ -104,4 +105,21 @@ code {
   #scale-root {
     transform: scale(0.8);
   }
+}
+
+/* Fix extra space - ensure body doesn't create extra height */
+body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure no extra space after any content */
+#scale-root > *:last-child {
+  margin-bottom: 0 !important;
 }
