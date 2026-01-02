@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Route, Switch, useLocation } from "react-router-dom";
 
 // Import i18n configuration
@@ -47,6 +47,19 @@ function App() {
   const location = useLocation();
   const { authMember, setAuthMember } = useGlobals();
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
+
+  // Fix viewport height for mobile & VPS (critical fix)
+  useEffect(() => {
+    const setVh = () => {
+      document.documentElement.style.setProperty(
+        '--vh',
+        `${window.innerHeight * 0.01}px`
+      );
+    };
+    setVh();
+    window.addEventListener('resize', setVh);
+    return () => window.removeEventListener('resize', setVh);
+  }, []);
 
 
 

@@ -10,7 +10,6 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  Popover,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -106,6 +105,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [profileAccordionExpanded, setProfileAccordionExpanded] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -788,23 +788,142 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                         height: 40,
                       }}
                     />
+                    <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 180 }}>
+                      <Accordion 
+                        expanded={profileAccordionExpanded} 
+                        onChange={(e, isExpanded) => setProfileAccordionExpanded(isExpanded)}
+                        sx={{ 
+                          width: '100%',
+                          boxShadow: profileAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '8px',
+                          position: 'relative',
+                          zIndex: profileAccordionExpanded ? 1000 : 1,
+                          backgroundColor: '#ffffff',
+                          '&:before': {
+                            display: 'none',
+                          },
+                          '&.Mui-expanded': {
+                            margin: 0,
+                            minHeight: '40px !important',
+                          },
+                        }}
+                      >
+                        <AccordionSummary sx={{ 
+                          minHeight: 40, 
+                          maxHeight: 40,
+                          '&.Mui-expanded': { 
+                            minHeight: 40,
+                            maxHeight: 40,
+                          } 
+                        }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                     <Avatar
                       src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
-                      onClick={handleLogoutClick}
                       sx={{
-                        width: 56,
-                        height: 56,
-                        cursor: 'pointer',
-                        border: '2px solid #8b4513',
-                        boxShadow: '0 2px 8px rgba(139, 69, 19, 0.2)',
-                        '&:hover': {
-                          transform: 'scale(1.15)',
-                          transition: 'transform 0.3s ease',
-                          boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
-                        }
-                      }}
-                      alt="User Avatar"
-                    />
+                                width: 24,
+                                height: 24,
+                                border: '1px solid #8b4513',
+                              }}
+                            />
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {authMember?.memberNick || 'User'}
+                            </Typography>
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ 
+                          p: 0,
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0e0e0',
+                          borderTop: 'none',
+                          borderRadius: '0 0 8px 8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          zIndex: 1001,
+                          mt: 0,
+                          display: profileAccordionExpanded ? 'block' : 'none',
+                        }}>
+                          <Box>
+                            <ListItemButton
+                              onClick={() => {
+                                window.location.href = '/my-page';
+                                setProfileAccordionExpanded(false);
+                              }}
+                              sx={{
+                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                                px: 2,
+                                py: 1.5,
+                              }}
+                            >
+                              <ListItemIcon>
+                                <AccountIcon sx={{ color: '#8b4513', fontSize: 20 }} />
+                              </ListItemIcon>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {t('navigation.myPage')}
+                              </Typography>
+                            </ListItemButton>
+                            <ListItemButton
+                              onClick={() => {
+                                window.location.href = '/orders';
+                                setProfileAccordionExpanded(false);
+                              }}
+                              sx={{
+                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                                px: 2,
+                                py: 1.5,
+                              }}
+                            >
+                              <ListItemIcon>
+                                <OrdersIcon sx={{ color: '#8b4513', fontSize: 20 }} />
+                              </ListItemIcon>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {t('navigation.myOrders')}
+                              </Typography>
+                            </ListItemButton>
+                            <ListItemButton
+                              onClick={() => {
+                                window.location.href = '/help';
+                                setProfileAccordionExpanded(false);
+                              }}
+                              sx={{
+                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
+                                px: 2,
+                                py: 1.5,
+                              }}
+                            >
+                              <ListItemIcon>
+                                <HelpIcon sx={{ color: '#8b4513', fontSize: 20 }} />
+                              </ListItemIcon>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {t('navigation.helpSupport')}
+                              </Typography>
+                            </ListItemButton>
+                            <Divider />
+                            <ListItemButton
+                              onClick={() => {
+                                handleLogoutRequest();
+                                setProfileAccordionExpanded(false);
+                              }}
+                              sx={{
+                                '&:hover': { backgroundColor: 'rgba(231, 76, 60, 0.08)' },
+                                px: 2,
+                                py: 1.5,
+                              }}
+                            >
+                              <ListItemIcon>
+                                <LogoutIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
+                              </ListItemIcon>
+                              <Typography variant="body2" sx={{ fontWeight: 500, color: '#e74c3c' }}>
+                                {t('navigation.logout')}
+                              </Typography>
+                            </ListItemButton>
+                          </Box>
+                        </AccordionDetails>
+                      </Accordion>
+                    </Box>
                   </Box>
                 );
               })()}
@@ -836,152 +955,6 @@ export default function OtherNavbar(props: OtherNavbarProps) {
         </Container>
       </AppBar>
 
-      {/* User Profile Accordion */}
-      <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={handleCloseLogout}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        PaperProps={{
-          elevation: 8,
-          sx: {
-            mt: 1.5,
-            borderRadius: '12px',
-            minWidth: 240,
-            border: '1px solid #e0e0e0',
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <Accordion
-          defaultExpanded={true}
-          sx={{
-            boxShadow: 'none',
-            '&:before': {
-              display: 'none',
-            },
-            '&.Mui-expanded': {
-              margin: 0,
-            },
-          }}
-        >
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon sx={{ color: '#8b4513' }} />}
-            sx={{
-              px: 2,
-              py: 1.5,
-              backgroundColor: 'rgba(139, 69, 19, 0.05)',
-              '&.Mui-expanded': {
-                borderBottom: '1px solid #e0e0e0',
-              },
-              '& .MuiAccordionSummary-content': {
-                my: 0,
-                '&.Mui-expanded': {
-                  my: 0,
-                },
-              },
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Avatar
-                src={authMember?.memberImage ? `${serverApi}${authMember?.memberImage}` : "/icons/default-user.svg"}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  border: '2px solid #8b4513',
-                }}
-              />
-              <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50' }}>
-                {authMember?.memberNick || 'User'}
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
-            <Box>
-              <ListItemButton
-                onClick={() => {
-                  window.location.href = '/my-page';
-                  handleCloseLogout();
-                }}
-                sx={{
-                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-          <ListItemIcon>
-                  <AccountIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-          </ListItemIcon>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {t('navigation.myPage')}
-                </Typography>
-              </ListItemButton>
-              <ListItemButton
-                onClick={() => {
-                  window.location.href = '/orders';
-                  handleCloseLogout();
-                }}
-                sx={{
-                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-          <ListItemIcon>
-                  <OrdersIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-          </ListItemIcon>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {t('navigation.myOrders')}
-                </Typography>
-              </ListItemButton>
-              <ListItemButton
-                onClick={() => {
-                  window.location.href = '/help';
-                  handleCloseLogout();
-                }}
-                sx={{
-                  '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-          <ListItemIcon>
-                  <HelpIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-          </ListItemIcon>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {t('navigation.helpSupport')}
-                </Typography>
-              </ListItemButton>
-              <Divider />
-              <ListItemButton
-                onClick={() => {
-                  handleLogoutRequest();
-                  handleCloseLogout();
-                }}
-                sx={{
-                  '&:hover': { backgroundColor: 'rgba(231, 76, 60, 0.08)' },
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-          <ListItemIcon>
-                  <LogoutIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
-          </ListItemIcon>
-                <Typography variant="body2" sx={{ fontWeight: 500, color: '#e74c3c' }}>
-                  {t('navigation.logout')}
-                </Typography>
-              </ListItemButton>
-            </Box>
-          </AccordionDetails>
-        </Accordion>
-      </Popover>
 
       {/* Toolbar Spacer */}
       <Box sx={{ height: 120 }} />

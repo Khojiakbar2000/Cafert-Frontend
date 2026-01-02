@@ -46,14 +46,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
     }
   }, []);
 
+  // Kill accidental scaling from parents
+  useEffect(() => {
+    const heroElement = document.querySelector('.hero-section');
+    if (heroElement) {
+      (heroElement as HTMLElement).style.transform = 'none';
+      (heroElement as HTMLElement).style.scale = '1';
+    }
+  }, []);
+
   return (
     <Box
       className="hero-section"
       sx={{
         position: 'relative',
-        height: '100vh',
-        minHeight: '100vh',
-        maxHeight: '100vh',
+        height: 'calc(var(--vh, 1vh) * 100)',
+        minHeight: 'calc(var(--vh, 1vh) * 100)',
+        maxHeight: 'calc(var(--vh, 1vh) * 100)',
         width: '100%',
         maxWidth: '100%',
         display: 'flex',
@@ -62,8 +71,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
         overflow: 'hidden',
         backgroundImage: `url('${heroImages[currentImageIndex]}')`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: '50% 50%',
         backgroundRepeat: 'no-repeat',
+        transform: 'none',
+        scale: '1',
         transition: 'all 1.5s ease-in-out',
         '&::before': {
           content: '""',
@@ -140,7 +151,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
                 <Typography
                   variant="h1"
                   sx={{
-                    fontSize: { xs: '2.25rem', sm: '3rem', md: '3.5rem', lg: '4rem', xl: '4.5rem' },
+                    fontSize: 'clamp(2.5rem, 4vw, 4.5rem)',
                     fontWeight: 400,
                     fontFamily: '"Playfair Display", serif',
                     color: isDarkMode ? '#ffffff' : 'white',
@@ -166,7 +177,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
                 <Typography
                   variant="body1"
                   sx={{
-                    fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem', lg: '1.375rem' },
+                    fontSize: 'clamp(1rem, 2vw, 1.375rem)',
                     color: isDarkMode ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.9)',
                     mb: 4,
                     lineHeight: 1.6,
@@ -202,7 +213,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
                         color: isDarkMode ? '#000' : 'white',
                         px: 4,
                         py: 1.5,
-                        fontSize: '1.1rem',
+                        fontSize: 'clamp(0.95rem, 1.5vw, 1.1rem)',
                         fontWeight: 600,
                         '&:hover': {
                           backgroundColor: '#b8941f'
@@ -226,7 +237,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
                         color: 'white',
                         px: 4,
                         py: 1.5,
-                        fontSize: '1.1rem',
+                        fontSize: 'clamp(0.95rem, 1.5vw, 1.1rem)',
                         fontWeight: 600,
                         '&:hover': {
                           borderColor: 'white',
@@ -252,7 +263,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
               <Box
                 sx={{
                   position: 'relative',
-                  height: { xs: '400px', md: '600px' },
+                  height: { xs: '360px', md: '520px' },
+                  maxHeight: '70vh',
                   borderRadius: '20px',
                   overflow: 'hidden',
                   boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
@@ -287,6 +299,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
+                    aspectRatio: '16 / 9',
                     borderRadius: '17px'
                   }}
                 >
