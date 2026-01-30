@@ -46,9 +46,12 @@ import {
   Whatshot as WhatshotIcon,
   AttachMoney as AttachMoneyIcon,
   DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon
+  LightMode as LightModeIcon,
+  LocalCafe as LocalCafeIcon,
+  RestaurantMenu as RestaurantMenuIcon,
+  EmojiFoodBeverage as EmojiFoodBeverageIcon
 } from "@mui/icons-material";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { CartItem } from "../../../lib/types/search";
 import { useTheme as useCoffeeTheme } from "../../../mui-coffee/context/ThemeContext";
 import { useTranslation } from 'react-i18next';
@@ -56,7 +59,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProductService from "../../services/ProductService";
 
 // Lazy load the AwardsStrip component
-import { serverApi } from "../../../lib/config";const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
+import { serverApi } from "../../../lib/config";
+const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
+const ImageRightSection = React.lazy(() => import('../../../mui-coffee/components/ImageRightSection'));
 
 // Loading skeleton for cards
 const CardSkeleton = () => (
@@ -113,13 +118,18 @@ interface CoffeesProps {
 export default function Coffees(props: CoffeesProps) {
   const { onAdd } = props;
   const history = useHistory();
-  const { isDarkMode, toggleTheme } = useCoffeeTheme();
+  const location = useLocation();
+  const { isDarkMode, toggleTheme, colors } = useCoffeeTheme();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const { t } = useTranslation();
   
   // Pagination constants
   const ITEMS_PER_PAGE = 5;
+  
+  // Get category from URL query params
+  const searchParams = new URLSearchParams((location as any).search || window.location.search);
+  const categoryFromUrl = searchParams.get('category') as "all" | "desserts" | "drinks" | "salads" | "dishes" | "other" | null;
   
   const [coffees, setCoffees] = useState<CoffeeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,7 +204,30 @@ export default function Coffees(props: CoffeesProps) {
     fetchProducts();
   }, []);
   const [searchText, setSearchText] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "desserts" | "drinks" | "salads" | "dishes" | "other">('all');
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "desserts" | "drinks" | "salads" | "dishes" | "other">(
+    categoryFromUrl && ['all', 'desserts', 'drinks', 'salads', 'dishes', 'other'].includes(categoryFromUrl) 
+      ? categoryFromUrl 
+      : 'all'
+  );
+  
+  // Ref for category tabs section to scroll into view
+  const categoryTabsRef = useRef<HTMLDivElement>(null);
+
+  // Update category when URL changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams((location as any).search || window.location.search);
+    const urlCategory = searchParams.get('category') as "all" | "desserts" | "drinks" | "salads" | "dishes" | "other" | null;
+    if (urlCategory && ['all', 'desserts', 'drinks', 'salads', 'dishes', 'other'].includes(urlCategory)) {
+      setSelectedCategory(urlCategory);
+      // Scroll to category tabs section when category is set from URL
+      setTimeout(() => {
+        categoryTabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else if (!urlCategory) {
+      // If no category in URL, default to 'all'
+      setSelectedCategory('all');
+    }
+  }, [(location as any).search || window.location.search]);
   const [sortBy, setSortBy] = useState<'new' | 'price' | 'views' | 'rating'>('new');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortAccordionExpanded, setSortAccordionExpanded] = useState(false);
@@ -316,6 +349,18 @@ export default function Coffees(props: CoffeesProps) {
 
   const handleCategoryChange = (event: React.SyntheticEvent, newValue: "all" | "desserts" | "drinks" | "salads" | "dishes" | "other") => {
     setSelectedCategory(newValue);
+    // Update URL with the selected category
+    const newSearchParams = new URLSearchParams((location as any).search || window.location.search);
+    if (newValue === 'all') {
+      newSearchParams.delete('category');
+    } else {
+      newSearchParams.set('category', newValue);
+    }
+    const newSearch = newSearchParams.toString();
+    (history as any).replace({
+      pathname: (location as any).pathname,
+      search: newSearch ? `?${newSearch}` : '',
+    });
   };
 
   const handleSortChange = (event: any) => {
@@ -369,51 +414,24 @@ export default function Coffees(props: CoffeesProps) {
 
   return (
     <Box sx={{ 
-      backgroundColor: isDarkMode ? '#0a0a0a' : '#fafafa', 
+      width: '100%',
       minHeight: '100vh',
       position: 'relative',
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '200px',
-        background: isDarkMode 
-          ? 'linear-gradient(180deg, rgba(139, 69, 19, 0.1) 0%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(139, 69, 19, 0.05) 0%, transparent 100%)',
-        zIndex: 0
-      }
     }}>
-      <Box sx={{ py: 6, position: 'relative', zIndex: 1 }}>
+      {/* Content in Container */}
+      <Container
+        maxWidth="xl"
+        sx={{
+          position: 'relative',
+          zIndex: 1,
+          overflowX: "hidden",
+          paddingTop: { xs: "2rem", sm: "3rem", md: "4rem" },
+          paddingBottom: { xs: "3.5rem", sm: "4.5rem", md: "6rem" },
+          paddingLeft: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
+          paddingRight: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
+        }}
+      >
         <Stack spacing={6}>
-          {/* Header Section */}
-          <Box sx={{ mb: 6, textAlign: 'center' }}>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Typography variant="h2" sx={{
-                fontWeight: 700,
-                mb: 2,
-                fontFamily: 'Playfair Display, serif',
-                fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
-                color: isDarkMode ? '#ffffff' : '#1a1a1a'
-              }}>
-                Our Menu
-            </Typography>
-              <Typography variant="h5" sx={{
-                color: isDarkMode ? '#b0b0b0' : '#666666',
-                fontWeight: 400,
-                fontFamily: 'Poppins, sans-serif',
-                fontSize: { xs: '1.1rem', md: '1.3rem' }
-              }}>
-                Discover our carefully curated selection of coffee, desserts, and more
-            </Typography>
-            </motion.div>
-          </Box>
-
           {/* Enhanced Search and Controls */}
           <Paper sx={{ 
             backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
@@ -527,6 +545,7 @@ export default function Coffees(props: CoffeesProps) {
           </Suspense>
 
           {/* Enhanced Category Tabs */}
+          <Box ref={categoryTabsRef}>
           <Paper sx={{ 
             backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
             border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
@@ -573,6 +592,7 @@ export default function Coffees(props: CoffeesProps) {
               <Tab label={t('navigation.salads')} value="salads" />
             </Tabs>
           </Paper>
+          </Box>
 
           {/* Enhanced Sort Controls */}
           <Paper sx={{ 
@@ -1289,6 +1309,11 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           )}
 
+          {/* Image Right Section */}
+          <Suspense fallback={<Box sx={{ py: 4 }} />}>
+            <ImageRightSection imageSrc="/penguin.png" />
+          </Suspense>
+
           {/* Enhanced No Results */}
           {filteredCoffees.length === 0 && (
             <Paper sx={{ 
@@ -1468,7 +1493,7 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           </Box>
         </Stack>
-      </Box>
+      </Container>
     </Box>
   );
 } 

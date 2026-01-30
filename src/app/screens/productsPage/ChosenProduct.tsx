@@ -272,6 +272,8 @@ export default function ChosenProduct(props: ChosenProductProps) {
   return (
     <Box sx={{
       backgroundColor: colors.background,
+      background: `radial-gradient(circle at 20% 15%, rgba(180,140,90,0.10), transparent 45%),
+                   radial-gradient(circle at 80% 30%, rgba(120,170,160,0.08), transparent 50%)`,
       color: colors.text,
       minHeight: '100vh',
       py: 4
@@ -299,24 +301,40 @@ export default function ChosenProduct(props: ChosenProductProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Grid container spacing={4}>
+          <Box
+            sx={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))',
+              backdropFilter: 'blur(20px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.14)',
+              borderRadius: '20px',
+              position: 'relative',
+              p: 4,
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 'inherit',
+                pointerEvents: 'none',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)',
+                zIndex: 0,
+              }
+            }}
+          >
+            <Grid container spacing={4} sx={{ position: 'relative', zIndex: 1 }}>
             {/* Product Images - 60% */}
             <Grid item xs={12} md={7.2}>
               <Stack spacing={2}>
                 {/* Main Image with Carousel */}
                 <Card 
-                  onClick={() => setLightboxOpen(true)}
                   sx={{
-                backgroundColor: colors.surface,
+                    backgroundColor: 'transparent',
                     borderRadius: '20px',
-                overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-                    cursor: 'pointer',
+                    overflow: 'hidden',
                     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                     position: 'relative',
                     '&:hover': {
-                      transform: 'scale(1.02)',
-                      boxShadow: '0 25px 50px rgba(0,0,0,0.12)',
                       '& .product-main-image': {
                         transform: 'scale(1.05)',
                       },
@@ -334,6 +352,7 @@ export default function ChosenProduct(props: ChosenProductProps) {
                       height: '44px',
                       borderRadius: '50%',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      zIndex: 10,
                       '&:after': {
                         fontSize: '20px',
                         fontWeight: 'bold',
@@ -376,11 +395,13 @@ export default function ChosenProduct(props: ChosenProductProps) {
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
                             }}
+                            onClick={() => setLightboxOpen(true)}
                           style={{
                             width: '100%',
                             height: '100%',
                               objectFit: 'cover',
                               transition: 'transform 0.4s ease',
+                              cursor: 'pointer',
                           }}
                           alt={`${chosenProduct.productName} - Image ${index + 1}`}
                         />
@@ -616,10 +637,13 @@ export default function ChosenProduct(props: ChosenProductProps) {
 
                 {/* Social Proof */}
                 <Box sx={{
-                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(139, 69, 19, 0.08)',
-                  borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.20)',
+                  backdropFilter: 'blur(14px)',
+                  WebkitBackdropFilter: 'blur(14px)',
+                  border: '1px solid rgba(255,255,255,0.30)',
+                  borderRadius: '14px',
                   p: 2,
-                  textAlign: 'center'
+                  textAlign: 'center',
                 }}>
                   <Typography variant="body2" sx={{ 
                     color: colors.accent,
@@ -640,10 +664,12 @@ export default function ChosenProduct(props: ChosenProductProps) {
                 {/* Restaurant Info - Enhanced */}
                 {restaurant && (
                   <Card sx={{
-                    backgroundColor: colors.surface,
-                    borderRadius: '16px',
+                    background: 'rgba(255,255,255,0.20)',
+                    backdropFilter: 'blur(14px)',
+                    WebkitBackdropFilter: 'blur(14px)',
+                    border: '1px solid rgba(255,255,255,0.30)',
+                    borderRadius: '14px',
                     p: 2.5,
-                    border: `1px solid ${colors.border}`
                   }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Box sx={{
@@ -696,6 +722,7 @@ export default function ChosenProduct(props: ChosenProductProps) {
               </Stack>
             </Grid>
           </Grid>
+          </Box>
 
           {/* Related Items Section */}
           {relatedProducts.length > 0 && (

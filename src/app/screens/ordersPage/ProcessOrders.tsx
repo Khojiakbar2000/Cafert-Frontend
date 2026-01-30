@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Container, Stack, Typography, Divider, Paper } from "@mui/material";
 import Button from "@mui/material/Button";
+import PaymentIcon from "@mui/icons-material/Payment";
 
 import { useSelector} from "react-redux";
 import {createSelector} from "reselect";
@@ -84,6 +85,50 @@ export default function ProcessOrders(props:ProcessOrdersProps) {
   }, [processOrders]);
 
   /** HANDLERS **/
+
+  const deleteOrderHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      const orderId = e.target.value;
+      const input: OrderUpdateInput = {
+        orderId: orderId,
+        orderStatus: OrderStatus.DELETE,
+      };
+
+      const confirmation = window.confirm("Do you want to delete the order?");
+      if (confirmation) {
+        const order = new OrderService();
+        await order.updateOrder(input);
+        setValue("1");
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
+
+  const paymentHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      
+      const orderId = e.target.value;
+      const confirmation = window.confirm("Do you want to proceed with payment?");
+      if (confirmation) {
+        // Here you would typically integrate with a payment gateway
+        // For now, we'll just show a success message
+        window.alert("Payment processed successfully!");
+        // Optionally update order status after payment
+        // const order = new OrderService();
+        // await order.updateOrder({ orderId, orderStatus: OrderStatus.PROCESS });
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
+
   const finishOrderHandler = async (e: T)=>{
     try{
       if(!authMember) throw new Error(Messages.error2)
@@ -261,23 +306,64 @@ export default function ProcessOrders(props:ProcessOrdersProps) {
                     ${order.orderTotal.toFixed(2)}
                   </Typography>
                 </Box>
-                <Button 
-                  value={order._id}
-                  variant="contained"
-                  onClick={finishOrderHandler}
-                  sx={{ 
-                    minWidth: 160,
-                    height: 38,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    backgroundColor: '#8b4513',
-                    '&:hover': {
-                      backgroundColor: '#a0522d',
-                    }
-                  }}
-                >
-                  Verify to Fulfill
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                  <Button
+                    value={order._id}
+                    variant="outlined"
+                    onClick={deleteOrderHandler}
+                    sx={{ 
+                      minWidth: 100,
+                      height: 38,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderColor: '#d0d0d0',
+                      color: '#666',
+                      '&:hover': {
+                        borderColor: '#999',
+                        backgroundColor: 'rgba(0,0,0,0.04)'
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    value={order._id}
+                    variant="contained"
+                    onClick={paymentHandler}
+                    startIcon={<PaymentIcon />}
+                    sx={{ 
+                      minWidth: 120,
+                      height: 38,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      backgroundColor: '#8b4513',
+                      '&:hover': {
+                        backgroundColor: '#a0522d',
+                      }
+                    }}
+                  >
+                    Payment
+                  </Button>
+                  <Button 
+                    value={order._id}
+                    variant="outlined"
+                    onClick={finishOrderHandler}
+                    sx={{ 
+                      minWidth: 160,
+                      height: 38,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderColor: '#8b4513',
+                      color: '#8b4513',
+                      '&:hover': {
+                        borderColor: '#a0522d',
+                        backgroundColor: 'rgba(139, 69, 19, 0.04)',
+                      }
+                    }}
+                  >
+                    Verify to Fulfill
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Paper>

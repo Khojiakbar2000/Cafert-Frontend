@@ -97,7 +97,9 @@ export default function Footer() {
         background: 'linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #1a1a1a 100%)',
         color: '#fff',
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'visible',
+        marginBottom: '-100px',
+        paddingBottom: '100px',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -108,15 +110,38 @@ export default function Footer() {
           background: 'linear-gradient(90deg, #8B4513, #A0522D, #CD853F, #D2691E, #8B4513)',
           backgroundSize: '200% 100%',
           animation: 'gradientShift 3s ease-in-out infinite',
+          zIndex: 10,
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
+          height: '100px',
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #1a1a1a 100%)',
+          clipPath: 'ellipse(100% 100px at 50% 100%)',
+          WebkitClipPath: 'ellipse(100% 100px at 50% 100%)',
+          zIndex: 1,
         },
         '@keyframes gradientShift': {
           '0%, 100%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
+        },
+        '@media (max-width: 768px)': {
+          marginBottom: '-60px',
+          paddingBottom: '60px',
+          '&::after': {
+            height: '60px',
+            clipPath: 'ellipse(100% 60px at 50% 100%)',
+            WebkitClipPath: 'ellipse(100% 60px at 50% 100%)',
+          }
         }
       }}
     >
       {/* Main Footer Content */}
-      <Container maxWidth="xl" sx={{ py: 8 }}>
+      <Container maxWidth="xl" sx={{ py: 8, position: 'relative', zIndex: 2 }}>
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', lg: 'row' },

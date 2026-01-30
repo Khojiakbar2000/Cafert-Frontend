@@ -25,7 +25,7 @@ export const plans = [
 	},
 	{
 		title: 'Join us on social media',
-		desc: '☕ We are sharing coffee recipes and tips on social media',
+		desc: 'We are sharing coffee recipes and tips on social media',
 		author: 'Cafert Team',
 		date: 'A week ago',
 		location: 'Europe, France',

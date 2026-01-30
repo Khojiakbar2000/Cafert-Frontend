@@ -2,33 +2,7 @@ import axios from "axios";
 import { serverApi } from "../../lib/config";
 import { Member } from "../../lib/types/member";
 import { MemberStatus } from "../../lib/enums/member.enum";
-
-export interface UserActivity {
-  id: string;
-  name: string;
-  avatar: string;
-  status: 'online' | 'offline';
-  lastActivity: string;
-  activity: string;
-  location: string;
-  memberId: string;
-}
-
-export interface RecentActivity {
-  id: string;
-  name: string;
-  avatar: string;
-  message: string;
-  type: 'order' | 'favorite' | 'view' | 'join';
-  time: string;
-  memberId: string;
-}
-
-export interface ActiveUsersStats {
-  totalActive: number;
-  onlineUsers: number;
-  recentJoiners: number;
-}
+import type { UserActivity, RecentActivity, ActiveUsersStats } from "./ActivityServiceTypes";
 
 class ActivityService {
   private readonly path: string;
@@ -54,16 +28,25 @@ class ActivityService {
       // Filter for ACTIVE members only (these are the real "active users")
       const activeMembers = members.filter(member => member.memberStatus === MemberStatus.ACTIVE);
       
-      return activeMembers.slice(0, 4).map((member, index) => ({
-        id: member._id,
-        name: member.memberNick,
-        avatar: member.memberImage ? `${this.path}${member.memberImage}` : this.getRandomAvatar(),
-        status: 'online' as const,
-        lastActivity: this.getRandomTimeAgo(),
-        activity: this.getRandomActivity(),
-        location: this.getRandomLocation(),
-        memberId: member._id
-      }));
+      return activeMembers.slice(0, 4).map((member, index) => {
+        // Use deterministic values based on member ID to prevent random changes
+        const memberHash = member._id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const avatarIndex = memberHash % 5;
+        const timeIndex = (memberHash >> 2) % 5;
+        const activityIndex = (memberHash >> 4) % 5;
+        const locationIndex = (memberHash >> 6) % 5;
+        
+        return {
+          id: member._id,
+          name: member.memberNick,
+          avatar: member.memberImage ? `${this.path}${member.memberImage}` : this.getDeterministicAvatar(avatarIndex),
+          status: 'online' as const,
+          lastActivity: this.getDeterministicTimeAgo(timeIndex),
+          activity: this.getDeterministicActivity(activityIndex),
+          location: this.getDeterministicLocation(locationIndex),
+          memberId: member._id
+        };
+      });
     } catch (err: any) {
       // Don't log aborted requests as errors
       if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
@@ -90,17 +73,26 @@ class ActivityService {
       // Create realistic activities based on ACTIVE users only
       const activeMembers = members.filter(member => member.memberStatus === MemberStatus.ACTIVE);
       
+      // Use deterministic selection based on member ID to prevent random changes
       activeMembers.slice(0, 5).forEach((member, index) => {
         const activityTypes: Array<'order' | 'favorite' | 'view' | 'join'> = ['order', 'favorite', 'view', 'join'];
-        const randomType = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+        // Use member ID hash to deterministically select type (same member = same type)
+        const typeIndex = member._id.charCodeAt(0) % activityTypes.length;
+        const selectedType = activityTypes[typeIndex];
+        
+        // Use deterministic values based on member ID
+        const memberHash = member._id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const avatarIndex = memberHash % 5;
+        const timeIndex = (memberHash >> 2) % 5;
+        const messageIndex = (memberHash >> 4) % 3; // 3 messages per type
         
         activities.push({
           id: `activity_${member._id}_${index}`,
           name: member.memberNick,
-          avatar: member.memberImage ? `${this.path}${member.memberImage}` : this.getRandomAvatar(),
-          message: this.getActivityMessage(randomType),
-          type: randomType,
-          time: this.getRandomTimeAgo(),
+          avatar: member.memberImage ? `${this.path}${member.memberImage}` : this.getDeterministicAvatar(avatarIndex),
+          message: this.getDeterministicActivityMessage(selectedType, messageIndex),
+          type: selectedType,
+          time: this.getDeterministicTimeAgo(timeIndex),
           memberId: member._id
         });
       });
@@ -176,8 +168,8 @@ class ActivityService {
     }
   }
 
-  // Helper methods for generating realistic data
-  private getRandomAvatar(): string {
+  // Helper methods for generating realistic data - deterministic versions
+  private getDeterministicAvatar(index: number): string {
     const avatars = [
       'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face',
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face',
@@ -185,15 +177,15 @@ class ActivityService {
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=face'
     ];
-    return avatars[Math.floor(Math.random() * avatars.length)];
+    return avatars[index % avatars.length];
   }
 
-  private getRandomTimeAgo(): string {
+  private getDeterministicTimeAgo(index: number): string {
     const times = ['just now', '1 min ago', '2 min ago', '3 min ago', '5 min ago'];
-    return times[Math.floor(Math.random() * times.length)];
+    return times[index % times.length];
   }
 
-  private getRandomActivity(): string {
+  private getDeterministicActivity(index: number): string {
     const activities = [
       'Ordered Caramel Latte',
       'Browsing menu',
@@ -201,10 +193,10 @@ class ActivityService {
       'Joined community',
       'Exploring coffee beans'
     ];
-    return activities[Math.floor(Math.random() * activities.length)];
+    return activities[index % activities.length];
   }
 
-  private getRandomLocation(): string {
+  private getDeterministicLocation(index: number): string {
     const locations = [
       'New York, NY',
       'San Francisco, CA',
@@ -212,10 +204,10 @@ class ActivityService {
       'Chicago, IL',
       'Miami, FL'
     ];
-    return locations[Math.floor(Math.random() * locations.length)];
+    return locations[index % locations.length];
   }
 
-  private getActivityMessage(type: 'order' | 'favorite' | 'view' | 'join'): string {
+  private getDeterministicActivityMessage(type: 'order' | 'favorite' | 'view' | 'join', index: number): string {
     const messages = {
       order: [
         'just ordered a Caramel Macchiato',
@@ -240,7 +232,28 @@ class ActivityService {
     };
     
     const typeMessages = messages[type];
-    return typeMessages[Math.floor(Math.random() * typeMessages.length)];
+    return typeMessages[index % typeMessages.length];
+  }
+
+  // Keep old random methods for backward compatibility (not used anymore)
+  private getRandomAvatar(): string {
+    return this.getDeterministicAvatar(0);
+  }
+
+  private getRandomTimeAgo(): string {
+    return this.getDeterministicTimeAgo(0);
+  }
+
+  private getRandomActivity(): string {
+    return this.getDeterministicActivity(0);
+  }
+
+  private getRandomLocation(): string {
+    return this.getDeterministicLocation(0);
+  }
+
+  private getActivityMessage(type: 'order' | 'favorite' | 'view' | 'join'): string {
+    return this.getDeterministicActivityMessage(type, 0);
   }
 
   // Fallback data for active users

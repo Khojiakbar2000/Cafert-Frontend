@@ -58,6 +58,7 @@ import {
   FilterList as FilterListIcon
 } from '@mui/icons-material';
 import { useTheme as useCoffeeTheme } from '../../../mui-coffee/context/ThemeContext';
+import SEO from '../../../components/SEO';
 
 
 interface FAQItem {
@@ -351,7 +352,15 @@ export default function HelpPage() {
   };
 
   return (
-    <Box sx={{ 
+    <>
+      <SEO
+        title="Help Center - FAQ & Support"
+        description="Find answers to frequently asked questions about Cafert. Get help with orders, payments, account management, and more."
+        image="/img/misc/logo.webp"
+        url="/help"
+        keywords="help, support, FAQ, questions, customer service, coffee shop help"
+      />
+      <Box sx={{ 
       backgroundColor: isDarkMode ? colors.background : '#f8f9fa', 
       minHeight: '100vh',
       pt: 12, // Add more top padding to account for fixed navbar
@@ -539,17 +548,17 @@ export default function HelpPage() {
                       px: 3,
                       borderRadius: 2,
                       backgroundColor: selectedCategory === category.id ? colors.accent : 'transparent',
-                      color: selectedCategory === category.id ? '#ffffff' : colors.text,
+                      color: selectedCategory === category.id ? '#ffffff' : (isDarkMode ? '#ffffff' : colors.text),
                       '&:hover': {
                         backgroundColor: selectedCategory === category.id ? colors.accentDark : (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'),
                       }
                     }}
                   >
                     <Box sx={{ textAlign: 'left' }}>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'inherit' }}>
                         {category.name}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography variant="caption" sx={{ color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : colors.textSecondary }}>
                         {category.count} questions
                       </Typography>
                     </Box>
@@ -1009,5 +1018,6 @@ export default function HelpPage() {
         </Grid>
       </Container>
     </Box>
+    </>
   );
 } 

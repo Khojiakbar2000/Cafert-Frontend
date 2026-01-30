@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Box,
   Container,
@@ -13,8 +13,7 @@ import {
 import {
   Email as EmailIcon,
   CheckCircle as CheckCircleIcon,
-  Close as CloseIcon,
-  LocalCafe as CafeIcon
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,23 +30,77 @@ interface NewsletterSubscriptionProps {
   };
 }
 
-const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors }) => {
+// Default colors defined outside component to prevent recreation
+const DEFAULT_COLORS = {
+  primary: '#2C1810',
+  secondary: '#8B4513',
+  accent: '#D2691E',
+  background: '#FDF6F0',
+  text: '#2C1810',
+  textSecondary: '#6B4423',
+  border: '#E8D5C4',
+  surface: '#F8F4F0'
+};
+
+const NewsletterSubscriptionComponent: React.FC<NewsletterSubscriptionProps> = ({ colors }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Use ref to store previous color values and object reference
+  const prevColorValuesRef = useRef<string | null>(null);
+  const prevComponentColorsRef = useRef(DEFAULT_COLORS);
 
-  // Default colors if not provided
-  const defaultColors = {
-    primary: '#2C1810',
-    secondary: '#8B4513',
-    accent: '#D2691E',
-    background: '#FDF6F0',
-    text: '#2C1810',
-    textSecondary: '#6B4423',
-    border: '#E8D5C4',
-    surface: '#F8F4F0'
-  };
+  // Memoize componentColors with stable reference - only create new object if values actually changed
+  // Use a ref-based approach to avoid dependency on colors object reference
+  const componentColors = useMemo(() => {
+    if (!colors) {
+      if (prevColorValuesRef.current !== 'DEFAULT') {
+        prevComponentColorsRef.current = DEFAULT_COLORS;
+        prevColorValuesRef.current = 'DEFAULT';
+      }
+      return prevComponentColorsRef.current;
+    }
+    
+    // Create a string key from all color values to compare
+    const colorKey = `${colors.primary}|${colors.secondary}|${colors.accent}|${colors.background}|${colors.text}|${colors.textSecondary}|${colors.border}|${colors.surface}`;
+    
+    // If values haven't changed, return previous object reference
+    if (colorKey === prevColorValuesRef.current) {
+      return prevComponentColorsRef.current;
+    }
+    
+    // Values changed, create new object and store it
+    prevColorValuesRef.current = colorKey;
+    const newColors = {
+      primary: String(colors.primary || DEFAULT_COLORS.primary),
+      secondary: String(colors.secondary || DEFAULT_COLORS.secondary),
+      accent: String(colors.accent || DEFAULT_COLORS.accent),
+      background: String(colors.background || DEFAULT_COLORS.background),
+      text: String(colors.text || DEFAULT_COLORS.text),
+      textSecondary: String(colors.textSecondary || DEFAULT_COLORS.textSecondary),
+      border: String(colors.border || DEFAULT_COLORS.border),
+      surface: String(colors.surface || DEFAULT_COLORS.surface)
+    };
+    prevComponentColorsRef.current = newColors;
+    
+    return prevComponentColorsRef.current;
+  }, [
+    colors?.primary,
+    colors?.secondary,
+    colors?.accent,
+    colors?.background,
+    colors?.text,
+    colors?.textSecondary,
+    colors?.border,
+    colors?.surface
+  ]);
 
-  const componentColors = colors || defaultColors;
+  // Memoize benefits array to prevent recreation on every render
+  const benefits = useMemo(() => [
+    { text: 'Weekly Coffee Tips', emoji: '☕' },
+    { text: 'Exclusive Offers', emoji: '🎁' },
+    { text: 'Event Updates', emoji: '📅' }
+  ], []);
 
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -105,6 +158,11 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
     setError('');
   };
 
+  // Early return if componentColors is invalid to prevent crashes
+  if (!componentColors) {
+    return null;
+  }
+
   return (
     <Box
       sx={{
@@ -141,29 +199,30 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             {/* Icon */}
-            <motion.div
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  backgroundColor: componentColors.accent,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 3,
-                  boxShadow: `0 8px 32px rgba(210, 105, 30, 0.3)`
-                }}
-              >
-                <CafeIcon sx={{ color: 'white', fontSize: 36 }} />
-              </Box>
-            </motion.div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <Box
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      backgroundColor: componentColors.accent,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 3,
+                      boxShadow: `0 8px 32px rgba(210, 105, 30, 0.3)`,
+                      fontSize: '36px'
+                    }}
+                  >
+                    ☕
+                  </Box>
+                </motion.div>
 
             {/* Title */}
             <Typography
@@ -227,7 +286,11 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
                     }}
                   >
                     {isSubscribed 
-                      ? 'Thank you for subscribing! Welcome to our coffee community! ☕'
+                      ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          Thank you for subscribing! Welcome to our coffee community! ☕
+                        </Box>
+                      )
                       : error
                     }
                   </Alert>
@@ -345,11 +408,15 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
                   color: componentColors.textSecondary,
                   fontSize: { xs: '0.8rem', md: '0.9rem' },
                   maxWidth: '400px',
-                  mx: 'auto'
+                  mx: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5
                 }}
               >
-                We respect your privacy. Unsubscribe at any time. 
-                No spam, just coffee love! ☕
+                    We respect your privacy. Unsubscribe at any time. 
+                    No spam, just coffee love! ☕
               </Typography>
             </Box>
           </motion.div>
@@ -370,38 +437,34 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
                 flexWrap: 'wrap'
               }}
             >
-              {[
-                { text: 'Weekly Coffee Tips', icon: '☕' },
-                { text: 'Exclusive Offers', icon: '🎁' },
-                { text: 'Event Updates', icon: '📅' }
-              ].map((benefit, index) => (
-                <Box
-                  key={benefit.text}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    backgroundColor: `${componentColors.accent}08`,
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    border: `1px solid ${componentColors.accent}20`
-                  }}
-                >
-                  <Typography sx={{ fontSize: '1.2rem' }}>
-                    {benefit.icon}
-                  </Typography>
-                  <Typography
-                    variant="body2"
+              {benefits.map((benefit, index) => {
+                return (
+                  <Box
+                    key={benefit.text}
                     sx={{
-                      color: componentColors.text,
-                      fontWeight: 500,
-                      fontSize: { xs: '0.8rem', md: '0.9rem' }
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      backgroundColor: `${componentColors.accent}08`,
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: `1px solid ${componentColors.accent}20`
                     }}
                   >
-                    {benefit.text}
-                  </Typography>
-                </Box>
-              ))}
+                    <span style={{ fontSize: '1.2rem' }}>{benefit.emoji}</span>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: componentColors.text,
+                        fontWeight: 500,
+                        fontSize: { xs: '0.8rem', md: '0.9rem' }
+                      }}
+                    >
+                      {benefit.text}
+                    </Typography>
+                  </Box>
+                );
+              })}
             </Box>
           </motion.div>
         </motion.div>
@@ -410,4 +473,8 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({ colors 
   );
 };
 
-export default NewsletterSubscription; 
+NewsletterSubscriptionComponent.displayName = 'NewsletterSubscription';
+
+// Export without memo for now to avoid comparison issues
+// The componentColors useMemo should handle preventing unnecessary re-renders
+export default NewsletterSubscriptionComponent; 

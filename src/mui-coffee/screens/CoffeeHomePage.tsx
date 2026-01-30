@@ -51,13 +51,12 @@ import {
   TrendingUp as TrendingUpIcon,
   Logout as LogoutIcon
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTheme as useThemeContext } from '../context/ThemeContext';
 import { useGlobals } from '../../app/hooks/useGlobals';
-import ActivityService from '../../app/services/ActivityService';
 import ProductService from '../../app/services/ProductService';
 import MemberService from '../../app/services/MemberService';
 import ThemeToggle from '../components/ThemeToggle';
@@ -69,9 +68,12 @@ import StorytellingTimeline from '../components/StorytellingTimeline';
 import { coffeeShopTimelineData } from '../components/TimelineData';
 import Showcase from '../components/Showcase';
 import CollageHero from '../components/CollageHero';
+import HorizontalTestimonials from '../components/HorizontalTestimonials';
 import { Product } from '../../lib/types/product';
-import { UserActivity, RecentActivity, ActiveUsersStats } from '../../app/services/ActivityService';
+import type { UserActivity, RecentActivity, ActiveUsersStats } from '../../app/services/ActivityServiceTypes';
 import { serverApi } from '../../lib/config';
+import SEO from '../../components/SEO';
+import { useHistory } from 'react-router-dom';
 
 interface CoffeeHomePageProps {
   setSignupOpen?: (isOpen: boolean) => void;
@@ -86,6 +88,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
   const { t, i18n } = useTranslation();
   const { isDarkMode, toggleTheme, colors } = useThemeContext();
   const { authMember, setAuthMember } = useGlobals();
+  const history = useHistory();
   const [activeMenuTab, setActiveMenuTab] = useState('popular-coffees');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -503,6 +506,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
 
     const fetchActiveUsersData = async () => {
       try {
+        const ActivityServiceModule = await import('../../app/services/ActivityService');
+        const ActivityService = ActivityServiceModule.default;
         const activityService = new ActivityService();
         
         // Fetch active users
@@ -667,6 +672,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       const memberData = localStorage.getItem("memberData");
       if (memberData) {
         const member = JSON.parse(memberData);
+        const ActivityServiceModule = await import('../../app/services/ActivityService');
+        const ActivityService = ActivityServiceModule.default;
         const activityService = new ActivityService();
         await activityService.trackUserActivity({
           type,
@@ -680,9 +687,11 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     }
   };
 
-  // Track product view when user clicks on a product
+  // Track product view when user clicks on a product and navigate to detail page
   const handleProductClick = (productId: string) => {
     trackUserActivity('view', productId);
+    // Navigate to product detail page
+    history.push(`/products/${productId}`);
   };
 
   // Global styles for the page
@@ -959,7 +968,6 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             </Box>
             
             {/* Stats Button */}
-            {authMember && (
               <Typography
                 variant="body1"
                 onClick={() => window.location.href = '/stats'}
@@ -1000,7 +1008,6 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               >
                 {t('navigation.analytics')}
               </Typography>
-            )}
             
             {/* Right side controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1189,7 +1196,6 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               </ListItemIcon>
               <ListItemText primary={t('nav.menu')} />
             </ListItem>
-            {authMember && (
               <ListItem
                 onClick={() => {
                   window.location.href = '/stats';
@@ -1207,7 +1213,6 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                 </ListItemIcon>
                 <ListItemText primary={t('navigation.analytics')} />
               </ListItem>
-            )}
             <ListItem
               onClick={() => {
                 window.location.href = '/help';
@@ -1400,10 +1405,10 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         items={coffeeShopTimelineData}
       />
 
-
-
       {/* Happy Coffee Time Section */}
-      <Box sx={{
+      <Box 
+        className="happy-coffee-time-section"
+        sx={{
         padding: '6rem 0',
         backgroundImage: `url('/img/coffee/coffee-beans.jpg')`,
         backgroundSize: 'cover',
@@ -1411,6 +1416,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         backgroundAttachment: 'fixed',
         position: 'relative',
         overflow: 'hidden',
+          zIndex: 1,
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -1423,7 +1429,8 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             : 'rgba(255, 255, 255, 0.9)',
           zIndex: 1
         }
-      }}>
+        }}
+      >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
           <Grid container alignItems="center" spacing={6}>
             <Grid item xs={12} md={6}>
@@ -1565,7 +1572,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     <Box
                       component="img"
                       src="/img/coffee/coffee-beans.jpg"
-                      alt=""
+                      alt="Coffee beans decoration"
                       sx={{
                         width: 60,
                         height: 60,
@@ -1597,7 +1604,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     <Box
                       component="img"
                       src="/img/coffee/coffee-beans.jpg"
-                      alt=""
+                      alt="Coffee beans decoration"
                       sx={{
                         width: 40,
                         height: 40,
@@ -1616,37 +1623,59 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
       </Box>
 
       {/* Menu Section */}
-      <Box ref={menuRef} sx={{
+      <Box 
+        ref={menuRef}
+        sx={{
         padding: '6rem 0',
         backgroundColor: colors.background,
-        position: 'relative'
-      }}>
+          position: 'relative',
+          zIndex: 10,
+          willChange: 'transform'
+        }}
+      >
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography variant="overline" sx={{
-              color: colors.accent,
-              fontWeight: 600,
-              letterSpacing: 2,
-              mb: 2,
-              display: 'block'
-            }}>
-              our menu
-            </Typography>
             <Typography variant="h2" sx={{
               color: colors.text,
               fontSize: { xs: '2.5rem', md: '3.5rem' },
-              fontWeight: 700,
+              fontWeight: 600,
               mb: 2,
-              fontFamily: 'Playfair Display, serif'
+              fontFamily: '"Cinzel", serif',
+              letterSpacing: '0.02em',
             }}>
               {t('menu.title')}
             </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              gap: 2,
+              mb: 3,
+            }}>
+              <Box sx={{ 
+                width: '40px', 
+                height: '1px', 
+                backgroundColor: colors.border
+              }} />
+              <Box sx={{ 
+                fontSize: '1.5rem',
+                color: colors.textSecondary,
+                lineHeight: 1,
+              }}>❦</Box>
+              <Box sx={{ 
+                width: '40px', 
+                height: '1px', 
+                backgroundColor: colors.border
+              }} />
+            </Box>
             <Typography variant="h6" sx={{
               color: colors.textSecondary,
               fontSize: { xs: '1.1rem', md: '1.3rem' },
               maxWidth: '600px',
               mx: 'auto',
-              lineHeight: 1.6
+              lineHeight: 1.6,
+              fontFamily: '"EB Garamond", serif',
+              fontStyle: 'italic',
             }}>
               {t('menu.subtitle')}
             </Typography>
@@ -1656,40 +1685,49 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 8 }}>
             <Box sx={{
               display: 'flex',
-              backgroundColor: colors.surface,
-              borderRadius: '60px',
-              padding: '6px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-              border: `1px solid ${colors.border}`
+              backgroundColor: 'transparent',
+              borderRadius: '2px',
+              padding: 0,
+              boxShadow: 'none',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden',
             }}>
               {[
-                { key: 'popular-coffees', label: t('menu.popular'), icon: '🔥' },
-                { key: 'fresh-menu', label: t('menu.fresh'), icon: '✨' }
+                { key: 'popular-coffees', label: t('menu.popular') },
+                { key: 'fresh-menu', label: t('menu.fresh') }
               ].map((tab) => (
                 <Button
                   key={tab.key}
                   onClick={() => setActiveMenuTab(tab.key)}
                   sx={{
-                    borderRadius: '50px',
+                    borderRadius: 0,
                     px: 6,
                     py: 2,
                     textTransform: 'none',
-                    fontSize: { xs: '0.9rem', md: '1.1rem' },
-                    fontWeight: 600,
-                    backgroundColor: activeMenuTab === tab.key ? colors.accent : 'transparent',
-                    color: activeMenuTab === tab.key ? colors.background : colors.textSecondary,
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 400,
+                    fontFamily: '"EB Garamond", serif',
+                    backgroundColor: activeMenuTab === tab.key 
+                      ? colors.accent
+                      : 'transparent',
+                    color: activeMenuTab === tab.key 
+                      ? colors.background
+                      : colors.textSecondary,
+                    border: `1px solid ${colors.border}`,
+                    borderRight: tab.key === 'popular-coffees' ? 'none' : undefined,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1,
                     '&:hover': {
-                      backgroundColor: activeMenuTab === tab.key ? colors.accentDark : colors.surface,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                      backgroundColor: activeMenuTab === tab.key 
+                        ? colors.accentDark
+                        : colors.surface,
+                      transform: 'none',
+                      boxShadow: 'none'
                     },
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <span style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
                   {tab.label}
                 </Button>
               ))}
@@ -1712,16 +1750,18 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               >
                 <Card sx={{
                   height: '100%',
-                  borderRadius: '25px',
+                  borderRadius: '2px',
                   overflow: 'hidden',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
-                  transition: 'all 0.4s ease',
+                  boxShadow: 'none',
+                  border: `1px solid ${colors.border}`,
+                  transition: 'all 0.3s ease',
                   position: 'relative',
                   backgroundColor: colors.surface,
                   cursor: 'pointer',
                   '&:hover': {
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                    transform: 'translateY(-8px) scale(1.02)'
+                    boxShadow: 'none',
+                    border: `1px solid ${colors.accent}`,
+                    transform: 'translateY(-2px)'
                   }
                 }}
                 onClick={() => handleProductClick(item.id)}
@@ -1737,12 +1777,14 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       color: 'white',
                       px: 2,
                       py: 0.5,
-                      borderRadius: '20px',
+                      borderRadius: '2px',
                       fontSize: '0.75rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                      fontWeight: 500,
+                      fontFamily: '"EB Garamond", serif',
+                      textTransform: 'none',
+                      letterSpacing: '0.01em',
+                      border: `1px solid ${item.isPopular ? '#FF6B35' : '#4CAF50'}`,
+                      boxShadow: 'none'
                     }}>
                       {item.isPopular ? `🔥 ${t('common.popular')}` : `✨ ${t('common.new')}`}
                     </Box>
@@ -1784,19 +1826,19 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     {/* Header with Rating */}
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Typography variant="h6" sx={{ 
-                        fontWeight: 700, 
+                        fontWeight: 500, 
                         color: colors.text,
-                        fontFamily: 'Playfair Display, serif',
-                        fontSize: '1.1rem',
-                        lineHeight: 1.3
+                        fontFamily: '"EB Garamond", serif',
+                        fontSize: '1.125rem',
+                        lineHeight: 1.4
                       }}>
                         {item.name}
                       </Typography>
                       <Typography variant="h6" sx={{ 
-                        fontWeight: 700, 
+                        fontWeight: 500, 
                         color: colors.accent,
-                        fontFamily: 'Playfair Display, serif',
-                        fontSize: '1.2rem'
+                        fontFamily: '"EB Garamond", serif',
+                        fontSize: '1.125rem'
                       }}>
                         {item.price}
                       </Typography>
@@ -1808,8 +1850,9 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     <Typography variant="body2" sx={{ 
                       color: colors.textSecondary, 
                       mb: 3,
-                      lineHeight: 1.6,
-                      fontSize: '0.95rem'
+                      lineHeight: 1.7,
+                      fontSize: '0.95rem',
+                      fontFamily: '"EB Garamond", serif',
                     }}>
                       {item.description}
                     </Typography>
@@ -1817,16 +1860,18 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     {/* Ingredients */}
                     <Box sx={{
                       backgroundColor: colors.background,
-                      borderRadius: '12px',
+                      borderRadius: '2px',
                       p: 2,
-                      border: `1px solid ${colors.border}`
+                      border: `1px solid ${colors.border}`,
+                      boxShadow: 'none',
                     }}>
                       <Typography variant="caption" sx={{ 
                         color: colors.textSecondary,
                         fontStyle: 'italic',
                         fontSize: '0.85rem',
+                        fontFamily: '"EB Garamond", serif',
                         display: 'block',
-                        lineHeight: 1.4
+                        lineHeight: 1.6
                       }}>
                         <strong>Ingredients:</strong> {item.ingredients}
                       </Typography>
@@ -2168,7 +2213,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         PaperProps={{
           sx: {
             borderRadius: '20px',
-            backgroundColor: colors.surface,
+                  backgroundColor: colors.surface,
           }
         }}
       >
@@ -2184,18 +2229,18 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
               alignItems: 'center',
               gap: 2
             }}>
-              <Box sx={{
+                  <Box sx={{
                 width: 60,
                 height: 60,
-                borderRadius: '50%',
-                backgroundColor: colors.accent,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.background,
-              }}>
+                    borderRadius: '50%',
+                    backgroundColor: colors.accent,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: colors.background,
+                  }}>
                 {services[selectedEvent].icon}
-              </Box>
+                  </Box>
               {services[selectedEvent].title}
             </DialogTitle>
             <DialogContent>
@@ -2211,22 +2256,22 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     mb: 3
                   }}
                 />
-                <Typography variant="body1" sx={{
-                  color: colors.text,
-                  lineHeight: 1.8,
+                    <Typography variant="body1" sx={{
+                      color: colors.text,
+                      lineHeight: 1.8,
                   fontSize: '1.1rem',
                   mb: 3
                 }}>
                   {services[selectedEvent].fullDescription}
-                </Typography>
-                <Typography variant="h6" sx={{
+                    </Typography>
+                        <Typography variant="h6" sx={{
                   color: colors.text,
                   fontWeight: 600,
                   mb: 2,
                   fontSize: '1.2rem'
                 }}>
                   Features:
-                </Typography>
+                        </Typography>
                 <List>
                   {services[selectedEvent].features.map((feature, index) => (
                     <ListItem key={index} sx={{ px: 0 }}>
@@ -2237,7 +2282,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                         primary={feature}
                         primaryTypographyProps={{
                           sx: {
-                            color: colors.textSecondary,
+                          color: colors.textSecondary,
                             fontSize: '1rem'
                           }
                         }}
@@ -2245,7 +2290,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                     </ListItem>
                   ))}
                 </List>
-              </Box>
+          </Box>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 0 }}>
               <Button
@@ -2282,341 +2327,60 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         )}
       </Dialog>
 
-      {/* Testimonials Section */}
-      <Box ref={testimonialsRef} sx={{
-        padding: '6rem 0',
-        backgroundColor: colors.background,
-        position: 'relative'
-      }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography variant="overline" sx={{
-              color: colors.accent,
-              fontWeight: 600,
-              letterSpacing: 2,
-              mb: 2,
-              display: 'block'
-            }}>
-              testimonials
-            </Typography>
-            <Typography variant="h2" sx={{
-              color: colors.text,
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              fontWeight: 700,
-              mb: 2,
-              fontFamily: 'Playfair Display, serif'
-            }}>
-              What They Say About Us
-            </Typography>
-            <Typography variant="h6" sx={{
-              color: colors.textSecondary,
-              fontSize: { xs: '1.1rem', md: '1.3rem' },
-              maxWidth: '600px',
-              mx: 'auto',
-              lineHeight: 1.6
-            }}>
-              Real experiences from coffee lovers who visit our cafe
-            </Typography>
-          </Box>
-
-          {/* Enhanced Testimonials Grid */}
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-            gap: 4,
-            position: 'relative'
-          }}>
-            {/* Background Decorative Elements */}
-            <Box sx={{
-              position: 'absolute',
-              top: -50,
-              left: -50,
-              width: 100,
-              height: 100,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${colors.accent}20 0%, transparent 100%)`,
-              zIndex: 0
-            }} />
-            <Box sx={{
-              position: 'absolute',
-              bottom: -30,
-              right: -30,
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${colors.accent}15 0%, transparent 100%)`,
-              zIndex: 0
-            }} />
-
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.id}
-                initial={{ opacity: 0, y: 60, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ 
-                  duration: 0.8, 
-                  delay: index * 0.2,
-                  ease: "easeOut"
-                }}
-                viewport={{ once: true, margin: "-50px" }}
-                whileHover={{ y: -8, scale: 1.02 }}
-              >
-                <Card sx={{
-                  height: '100%',
-                  borderRadius: '30px',
-                  overflow: 'hidden',
-                  boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
-                  backgroundColor: colors.surface,
-                  transition: 'all 0.4s ease',
-                  position: 'relative',
-                  border: `1px solid ${colors.border}`,
-                  '&:hover': {
-                    boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
-                    transform: 'translateY(-8px) scale(1.02)'
-                  }
-                }}>
-                  {/* Quote Icon */}
-                  <Box sx={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    width: 50,
-                    height: 50,
-                    borderRadius: '50%',
-                    backgroundColor: colors.accent,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: colors.background,
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-                    zIndex: 2
-                  }}>
-                    "
-                  </Box>
-
-                  {/* Gradient Background */}
-                  <Box sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '120px',
-                    background: `linear-gradient(135deg, ${colors.accent}10 0%, ${colors.accent}05 100%)`,
-                    zIndex: 1
-                  }} />
-
-                  <CardContent sx={{ 
-                    p: 4, 
-                    position: 'relative',
-                    zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%'
-                  }}>
-                    {/* Rating Stars */}
-                    <Box sx={{ 
-                      display: 'flex', 
-                      mb: 3,
-                      justifyContent: 'center'
-                    }}>
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ 
-                            duration: 0.5, 
-                            delay: index * 0.2 + i * 0.1,
-                            type: "spring",
-                            stiffness: 200
-                          }}
-                        >
-                          <StarIcon sx={{ 
-                            color: '#FFD700', 
-                            fontSize: '1.4rem',
-                            filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3))'
-                          }} />
-                        </motion.div>
-                      ))}
-                    </Box>
-
-                    {/* Testimonial Text */}
-                    <Typography variant="body1" sx={{
-                      color: colors.text,
-                      mb: 4,
-                      fontStyle: 'italic',
-                      lineHeight: 1.8,
-                      fontSize: '1.05rem',
-                      textAlign: 'center',
-                      flexGrow: 1,
-                      position: 'relative',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: -10,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: 60,
-                        height: 2,
-                        backgroundColor: colors.accent,
-                        borderRadius: 1
-                      }
-                    }}>
-                      "{testimonial.text}"
-                    </Typography>
-
-                    {/* Author Section */}
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 2,
-                      mt: 'auto'
-                    }}>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ 
-                          duration: 0.5, 
-                          delay: index * 0.2 + 0.5,
-                          type: "spring",
-                          stiffness: 200
-                        }}
-                      >
-                        <Avatar
-                          src={testimonial.avatar}
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            border: `3px solid ${colors.accent}`,
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'scale(1.1) rotate(5deg)'
-                            }
-                          }}
-                        />
-                      </motion.div>
-                      <Box>
-                        <Typography variant="h6" sx={{
-                          color: colors.accent,
-                          fontWeight: 700,
-                          fontFamily: 'Playfair Display, serif',
-                          fontSize: '1.1rem',
-                          mb: 0.5
-                        }}>
-                          {testimonial.author}
-                        </Typography>
-                        <Typography variant="caption" sx={{
-                          color: colors.textSecondary,
-                          fontSize: '0.85rem',
-                          fontStyle: 'italic'
-                        }}>
-                          Verified Customer
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Decorative Bottom Element */}
-                    <Box sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '4px',
-                      background: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.accentLight} 50%, ${colors.accent} 100%)`,
-                      borderRadius: '0 0 30px 30px'
-                    }} />
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </Box>
-
-          {/* Testimonials Stats */}
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: { xs: 2, md: 6 },
-            mt: 6,
-            flexWrap: 'wrap'
-          }}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" sx={{
-                  color: colors.accent,
-                  fontWeight: 700,
-                  fontFamily: 'Playfair Display, serif',
-                  mb: 1
-                }}>
-                  4.9
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: colors.textSecondary,
-                  fontSize: '0.9rem'
-                }}>
-                  Average Rating
-                </Typography>
-              </Box>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
-              viewport={{ once: true }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" sx={{
-                  color: colors.accent,
-                  fontWeight: 700,
-                  fontFamily: 'Playfair Display, serif',
-                  mb: 1
-                }}>
-                  2,500+
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: colors.textSecondary,
-                  fontSize: '0.9rem'
-                }}>
-                  Happy Customers
-                </Typography>
-              </Box>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
-              viewport={{ once: true }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" sx={{
-                  color: colors.accent,
-                  fontWeight: 700,
-                  fontFamily: 'Playfair Display, serif',
-                  mb: 1
-                }}>
-                  98%
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: colors.textSecondary,
-                  fontSize: '0.9rem'
-                }}>
-                  Satisfaction Rate
-                </Typography>
-              </Box>
-            </motion.div>
-          </Box>
-        </Container>
-      </Box>
+      {/* Horizontal Scrolling Testimonials Section */}
+      <HorizontalTestimonials 
+        testimonials={[
+          {
+            id: '1',
+            quote: 'The best coffee experience I\'ve ever had. Every cup tells a story of quality and care.',
+            author: 'Sarah Johnson',
+            role: 'Coffee Enthusiast',
+            avatar: '/img/food/rose.webp',
+            rating: 5,
+          },
+          {
+            id: '2',
+            quote: 'Amazing atmosphere and even better coffee. This place has become my daily ritual.',
+            author: 'Michael Chen',
+            role: 'Regular Customer',
+            avatar: '/img/food/martin.webp',
+            rating: 5,
+          },
+          {
+            id: '3',
+            quote: 'The attention to detail in every brew is remarkable. Truly exceptional coffee.',
+            author: 'Emily Rodriguez',
+            role: 'Barista & Reviewer',
+            avatar: '/img/food/justin.webp',
+            rating: 5,
+          },
+          {
+            id: '4',
+            quote: 'I\'ve traveled the world for coffee, and this place ranks among the very best.',
+            author: 'David Thompson',
+            role: 'Coffee Blogger',
+            avatar: '/img/food/nusret.webp',
+            rating: 5,
+          },
+          {
+            id: '5',
+            quote: 'The perfect blend of tradition and innovation. A must-visit for any coffee lover.',
+            author: 'Lisa Anderson',
+            role: 'Food Critic',
+            avatar: '/img/food/rose.webp',
+            rating: 5,
+          },
+          {
+            id: '6',
+            quote: 'Outstanding quality and service. This is what coffee culture should be about.',
+            author: 'James Wilson',
+            role: 'Local Resident',
+            avatar: '/img/food/martin.webp',
+            rating: 5,
+          },
+        ]}
+        enableSnap={true}
+      />
 
       {/* Horizontal Scroll Gallery Section */}
       {/* Image Gallery Section */}
@@ -3410,11 +3174,36 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
         onClose={handleReservationClose}
         maxWidth="md"
         fullWidth
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.18)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+          }
+        }}
         PaperProps={{
           sx: {
-            borderRadius: '20px',
-            backgroundColor: colors.background,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            borderRadius: '18px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.10))',
+            backdropFilter: 'blur(18px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+            border: '1px solid rgba(255,255,255,0.38)',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.22)',
+            position: 'relative',
+            // Gradient overlay highlight using ::before
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 'inherit',
+              pointerEvents: 'none',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.03))',
+              mixBlendMode: 'overlay',
+            },
+            // Ensure text remains readable
+            '& *': {
+              color: colors.text,
+            }
           }
         }}
       >
@@ -3520,21 +3309,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3552,21 +3351,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3583,21 +3392,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3618,21 +3437,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3653,21 +3482,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3686,21 +3525,31 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         }
                       }}
                     />
@@ -3719,24 +3568,34 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
-                          '&:hover fieldset': {
-                            borderColor: colors.accent
+                          background: 'rgba(255, 255, 255, 0.16)',
+                          border: '1px solid rgba(255, 255, 255, 0.24)',
+                          '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.24)',
                           },
-                          '&.Mui-focused fieldset': {
-                            borderColor: colors.accent
+                          '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.32)'
+                          },
+                          '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            '& fieldset': {
+                              borderColor: 'rgba(180, 140, 90, 0.45)',
+                            },
+                            boxShadow: '0 0 0 4px rgba(180, 140, 90, 0.18)',
+                            outline: 'none',
                           }
                         },
                         '& .MuiInputLabel-root': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.7)',
                           '&.Mui-focused': {
-                            color: colors.accent
+                            color: colors.accent || 'rgba(43, 38, 32, 0.9)'
                           }
                         },
                         '& .MuiOutlinedInput-input': {
-                          color: colors.text
+                          color: colors.text || '#2b2620'
                         },
                         '& .MuiInputBase-input::placeholder': {
-                          color: colors.textSecondary,
+                          color: colors.textSecondary || 'rgba(43, 38, 32, 0.5)',
                           opacity: 0.7
                         }
                       }}

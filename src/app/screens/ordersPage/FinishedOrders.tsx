@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Box, Stack, Typography, Paper } from "@mui/material";
+import { Box, Stack, Typography, Paper, Button } from "@mui/material";
+import PaymentIcon from "@mui/icons-material/Payment";
+import { useGlobals } from "../../hooks/useGlobals";
+import { Messages } from "../../../lib/config";
+import { sweetErrorHandling } from "../../../lib/sweetAlert";
+import { T } from "../../../lib/types/common";
+import { OrderUpdateInput } from "../../../lib/types/order";
+import { OrderStatus } from "../../../lib/enums/order.enum";
+import OrderService from "../../services/OrderService";
 
 import { useSelector} from "react-redux";
 import {createSelector} from "reselect";
@@ -15,9 +23,56 @@ const finishedOrdersRetriever = createSelector(
   (finishedOrders)=> ({finishedOrders})
 ) 
 
-export default function FinishedOrders() {
+interface FinishedOrdersProps {
+  setValue?: (input: string) => void;
+}
+
+export default function FinishedOrders(props: FinishedOrdersProps = {}) {
+  const { setValue } = props;
   const {finishedOrders} = useSelector(finishedOrdersRetriever)
+  const {authMember, setOrderBuilder} = useGlobals();
   const [productCache, setProductCache] = useState<{[key: string]: Product}>({});
+
+  /** HANDLERS **/
+  const deleteOrderHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      const orderId = e.target.value;
+      const input: OrderUpdateInput = {
+        orderId: orderId,
+        orderStatus: OrderStatus.DELETE,
+      };
+
+      const confirmation = window.confirm("Do you want to delete the order?");
+      if (confirmation) {
+        const order = new OrderService();
+        await order.updateOrder(input);
+        if (setValue) setValue("1");
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
+
+  const paymentHandler = async (e: T) => {
+    try {
+      if (!authMember) throw new Error(Messages.error2);
+      
+      const orderId = e.target.value;
+      const confirmation = window.confirm("Do you want to proceed with payment?");
+      if (confirmation) {
+        // Here you would typically integrate with a payment gateway
+        // For now, we'll just show a success message
+        window.alert("Payment processed successfully!");
+        setOrderBuilder(new Date());
+      }
+    } catch (err) {
+      console.log(err);
+      sweetErrorHandling(err).then();
+    }
+  };
 
   // Function to fetch product data if not available
   const fetchProductData = async (productId: string): Promise<Product | null> => {
@@ -193,7 +248,7 @@ export default function FinishedOrders() {
                 })}
             </Box>
 
-            {/* Total */}
+            {/* Total and Actions */}
             <Box sx={{ 
               borderTop: '2px solid #f0f0f0',
               backgroundColor: '#fafafa',
@@ -202,19 +257,61 @@ export default function FinishedOrders() {
             }}>
               <Box sx={{ 
                 display: 'flex', 
-                alignItems: 'center', 
-                gap: 1, 
-                flexWrap: 'wrap'
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1.5
               }}>
-                <Typography variant="body2" sx={{ color: '#666' }}>Product price:</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>${(order.orderTotal - order.orderDelivery).toFixed(2)}</Typography>
-                <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>+</Typography>
-                <Typography variant="body2" sx={{ color: '#666' }}>Delivery:</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>${order.orderDelivery.toFixed(2)}</Typography>
-                <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>=</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-                  ${order.orderTotal.toFixed(2)}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography variant="body2" sx={{ color: '#666' }}>Product price:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>${(order.orderTotal - order.orderDelivery).toFixed(2)}</Typography>
+                  <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>+</Typography>
+                  <Typography variant="body2" sx={{ color: '#666' }}>Delivery:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>${order.orderDelivery.toFixed(2)}</Typography>
+                  <Typography variant="body2" sx={{ color: '#666', mx: 0.5 }}>=</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+                    ${order.orderTotal.toFixed(2)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                  <Button
+                    value={order._id}
+                    variant="outlined"
+                    onClick={deleteOrderHandler}
+                    sx={{ 
+                      minWidth: 100,
+                      height: 38,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderColor: '#d0d0d0',
+                      color: '#666',
+                      '&:hover': {
+                        borderColor: '#999',
+                        backgroundColor: 'rgba(0,0,0,0.04)'
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    value={order._id}
+                    variant="contained"
+                    onClick={paymentHandler}
+                    startIcon={<PaymentIcon />}
+                    sx={{ 
+                      minWidth: 120,
+                      height: 38,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      backgroundColor: '#8b4513',
+                      '&:hover': {
+                        backgroundColor: '#a0522d',
+                      }
+                    }}
+                  >
+                    Payment
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Paper>

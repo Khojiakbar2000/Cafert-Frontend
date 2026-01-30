@@ -567,9 +567,31 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       sx={{
         minHeight: '100vh',
         backgroundColor: componentColors.background,
-        pt: 12, // Add more top padding to account for fixed navbar
+        background: isDarkMode
+          ? `radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+             radial-gradient(circle at 80% 80%, rgba(179, 142, 106, 0.1) 0%, transparent 50%),
+             ${componentColors.background}`
+          : `radial-gradient(circle at 20% 50%, rgba(179, 142, 106, 0.08) 0%, transparent 50%),
+             radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
+             ${componentColors.background}`,
+        backgroundAttachment: 'fixed',
+        pt: 12,
         pb: 4,
-        px: isMobile ? 2 : 4
+        px: isMobile ? 2 : 4,
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: isDarkMode
+            ? 'radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 70%)'
+            : 'radial-gradient(circle at 50% 50%, rgba(179, 142, 106, 0.05) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        }
       }}
     >
       <motion.div
@@ -577,414 +599,599 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Hero Dashboard Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+        {/* Bento Grid Container */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: isMobile 
+              ? '1fr' 
+              : 'repeat(12, 1fr)',
+            gridAutoRows: 'minmax(200px, auto)',
+            gap: 3,
+            mb: 4
+          }}
         >
-          <Card
-            sx={{
-              backgroundColor: componentColors.surface,
-              borderRadius: '16px',
-              border: `1px solid ${componentColors.border}`,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              mb: 4
+          {/* Profile Header - Large Card (spans 2 columns on desktop) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              gridColumn: isMobile ? '1' : 'span 12',
+              gridRow: 'span 1'
             }}
           >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                {/* Left: Avatar + Name + Status */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
-                  sx={{
-                      width: 64,
-                      height: 64,
-                      border: `2px solid ${componentColors.accent}`
-                    }}
-                  />
-                  <Box>
-                  <Typography
-                      variant="h5"
-                    sx={{
-                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                      fontWeight: 700,
-                        mb: 0.5,
-                        fontSize: '1.5rem'
-                    }}
-                  >
-                    {authMember?.memberNick || 'Guest User'}
-                  </Typography>
-                  <Typography
-                      variant="body2"
-                    sx={{
-                      color: componentColors.textSecondary,
-                        fontSize: '0.9rem'
-                    }}
-                  >
-                      {authMember?.memberType || 'Regular customer'} • Last order {lastOrder ? `${Math.floor((Date.now() - new Date(lastOrder.createdAt).getTime()) / (1000 * 60 * 60))} hours ago` : 'never'}
-                  </Typography>
+            <Card
+              sx={{
+                backgroundColor: componentColors.surface,
+                borderRadius: '20px',
+                border: `1px solid ${componentColors.border}`,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                height: '100%',
+                background: isDarkMode 
+                  ? `linear-gradient(135deg, ${componentColors.surface} 0%, ${componentColors.surface}dd 100%)`
+                  : `linear-gradient(135deg, ${componentColors.surface} 0%, #ffffff 100%)`,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                  transform: 'translateY(-2px)'
+                }
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <Avatar
+                      src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        border: isDarkMode
+                          ? '3px solid rgba(255, 255, 255, 0.2)'
+                          : '3px solid rgba(255, 255, 255, 0.8)',
+                        boxShadow: isDarkMode
+                          ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02), 0 0 20px ${componentColors.accent}30`
+                          : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 20px ${componentColors.accent}20`
+                      }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                          fontWeight: 700,
+                          mb: 0.5,
+                          fontSize: isMobile ? '1.5rem' : '2rem'
+                        }}
+                      >
+                        {authMember?.memberNick || 'Guest User'}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: componentColors.textSecondary,
+                          fontSize: '1rem'
+                        }}
+                      >
+                        {authMember?.memberType || 'Regular customer'} • Last order {lastOrder ? `${Math.floor((Date.now() - new Date(lastOrder.createdAt).getTime()) / (1000 * 60 * 60))} hours ago` : 'never'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<EditIcon />}
+                      onClick={handleEditProfile}
+                      sx={{
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(42, 42, 42, 0.3)'
+                          : 'rgba(248, 249, 250, 0.5)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        borderColor: isDarkMode
+                          ? 'rgba(255, 255, 255, 0.15)'
+                          : 'rgba(255, 255, 255, 0.6)',
+                        color: componentColors.text,
+                        px: 2.5,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '0.9rem',
+                        boxShadow: isDarkMode
+                          ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
+                          : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
+                        '&:hover': {
+                          borderColor: componentColors.accent,
+                          backgroundColor: isDarkMode
+                            ? 'rgba(42, 42, 42, 0.5)'
+                            : 'rgba(248, 249, 250, 0.7)',
+                          boxShadow: isDarkMode
+                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03)'
+                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      Edit Profile
+                    </Button>
+                    {activeOrder ? (
+                      <Button
+                        variant="contained"
+                        startIcon={<TrackChangesIcon />}
+                        onClick={() => history.push('/orders')}
+                        sx={{
+                          backgroundColor: componentColors.accent,
+                          color: 'white',
+                          px: 3,
+                          py: 1.5,
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          fontSize: '1rem',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          boxShadow: isDarkMode
+                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
+                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
+                          '&:hover': {
+                            backgroundColor: componentColors.secondary,
+                            boxShadow: isDarkMode
+                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
+                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        Track Active Order
+                      </Button>
+                    ) : lastOrder ? (
+                      <Button
+                        variant="contained"
+                        startIcon={<ReplayIcon />}
+                        onClick={() => history.push('/orders')}
+                        sx={{
+                          backgroundColor: componentColors.accent,
+                          color: 'white',
+                          px: 3,
+                          py: 1.5,
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          fontSize: '1rem',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          boxShadow: isDarkMode
+                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
+                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
+                          '&:hover': {
+                            backgroundColor: componentColors.secondary,
+                            boxShadow: isDarkMode
+                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
+                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        Order Again
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => history.push('/coffees')}
+                        sx={{
+                          backgroundColor: componentColors.accent,
+                          color: 'white',
+                          px: 3,
+                          py: 1.5,
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          fontSize: '1rem',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                          boxShadow: isDarkMode
+                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
+                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
+                          '&:hover': {
+                            backgroundColor: componentColors.secondary,
+                            boxShadow: isDarkMode
+                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
+                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                      >
+                        Place First Order
+                      </Button>
+                    )}
                   </Box>
                 </Box>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                {/* Right: Action Buttons */}
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={handleEditProfile}
-                    sx={{
-                      borderColor: componentColors.border,
-                      color: componentColors.text,
-                      px: 2.5,
-                      py: 1.5,
-                      borderRadius: '12px',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      fontSize: '0.9rem',
-                      '&:hover': {
-                        borderColor: componentColors.accent,
-                        backgroundColor: `${componentColors.accent}08`,
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
-                  {activeOrder ? (
-                    <Button
-                      variant="contained"
-                      startIcon={<TrackChangesIcon />}
-                      onClick={() => history.push('/orders')}
-                      sx={{
-                        backgroundColor: componentColors.accent,
-                        color: 'white',
-                        px: 3,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        '&:hover': {
-                          backgroundColor: componentColors.secondary,
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      Track Active Order
-                    </Button>
-                  ) : lastOrder ? (
-                    <Button
-                      variant="contained"
-                      startIcon={<ReplayIcon />}
-                      onClick={() => history.push('/orders')}
-                      sx={{
-                        backgroundColor: componentColors.accent,
-                        color: 'white',
-                        px: 3,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        '&:hover': {
-                          backgroundColor: componentColors.secondary,
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      Order Again
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => history.push('/coffees')}
-                      sx={{
-                        backgroundColor: componentColors.accent,
-                        color: 'white',
-                        px: 3,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        '&:hover': {
-                          backgroundColor: componentColors.secondary,
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      Place First Order
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Enhanced Stats Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <Grid container spacing={2} sx={{ mb: 4 }}>
-            {stats.map((stat, index) => (
-              <Grid item xs={6} sm={3} key={index}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.2 }}
-                >
+          {/* Stats Cards - Bento Grid Layout */}
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 + index * 0.05 }}
+              style={{
+                gridColumn: isMobile 
+                  ? '1' 
+                  : index === 0 ? 'span 6' : index === 1 ? 'span 6' : index === 2 ? 'span 4' : 'span 4',
+                gridRow: 'span 1'
+              }}
+            >
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
                 <Card
                   sx={{
-                      backgroundColor: stat.highlighted 
-                        ? (isDarkMode ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)')
-                        : componentColors.surface,
-                      borderRadius: '12px',
-                    border: `1px solid ${componentColors.border}`,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    backgroundColor: stat.highlighted 
+                      ? (isDarkMode 
+                          ? 'rgba(33, 150, 243, 0.25)' 
+                          : 'rgba(33, 150, 243, 0.15)')
+                      : (isDarkMode 
+                          ? 'rgba(42, 42, 42, 0.4)' 
+                          : 'rgba(248, 249, 250, 0.6)'),
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    borderRadius: '24px',
+                    border: isDarkMode
+                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                      : '1px solid rgba(255, 255, 255, 0.5)',
+                    boxShadow: isDarkMode
+                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
+                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
                     textAlign: 'center',
-                      p: 2.5,
+                    p: 3,
+                    height: '100%',
                     cursor: 'pointer',
-                      transition: 'all 0.3s ease',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '1px',
+                      background: isDarkMode
+                        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+                        : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                      zIndex: 1
+                    },
                     '&:hover': {
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                        borderColor: stat.color,
-                      },
-                      '&:active': {
-                        transform: 'scale(0.98)',
-                      }
-                    }}
-                    onClick={() => history.push('/orders')}
+                      boxShadow: isDarkMode
+                        ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03), 0 0 20px ${stat.color}20`
+                        : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9), 0 0 20px ${stat.color}15`,
+                      borderColor: stat.color,
+                      transform: 'translateY(-4px) scale(1.02)',
+                      backgroundColor: stat.highlighted 
+                        ? (isDarkMode 
+                            ? 'rgba(33, 150, 243, 0.3)' 
+                            : 'rgba(33, 150, 243, 0.2)')
+                        : (isDarkMode 
+                            ? 'rgba(42, 42, 42, 0.5)' 
+                            : 'rgba(248, 249, 250, 0.7)')
+                    },
+                    '&:active': {
+                      transform: 'scale(0.98)',
+                      boxShadow: isDarkMode
+                        ? 'inset 2px 2px 4px rgba(0, 0, 0, 0.3), inset -2px -2px 4px rgba(255, 255, 255, 0.02)'
+                        : 'inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.8)'
+                    }
+                  }}
+                  onClick={() => history.push('/orders')}
                 >
                   <Box
                     sx={{
                       display: 'flex',
                       justifyContent: 'center',
-                        mb: 1.5
+                      mb: 2
                     }}
                   >
                     <Box
                       sx={{
-                        backgroundColor: `${stat.color}15`,
-                          borderRadius: '12px',
-                          p: 1.5,
+                        backgroundColor: `${stat.color}20`,
+                        borderRadius: '16px',
+                        p: 2,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        boxShadow: `0 4px 12px ${stat.color}20`
                       }}
                     >
-                        <Box sx={{ color: stat.color, fontSize: 20 }}>
+                      <Box sx={{ color: stat.color, fontSize: 28 }}>
                         {stat.icon}
                       </Box>
                     </Box>
                   </Box>
                   <Typography
-                    variant="h4"
+                    variant="h3"
                     sx={{
-                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
                       fontWeight: 700,
-                        mb: 0.5,
-                        fontSize: '1.75rem'
+                      mb: 0.5,
+                      fontSize: isMobile ? '1.75rem' : '2.25rem'
                     }}
                   >
                     {stat.value}
                   </Typography>
                   <Typography
-                    variant="body2"
+                    variant="body1"
                     sx={{
                       color: componentColors.textSecondary,
-                        fontWeight: 600,
-                        fontSize: '0.85rem',
-                        mb: 0.5
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      mb: 1
                     }}
                   >
                     {stat.label}
                   </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: componentColors.textSecondary,
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 0.5
-                      }}
-                    >
-                      <TrendingUpIcon sx={{ fontSize: 12 }} />
-                      {stat.trend}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: componentColors.textSecondary,
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    <TrendingUpIcon sx={{ fontSize: 14 }} />
+                    {stat.trend}
                   </Typography>
                 </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
+              </motion.div>
+            </motion.div>
+          ))}
 
-        <Grid container spacing={3}>
-          {/* Smart Actions Panel */}
+          {/* Quick Actions - Medium Card */}
           {smartActions.length > 0 && (
-            <Grid item xs={12} md={4}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              style={{
+                gridColumn: isMobile ? '1' : 'span 4',
+                gridRow: 'span 2'
+              }}
             >
               <Card
                 sx={{
-                  backgroundColor: componentColors.surface,
-                    borderRadius: '12px',
-                  border: `1px solid ${componentColors.border}`,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  height: '100%'
+                  backgroundColor: isDarkMode 
+                    ? 'rgba(42, 42, 42, 0.4)'
+                    : 'rgba(248, 249, 250, 0.6)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  borderRadius: '24px',
+                  border: isDarkMode
+                    ? '1px solid rgba(255, 255, 255, 0.1)'
+                    : '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: isDarkMode
+                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
+                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
+                  height: '100%',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '1px',
+                    background: isDarkMode
+                      ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+                      : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                    zIndex: 1
+                  },
+                  '&:hover': {
+                    boxShadow: isDarkMode
+                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 12px 12px 24px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.03)'
+                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 12px 12px 24px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    borderColor: isDarkMode
+                      ? 'rgba(255, 255, 255, 0.15)'
+                      : 'rgba(255, 255, 255, 0.7)'
+                  }
                 }}
               >
-                  <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: 3 }}>
                   <Typography
-                      variant="h6"
+                    variant="h6"
                     sx={{
-                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
                       fontWeight: 700,
-                        mb: 2.5,
-                        fontSize: '1.25rem'
+                      mb: 3,
+                      fontSize: '1.25rem'
                     }}
                   >
                     Quick Actions
                   </Typography>
-                    <Stack spacing={2}>
-                      {smartActions.map((action, index) => (
-                        <motion.div
+                  <Stack spacing={2}>
+                    {smartActions.map((action, index) => (
+                      <motion.div
                         key={index}
-                          whileHover={{ x: 4 }}
-                          transition={{ duration: 0.2 }}
+                        whileHover={{ x: 4 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Button
+                          fullWidth
+                          startIcon={action.icon}
+                          onClick={action.action}
+                          sx={{
+                            justifyContent: 'flex-start',
+                            textAlign: 'left',
+                            p: 2,
+                            borderRadius: '12px',
+                            backgroundColor: isDarkMode
+                              ? 'rgba(42, 42, 42, 0.3)'
+                              : 'rgba(248, 249, 250, 0.5)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            border: isDarkMode
+                              ? '1px solid rgba(255, 255, 255, 0.1)'
+                              : '1px solid rgba(255, 255, 255, 0.5)',
+                            color: componentColors.text,
+                            textTransform: 'none',
+                            boxShadow: isDarkMode
+                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
+                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
+                            '&:hover': {
+                              backgroundColor: isDarkMode
+                                ? 'rgba(42, 42, 42, 0.5)'
+                                : 'rgba(248, 249, 250, 0.7)',
+                              boxShadow: isDarkMode
+                                ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03), 0 0 15px ${action.color}20`
+                                : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 15px ${action.color}15`,
+                              transform: 'translateX(4px)',
+                              borderColor: action.color,
+                            },
+                            transition: 'all 0.3s ease',
+                          }}
                         >
-                          <Button
-                            fullWidth
-                            startIcon={action.icon}
-                        onClick={action.action}
-                        sx={{
-                              justifyContent: 'flex-start',
-                              textAlign: 'left',
-                              p: 2,
-                          borderRadius: '12px',
-                              backgroundColor: `${action.color}08`,
-                              color: componentColors.text,
-                              textTransform: 'none',
-                          '&:hover': {
-                              backgroundColor: `${action.color}15`,
-                                transform: 'translateX(4px)',
-                              },
-                              transition: 'all 0.3s ease',
-                            }}
-                          >
-                            <Box sx={{ flex: 1, textAlign: 'left' }}>
+                          <Box sx={{ flex: 1, textAlign: 'left' }}>
                             <Typography
-                                variant="body1"
+                              variant="body1"
                               sx={{
-                                  fontWeight: 600,
+                                fontWeight: 600,
                                 color: componentColors.text,
-                                  mb: 0.5
+                                mb: 0.5
                               }}
                             >
                               {action.title}
                             </Typography>
                             <Typography
-                                variant="caption"
+                              variant="caption"
                               sx={{
-                                  color: componentColors.textSecondary,
-                                  fontSize: '0.8rem',
-                                  display: 'block'
+                                color: componentColors.textSecondary,
+                                fontSize: '0.8rem',
+                                display: 'block'
                               }}
                             >
                               {action.description}
                             </Typography>
-                            </Box>
-                          </Button>
-                        </motion.div>
-                      ))}
-                    </Stack>
+                          </Box>
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </Stack>
                 </CardContent>
               </Card>
             </motion.div>
-          </Grid>
           )}
 
-          {/* Recent Orders Timeline */}
-          <Grid item xs={12} md={smartActions.length > 0 ? 8 : 12}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+          {/* Recent Orders - Large Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            style={{
+              gridColumn: isMobile ? '1' : smartActions.length > 0 ? 'span 8' : 'span 12',
+              gridRow: 'span 2'
+            }}
+          >
+            <Card
+              sx={{
+                backgroundColor: isDarkMode 
+                  ? 'rgba(42, 42, 42, 0.4)'
+                  : 'rgba(248, 249, 250, 0.6)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderRadius: '24px',
+                border: isDarkMode
+                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.5)',
+                boxShadow: isDarkMode
+                  ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
+                  : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
+                height: '100%',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.3s ease',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '1px',
+                  background: isDarkMode
+                    ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                  zIndex: 1
+                },
+                '&:hover': {
+                  boxShadow: isDarkMode
+                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 12px 12px 24px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.03)'
+                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 12px 12px 24px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.9)',
+                  transform: 'translateY(-4px)',
+                  borderColor: isDarkMode
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : 'rgba(255, 255, 255, 0.7)'
+                }
+              }}
             >
-              <Card
-                sx={{
-                  backgroundColor: componentColors.surface,
-                  borderRadius: '12px',
-                  border: `1px solid ${componentColors.border}`,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  height: '100%'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                        fontWeight: 700,
-                        fontSize: '1.25rem'
-                      }}
-                    >
-                      Recent Orders
-                    </Typography>
-                    <Button
-                      variant="text"
-                      onClick={() => history.push('/orders')}
-                      sx={{
-                        color: componentColors.accent,
-                        textTransform: 'none',
-                        fontSize: '0.9rem',
-                        '&:hover': {
-                          backgroundColor: `${componentColors.accent}08`
-                        }
-                      }}
-                    >
-                      View All
-                    </Button>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
+                      fontWeight: 700,
+                      fontSize: '1.25rem'
+                    }}
+                  >
+                    Recent Orders
+                  </Typography>
+                  <Button
+                    variant="text"
+                    onClick={() => history.push('/orders')}
+                    sx={{
+                      color: componentColors.accent,
+                      textTransform: 'none',
+                      fontSize: '0.9rem',
+                      '&:hover': {
+                        backgroundColor: `${componentColors.accent}08`
+                      }
+                    }}
+                  >
+                    View All
+                  </Button>
+                </Box>
+                {isLoadingOrders ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress sx={{ color: componentColors.accent }} />
                   </Box>
-                  {isLoadingOrders ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                      <CircularProgress sx={{ color: componentColors.accent }} />
-                    </Box>
-                  ) : recentOrders.length > 0 ? (
-                    <Box sx={{ position: 'relative' }}>
-                      {/* Timeline line */}
-                      <Box
-                          sx={{
-                          position: 'absolute',
-                          left: 20,
-                          top: 0,
-                          bottom: 0,
-                          width: 2,
-                          backgroundColor: componentColors.border,
-                        }}
-                      />
-                      <Stack spacing={2}>
-                        {recentOrders.slice(0, 5).map((order, index) => {
+                ) : recentOrders.length > 0 ? (
+                  <Box sx={{ position: 'relative' }}>
+                    {/* Timeline line */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        left: 20,
+                        top: 0,
+                        bottom: 0,
+                        width: 2,
+                        backgroundColor: componentColors.border,
+                      }}
+                    />
+                    <Stack spacing={2}>
+                      {recentOrders.slice(0, 5).map((order, index) => {
                           const statusColor = getStatusColor(order.orderStatus);
                           const getActionButton = () => {
                             switch (order.orderStatus) {
@@ -1000,13 +1207,21 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                     }}
                                     sx={{
                                       backgroundColor: statusColor,
+                                      backdropFilter: 'blur(10px)',
+                                      WebkitBackdropFilter: 'blur(10px)',
                                       textTransform: 'none',
                                       fontSize: '0.75rem',
                                       px: 1.5,
                                       py: 0.5,
-                            '&:hover': {
+                                      borderRadius: '8px',
+                                      boxShadow: isDarkMode
+                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 3px 3px 6px rgba(0, 0, 0, 0.3), -1px -1px 3px rgba(255, 255, 255, 0.1)'
+                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 3px 3px 6px rgba(0, 0, 0, 0.15), -1px -1px 3px rgba(255, 255, 255, 0.5)',
+                                      '&:hover': {
                                         backgroundColor: statusColor,
-                                        opacity: 0.9,
+                                        boxShadow: isDarkMode
+                                          ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 4px 4px 8px rgba(0, 0, 0, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.15)'
+                                          : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.6)',
                                         transform: 'scale(1.05)',
                                       },
                                       transition: 'all 0.2s ease',
@@ -1053,15 +1268,29 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                       history.push('/orders');
                                     }}
                                 sx={{
+                                      backgroundColor: isDarkMode
+                                        ? 'rgba(42, 42, 42, 0.3)'
+                                        : 'rgba(248, 249, 250, 0.5)',
+                                      backdropFilter: 'blur(10px)',
+                                      WebkitBackdropFilter: 'blur(10px)',
                                       borderColor: statusColor,
                                       color: statusColor,
                                       textTransform: 'none',
                                       fontSize: '0.75rem',
                                       px: 1.5,
                                       py: 0.5,
+                                      borderRadius: '8px',
+                                      boxShadow: isDarkMode
+                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 3px 3px 6px rgba(0, 0, 0, 0.2), -1px -1px 3px rgba(255, 255, 255, 0.02)'
+                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 3px 3px 6px rgba(0, 0, 0, 0.08), -1px -1px 3px rgba(255, 255, 255, 0.8)',
                                       '&:hover': {
                                         borderColor: statusColor,
-                                        backgroundColor: `${statusColor}08`,
+                                        backgroundColor: isDarkMode
+                                          ? 'rgba(42, 42, 42, 0.5)'
+                                          : 'rgba(248, 249, 250, 0.7)',
+                                        boxShadow: isDarkMode
+                                          ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 4px 4px 8px rgba(0, 0, 0, 0.3), -2px -2px 4px rgba(255, 255, 255, 0.03), 0 0 10px ${statusColor}20`
+                                          : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 4px 4px 8px rgba(0, 0, 0, 0.12), -2px -2px 4px rgba(255, 255, 255, 0.9), 0 0 10px ${statusColor}15`,
                                         transform: 'scale(1.05)',
                                       },
                                       transition: 'all 0.2s ease',
@@ -1093,7 +1322,16 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                   cursor: 'pointer',
                                   '&:hover': {
                                     '& .order-content': {
-                                      backgroundColor: `${componentColors.accent}05`,
+                                      backgroundColor: isDarkMode
+                                        ? 'rgba(42, 42, 42, 0.5)'
+                                        : 'rgba(248, 249, 250, 0.7)',
+                                      boxShadow: isDarkMode
+                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03)'
+                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9)',
+                                      borderColor: isDarkMode
+                                        ? 'rgba(255, 255, 255, 0.15)'
+                                        : 'rgba(255, 255, 255, 0.7)',
+                                      transform: 'translateX(4px)'
                                     }
                                   }
                                 }}
@@ -1120,10 +1358,33 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                   sx={{
                                     flex: 1,
                                     p: 2,
-                                    borderRadius: '12px',
-                                    border: `1px solid ${componentColors.border}`,
-                                    backgroundColor: componentColors.surface,
+                                    borderRadius: '16px',
+                                    backgroundColor: isDarkMode 
+                                      ? 'rgba(42, 42, 42, 0.3)'
+                                      : 'rgba(248, 249, 250, 0.5)',
+                                    backdropFilter: 'blur(10px)',
+                                    WebkitBackdropFilter: 'blur(10px)',
+                                    border: isDarkMode
+                                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                                      : '1px solid rgba(255, 255, 255, 0.5)',
+                                    boxShadow: isDarkMode
+                                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
+                                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
                                     transition: 'all 0.3s ease',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    '&::before': {
+                                      content: '""',
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      height: '1px',
+                                      background: isDarkMode
+                                        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+                                        : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                                      zIndex: 1
+                                    }
                                   }}
                                 >
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
@@ -1254,50 +1515,86 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       </Button>
                     </Box>
                   )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-        </Grid>
-
-        {/* Account Actions Card (Subtle) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-            <Card
-              sx={{
-                backgroundColor: componentColors.surface,
-                borderRadius: '12px',
-                border: `1px solid ${componentColors.border}`,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                p: 2,
-                maxWidth: 400
-              }}
-            >
-            <Button
-                variant="text"
-              startIcon={isLoading ? <CircularProgress size={16} /> : <LogoutIcon />}
-              onClick={handleLogout}
-              disabled={isLoading}
-                fullWidth
-              sx={{
-                  color: componentColors.textSecondary,
-                  textTransform: 'none',
-                '&:hover': {
-                    backgroundColor: 'rgba(244, 67, 54, 0.08)',
-                    color: '#f44336',
-                  },
-                  transition: 'all 0.3s ease',
-              }}
-            >
-              {isLoading ? 'Logging out...' : 'Logout'}
-            </Button>
+              </CardContent>
             </Card>
-          </Box>
-        </motion.div>
+          </motion.div>
+
+          {/* Account Actions - Small Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            style={{
+              gridColumn: isMobile ? '1' : 'span 12',
+              gridRow: 'span 1'
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Card
+                sx={{
+                  backgroundColor: isDarkMode 
+                    ? 'rgba(42, 42, 42, 0.4)'
+                    : 'rgba(248, 249, 250, 0.6)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  borderRadius: '24px',
+                  border: isDarkMode
+                    ? '1px solid rgba(255, 255, 255, 0.1)'
+                    : '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: isDarkMode
+                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
+                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
+                  p: 2,
+                  maxWidth: 400,
+                  width: '100%',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '1px',
+                    background: isDarkMode
+                      ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
+                      : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                    zIndex: 1
+                  },
+                  '&:hover': {
+                    boxShadow: isDarkMode
+                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03)'
+                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    borderColor: isDarkMode
+                      ? 'rgba(255, 255, 255, 0.15)'
+                      : 'rgba(255, 255, 255, 0.7)'
+                  }
+                }}
+              >
+                <Button
+                  variant="text"
+                  startIcon={isLoading ? <CircularProgress size={16} /> : <LogoutIcon />}
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  fullWidth
+                  sx={{
+                    color: componentColors.textSecondary,
+                    textTransform: 'none',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                      color: '#f44336',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {isLoading ? 'Logging out...' : 'Logout'}
+                </Button>
+              </Card>
+            </Box>
+          </motion.div>
+        </Box>
       </motion.div>
 
 

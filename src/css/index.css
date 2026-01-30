@@ -99,3 +99,74 @@ body {
   display: block;
   flex: 1 0 auto;
 }
+
+/* Coffee Scroll Canvas - Custom Scrollbar */
+.coffee-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Global scrollbar for coffee scroll page */
+body.coffee-scroll-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+body.coffee-scroll-page::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+body.coffee-scroll-page::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+body.coffee-scroll-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) #ffffff;
+}
+
+/* Coffee Scroll Canvas - Custom Dark Scrollbar */
+.coffee-scroll-container::-webkit-scrollbar,
+body.coffee-scroll-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-track,
+body.coffee-scroll-page::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-thumb,
+body.coffee-scroll-page::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.coffee-scroll-container::-webkit-scrollbar-thumb:hover,
+body.coffee-scroll-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) #050505;
+}

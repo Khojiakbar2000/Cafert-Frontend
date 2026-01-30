@@ -3,16 +3,21 @@ import {
   Box,
   IconButton,
   Tooltip,
-  Menu,
-  MenuItem,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   ListItemIcon,
   ListItemText,
-  Typography
+  Typography,
+  Switch,
+  Divider
 } from '@mui/material';
 import {
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
-  LocalCafe as CoffeeIcon
+  LocalCafe as CoffeeIcon,
+  Star as WeatherIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
@@ -28,6 +33,10 @@ const FloatingStyleSwitcher: React.FC = () => {
   const { isDarkMode, currentTheme, setTheme, colors } = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [coffeeWidgetEnabled, setCoffeeWidgetEnabled] = useState(() => {
+    const saved = localStorage.getItem('coffeeWidgetEnabled');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   const themeOptions: ThemeOption[] = [
     {
@@ -61,6 +70,18 @@ const FloatingStyleSwitcher: React.FC = () => {
   const handleThemeChange = (themeId: string) => {
     setTheme(themeId);
     handleClose();
+  };
+
+  const handleCoffeeWidgetToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
+    setCoffeeWidgetEnabled(newValue);
+    localStorage.setItem('coffeeWidgetEnabled', String(newValue));
+    // Also set visibility if enabling
+    if (newValue) {
+      localStorage.setItem('coffeeWidgetVisible', 'true');
+    }
+    // Dispatch custom event for same-tab updates
+    window.dispatchEvent(new Event('coffeeWidgetToggle'));
   };
 
   const getCurrentThemeIcon = () => {
@@ -162,83 +183,155 @@ const FloatingStyleSwitcher: React.FC = () => {
         </Box>
       </motion.div>
 
-      {/* Theme Selection Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        PaperProps={{
-          sx: {
+      {/* Theme Selection Accordion */}
+      {anchorEl && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '30px',
+            width: 280,
             backgroundColor: colors.surface,
             border: `1px solid ${colors.border}`,
             boxShadow: `0 8px 32px ${colors.shadow}`,
             borderRadius: '16px',
-            minWidth: 200,
-            mt: 1,
-          }
-        }}
-      >
-        <Box sx={{ p: 2, borderBottom: `1px solid ${colors.border}` }}>
-          <Typography
-            variant="subtitle2"
+            overflow: 'hidden',
+            zIndex: 999,
+          }}
+        >
+          <Accordion
+            defaultExpanded
             sx={{
-              color: colors.text,
-              fontWeight: 600,
-              textAlign: 'center'
-            }}
-          >
-            Choose Theme
-          </Typography>
-        </Box>
-        
-        {themeOptions.map((option) => (
-          <MenuItem
-            key={option.id}
-            onClick={() => handleThemeChange(option.id)}
-            sx={{
-              py: 1.5,
-              px: 2,
-              '&:hover': {
-                backgroundColor: `${colors.accent}10`,
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              '&:before': {
+                display: 'none',
               },
-              '&.Mui-selected': {
-                backgroundColor: `${colors.accent}20`,
-                '&:hover': {
-                  backgroundColor: `${colors.accent}30`,
-                },
+              '&.Mui-expanded': {
+                margin: 0,
               },
             }}
-            selected={option.id === currentTheme}
           >
-            <ListItemIcon
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: colors.text }} />}
               sx={{
-                color: colors.accent,
-                minWidth: 40,
+                px: 2,
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0',
+                  alignItems: 'center',
+                },
               }}
             >
-              {option.icon}
-            </ListItemIcon>
-            <ListItemText
-              primary={
+              <Typography
+                variant="body2"
+                sx={{
+                  color: colors.text,
+                  fontWeight: 600,
+                }}
+              >
+                Choose Theme
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0, pb: 1 }}>
+              {themeOptions.map((option) => (
+                <Box
+                  key={option.id}
+                  onClick={() => handleThemeChange(option.id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    py: 1.5,
+                    px: 2,
+                    cursor: 'pointer',
+                    backgroundColor: option.id === currentTheme ? `${colors.accent}20` : 'transparent',
+                    '&:hover': {
+                      backgroundColor: `${colors.accent}10`,
+                    },
+                    transition: 'background-color 0.2s ease',
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: colors.accent,
+                      minWidth: 40,
+                    }}
+                  >
+                    {option.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.text,
+                          fontWeight: option.id === currentTheme ? 600 : 500,
+                        }}
+                      >
+                        {option.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: colors.textSecondary,
+                          fontSize: '11px',
+                        }}
+                      >
+                        {option.description}
+                      </Typography>
+                    }
+                  />
+                </Box>
+              ))}
+            </AccordionDetails>
+          </Accordion>
+          
+          <Divider sx={{ borderColor: colors.border }} />
+          
+          {/* Coffee Mood Widget Toggle */}
+          <Accordion
+            sx={{
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              '&:before': {
+                display: 'none',
+              },
+              '&.Mui-expanded': {
+                margin: 0,
+              },
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: colors.text }} />}
+              sx={{
+                px: 2,
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0',
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WeatherIcon sx={{ color: colors.accent, fontSize: 20 }} />
                 <Typography
                   variant="body2"
                   sx={{
                     color: colors.text,
-                    fontWeight: 500,
+                    fontWeight: 600,
                   }}
                 >
-                  {option.name}
+                  Coffee Mood Widget
                 </Typography>
-              }
-              secondary={
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 2, pb: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <Typography
                   variant="caption"
                   sx={{
@@ -246,13 +339,41 @@ const FloatingStyleSwitcher: React.FC = () => {
                     fontSize: '11px',
                   }}
                 >
-                  {option.description}
+                  Weather-based coffee suggestions
                 </Typography>
-              }
-            />
-          </MenuItem>
-        ))}
-      </Menu>
+                <Switch
+                  checked={coffeeWidgetEnabled}
+                  onChange={handleCoffeeWidgetToggle}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: colors.accent,
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: colors.accent,
+                    },
+                  }}
+                />
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+      )}
+      
+      {/* Backdrop to close */}
+      {anchorEl && (
+        <Box
+          onClick={handleClose}
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 998,
+            backgroundColor: 'transparent',
+          }}
+        />
+      )}
     </>
   );
 };

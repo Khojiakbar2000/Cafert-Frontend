@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   Container,
@@ -10,9 +10,6 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   ListItemButton,
   Stack,
   useTheme,
@@ -33,6 +30,10 @@ import {
   Grid,
   Divider,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Collapse,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -62,6 +63,7 @@ import Basket from './Basket';
 import LanguageSwitcher from '../../../components/LanguageSwitcher';
 import { CartItem } from '../../../lib/types/search';
 import ProductService from '../../services/ProductService';
+import { useTheme as useCoffeeTheme } from '../../../mui-coffee/context/ThemeContext';
 
 interface OtherNavbarProps {
   cartItems: CartItem[];
@@ -98,6 +100,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
   const location = useLocation();
   const history = useHistory();
   const { t, i18n } = useTranslation();
+  const { isDarkMode } = useCoffeeTheme();
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -105,7 +108,8 @@ export default function OtherNavbar(props: OtherNavbarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [profileAccordionExpanded, setProfileAccordionExpanded] = useState(false);
+  const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
+  const productsDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -209,12 +213,46 @@ export default function OtherNavbar(props: OtherNavbarProps) {
 
   const navigationItems = useMemo(() => [
     { path: '/', label: t('navigation.home'), icon: <HomeIcon /> },
-    { path: '/products', label: t('navigation.products'), icon: <ProductsIcon /> },
+    { path: '/products', label: t('navigation.products'), icon: <ProductsIcon />, isProducts: true },
     ...(authMember ? [{ path: '/orders', label: t('navigation.orders'), icon: <OrdersIcon /> }] : []),
     ...(authMember ? [{ path: '/my-page', label: t('navigation.myPage'), icon: <AccountIcon /> }] : []),
-    ...(authMember ? [{ path: '/stats', label: t('navigation.analytics'), icon: <AnalyticsIcon /> }] : []),
+    { path: '/stats', label: t('navigation.analytics'), icon: <AnalyticsIcon /> },
     { path: '/help', label: t('navigation.about'), icon: <HelpIcon /> },
   ], [t, authMember]);
+
+  const handleProductsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (productsDropdownOpen) {
+      // Second click: navigate to products page
+      setProductsDropdownOpen(false);
+      history.push('/products');
+    } else {
+      // First click: open dropdown
+      setProductsDropdownOpen(true);
+    }
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setProductsDropdownOpen(false);
+    history.push(`/products?category=${category}`);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (productsDropdownRef.current && !productsDropdownRef.current.contains(event.target as Node)) {
+        setProductsDropdownOpen(false);
+      }
+    };
+
+    if (productsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [productsDropdownOpen]);
 
   const drawer = (
     <Box sx={{ 
@@ -243,43 +281,158 @@ export default function OtherNavbar(props: OtherNavbarProps) {
       </Box>
       
       <List>
-        {navigationItems.map((item) => (
-          <ListItem
-            key={`${item.path}-${i18n.language}`}
-            onClick={handleDrawerToggle}
-            sx={{
-              color: location.pathname === item.path ? '#8b4513' : '#5d4037',
-              backgroundColor: location.pathname === item.path ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
-              margin: '4px 12px',
-              borderRadius: '12px',
-              transition: 'all 0.3s ease',
-              minHeight: 56,
-              '&:hover': {
-                backgroundColor: 'rgba(139, 69, 19, 0.12)',
-                transform: 'translateX(8px)',
-              },
-            }}
-          >
-            <NavLink
-              to={item.path}
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%' }}
+        {navigationItems.map((item) => {
+          if ((item as any).isProducts) {
+            // Products item with accordion
+            return (
+              <Box key={`${item.path}-${i18n.language}`}>
+                <ListItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (productsDropdownOpen) {
+                      setProductsDropdownOpen(false);
+                      history.push('/products');
+                      handleDrawerToggle();
+                    } else {
+                      setProductsDropdownOpen(true);
+                    }
+                  }}
+                  sx={{
+                    color: location.pathname === item.path ? '#8b4513' : '#5d4037',
+                    backgroundColor: location.pathname === item.path ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
+                    margin: '4px 12px',
+                    borderRadius: '12px',
+                    transition: 'all 0.3s ease',
+                    minHeight: 56,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(139, 69, 19, 0.12)',
+                      transform: 'translateX(8px)',
+                    },
+                  }}
+                >
+                  <MuiListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+                    {item.icon}
+                  </MuiListItemIcon>
+                  <ListItemText 
+                    primary={item.label} 
+                    sx={{ 
+                      '& .MuiListItemText-primary': {
+                        fontWeight: location.pathname === item.path ? 600 : 500,
+                        fontSize: '1rem',
+                        fontFamily: 'Inter, sans-serif',
+                      }
+                    }}
+                  />
+                  <ExpandMoreIcon 
+                    sx={{ 
+                      transform: productsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.3s ease',
+                    }} 
+                  />
+                </ListItem>
+                <Collapse in={productsDropdownOpen}>
+                  <List component="div" disablePadding>
+                    {['all', 'drinks', 'desserts', 'salads'].map((category) => (
+                      <ListItem
+                        key={category}
+                        onClick={() => {
+                          handleCategoryClick(category);
+                          handleDrawerToggle();
+                        }}
+                        sx={{
+                          pl: 6,
+                          py: 1,
+                          color: '#5d4037',
+                          '&:hover': {
+                            backgroundColor: 'rgba(139, 69, 19, 0.08)',
+                          },
+                        }}
+                      >
+                        <ListItemText 
+                          primary={category === 'all' ? t('common.all') : t(`navigation.${category}`)}
+                          sx={{ 
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.9rem',
+                              fontFamily: 'Inter, sans-serif',
+                            }
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              </Box>
+            );
+          }
+          
+          // Regular navigation items
+          const isActive = item.path.includes('?') 
+            ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
+            : location.pathname === item.path;
+          
+          return (
+            <ListItem
+              key={`${item.path}-${i18n.language}`}
+              onClick={() => {
+                if (item.path.includes('?')) {
+                  (history as any).push(item.path);
+                }
+                handleDrawerToggle();
+              }}
+              sx={{
+                color: isActive ? '#8b4513' : '#5d4037',
+                backgroundColor: isActive ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
+                margin: '4px 12px',
+                borderRadius: '12px',
+                transition: 'all 0.3s ease',
+                minHeight: 56,
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(139, 69, 19, 0.12)',
+                  transform: 'translateX(8px)',
+                },
+              }}
             >
-              <MuiListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
-                {item.icon}
-              </MuiListItemIcon>
-              <ListItemText 
-                primary={item.label} 
-                sx={{ 
-                  '& .MuiListItemText-primary': {
-                    fontWeight: location.pathname === item.path ? 600 : 500,
-                    fontSize: '1rem',
-                    fontFamily: 'Inter, sans-serif',
-                  }
-                }}
-              />
-            </NavLink>
-          </ListItem>
-        ))}
+              {item.path.includes('?') ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                  <MuiListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+                    {item.icon}
+                  </MuiListItemIcon>
+                  <ListItemText 
+                    primary={item.label} 
+                    sx={{ 
+                      '& .MuiListItemText-primary': {
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: '1rem',
+                        fontFamily: 'Inter, sans-serif',
+                      }
+                    }}
+                  />
+                </Box>
+              ) : (
+                <NavLink
+                  to={item.path}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%' }}
+                >
+                  <MuiListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+                    {item.icon}
+                  </MuiListItemIcon>
+                  <ListItemText 
+                    primary={item.label} 
+                    sx={{ 
+                      '& .MuiListItemText-primary': {
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: '1rem',
+                        fontFamily: 'Inter, sans-serif',
+                      }
+                    }}
+                  />
+                </NavLink>
+              )}
+            </ListItem>
+          );
+        })}
       </List>
 
       <Box sx={{ p: 3, mt: 'auto', borderTop: '1px solid #e0e0e0' }}>
@@ -612,17 +765,32 @@ export default function OtherNavbar(props: OtherNavbarProps) {
         </Box>
       </Drawer>
 
-      <AppBar
-        position="fixed"
+      <Box
         sx={{
-          background: scrolled 
-            ? 'rgba(255, 255, 255, 0.95)'
-            : 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: scrolled ? '1px solid #e0e0e0' : 'none',
-          boxShadow: scrolled ? '0 2px 20px rgba(0, 0, 0, 0.1)' : 'none',
-          transition: 'all 0.3s ease',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
           zIndex: 1200,
+          background: scrolled 
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(50px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+          borderBottom: scrolled 
+            ? '2px solid rgba(255, 255, 255, 0.4)' 
+            : '2px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: scrolled 
+            ? '0 25px 70px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+            : '0 15px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+      <AppBar
+        position="static"
+        sx={{
+          background: 'transparent',
+          boxShadow: 'none',
         }}
         elevation={0}
       >
@@ -648,17 +816,166 @@ export default function OtherNavbar(props: OtherNavbarProps) {
             {/* Desktop Navigation */}
             {!isMobile && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'nowrap' }}>
-                {navigationItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    style={{ textDecoration: 'none' }}
-                  >
+                {navigationItems.map((item) => {
+                  if ((item as any).isProducts) {
+                    // Products button with dropdown
+                    return (
+                      <Box key={item.path} ref={productsDropdownRef} sx={{ position: 'relative' }}>
+                        <Button
+                          onClick={handleProductsClick}
+                          sx={{
+                            color: isDarkMode ? '#ffffff' : (location.pathname === item.path ? '#8b4513' : '#5d4037'),
+                            backgroundColor: location.pathname === item.path 
+                              ? (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(139, 69, 19, 0.08)')
+                              : 'transparent',
+                            borderRadius: '25px',
+                            px: 3,
+                            py: 2,
+                            minWidth: '120px',
+                            height: '48px',
+                            textTransform: 'none',
+                            fontWeight: location.pathname === item.path ? 600 : 500,
+                            fontSize: '1rem',
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            ...(isDarkMode && {
+                              textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                              boxShadow: location.pathname === item.path
+                                ? '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)'
+                                : 'none',
+                            }),
+                            '&:hover': {
+                              backgroundColor: isDarkMode 
+                                ? 'rgba(255, 255, 255, 0.15)'
+                                : 'rgba(139, 69, 19, 0.12)',
+                              color: isDarkMode ? '#ffffff' : '#8b4513',
+                              transform: 'translateY(-2px)',
+                              ...(isDarkMode && {
+                                textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                                boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
+                              }),
+                            },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'center' }}>
+                            {item.icon}
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                fontSize: '1rem', 
+                                fontWeight: 'inherit', 
+                                whiteSpace: 'nowrap',
+                                color: 'inherit',
+                                ...(isDarkMode && {
+                                  textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                                }),
+                              }}
+                            >
+                              {item.label}
+                            </Typography>
+                            <ExpandMoreIcon 
+                              sx={{ 
+                                transform: productsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.3s ease',
+                                fontSize: '20px',
+                              }} 
+                            />
+                          </Box>
+                        </Button>
+                        <Collapse in={productsDropdownOpen}>
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              mt: 1.5,
+                              minWidth: '280px',
+                              width: '280px',
+                              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+                              borderRadius: '20px',
+                              boxShadow: isDarkMode
+                                ? '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                                : '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)',
+                              border: isDarkMode 
+                                ? '1px solid rgba(255, 255, 255, 0.08)' 
+                                : '1px solid rgba(0, 0, 0, 0.05)',
+                              zIndex: 1300,
+                              overflow: 'hidden',
+                              py: 2,
+                            }}
+                          >
+                            {['all', 'drinks', 'desserts', 'salads'].map((category, index) => (
+                              <React.Fragment key={category}>
+                                <Button
+                                  onClick={() => handleCategoryClick(category)}
+                                  fullWidth
+                                  sx={{
+                                    justifyContent: 'flex-start',
+                                    px: 4,
+                                    py: 2.5,
+                                    textTransform: 'none',
+                                    color: isDarkMode ? '#ffffff' : '#3a3429',
+                                    borderRadius: 0,
+                                    transition: 'all 0.15s ease',
+                                    '&:hover': {
+                                      backgroundColor: isDarkMode 
+                                        ? 'rgba(255, 255, 255, 0.1)'
+                                        : 'rgba(139, 69, 19, 0.05)',
+                                      transform: 'translateX(2px)',
+                                    },
+                                  }}
+                                >
+                                  <Typography 
+                                    sx={{ 
+                                      fontSize: '1rem', 
+                                      fontWeight: 500,
+                                      lineHeight: 1.5,
+                                      fontFamily: '"EB Garamond", serif',
+                                    }}
+                                  >
+                                    {category === 'all' ? t('common.all') : t(`navigation.${category}`)}
+                                  </Typography>
+                                </Button>
+                                {index < 3 && (
+                                  <Box 
+                                    sx={{ 
+                                      height: '1px',
+                                      backgroundColor: isDarkMode 
+                                        ? 'rgba(255, 255, 255, 0.06)'
+                                        : 'rgba(0, 0, 0, 0.04)',
+                                      mx: 3,
+                                    }} 
+                                  />
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </Box>
+                        </Collapse>
+                      </Box>
+                    );
+                  }
+                  
+                  // Regular navigation items
+                  const isActive = item.path.includes('?') 
+                    ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
+                    : location.pathname === item.path;
+                  
+                  return (
                     <Button
+                      key={item.path}
+                      onClick={() => {
+                        if (item.path.includes('?')) {
+                          (history as any).push(item.path);
+                        } else {
+                          (history as any).push(item.path);
+                        }
+                      }}
                       sx={{
-                        color: location.pathname === item.path ? '#8b4513' : '#5d4037',
-                        backgroundColor: location.pathname === item.path 
-                          ? 'rgba(139, 69, 19, 0.08)'
+                        color: isDarkMode ? '#ffffff' : (isActive ? '#8b4513' : '#5d4037'),
+                        backgroundColor: isActive 
+                          ? (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(139, 69, 19, 0.08)')
                           : 'transparent',
                         borderRadius: '25px',
                         px: 3,
@@ -666,28 +983,51 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                         minWidth: '120px',
                         height: '48px',
                         textTransform: 'none',
-                        fontWeight: location.pathname === item.path ? 600 : 500,
+                        fontWeight: isActive ? 600 : 500,
                         fontSize: '1rem',
                         transition: 'all 0.3s ease',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        ...(isDarkMode && {
+                          textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                          boxShadow: isActive
+                            ? '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)'
+                            : 'none',
+                        }),
                         '&:hover': {
-                          backgroundColor: 'rgba(139, 69, 19, 0.12)',
-                          color: '#8b4513',
+                          backgroundColor: isDarkMode 
+                            ? 'rgba(255, 255, 255, 0.15)'
+                            : 'rgba(139, 69, 19, 0.12)',
+                          color: isDarkMode ? '#ffffff' : '#8b4513',
                           transform: 'translateY(-2px)',
+                          ...(isDarkMode && {
+                            textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                            boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
+                          }),
                         },
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'center' }}>
                         {item.icon}
-                        <Typography variant="body1" sx={{ fontSize: '1rem', fontWeight: 'inherit', whiteSpace: 'nowrap' }}>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            fontSize: '1rem', 
+                            fontWeight: 'inherit', 
+                            whiteSpace: 'nowrap',
+                            color: 'inherit',
+                            ...(isDarkMode && {
+                              textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                            }),
+                          }}
+                        >
                           {item.label}
                         </Typography>
                       </Box>
                     </Button>
-                  </NavLink>
-                ))}
+                  );
+                })}
               </Box>
             )}
 
@@ -709,15 +1049,21 @@ export default function OtherNavbar(props: OtherNavbarProps) {
               <IconButton
                 onClick={handleSearchToggle}
                 sx={{
-                  color: '#5d4037',
-                  backgroundColor: 'rgba(93, 64, 55, 0.08)',
+                  color: isDarkMode ? '#ffffff' : '#5d4037',
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(93, 64, 55, 0.08)',
                   borderRadius: '50%',
                   width: 56,
                   height: 56,
+                  ...(isDarkMode && {
+                    boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
+                  }),
                   '&:hover': { 
-                    color: '#8b4513',
-                    backgroundColor: 'rgba(139, 69, 19, 0.12)',
+                    color: isDarkMode ? '#ffffff' : '#8b4513',
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(139, 69, 19, 0.12)',
                     transform: 'scale(1.15)',
+                    ...(isDarkMode && {
+                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), 0 0 25px rgba(255, 255, 255, 0.3)',
+                    }),
                   }
                 }}
                 aria-label="search"
@@ -734,17 +1080,25 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                       size="medium"
                       onClick={() => setSignupOpen(true)}
                       sx={{
-                        borderColor: '#8b4513',
-                        color: '#8b4513',
+                        borderColor: isDarkMode ? '#ffffff' : '#8b4513',
+                        color: isDarkMode ? '#ffffff' : '#8b4513',
                         borderRadius: '25px',
                         fontWeight: 600,
                         px: 4,
                         py: 1.5,
                         fontSize: '1rem',
+                        ...(isDarkMode && {
+                          textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
+                          boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
+                        }),
                         '&:hover': {
-                          borderColor: '#a0522d',
-                          backgroundColor: 'rgba(139, 69, 19, 0.08)',
+                          borderColor: isDarkMode ? '#ffffff' : '#a0522d',
+                          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(139, 69, 19, 0.08)',
                           transform: 'translateY(-3px)',
+                          ...(isDarkMode && {
+                            textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 15px rgba(255, 255, 255, 0.5)',
+                            boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), 0 0 25px rgba(255, 255, 255, 0.3)',
+                          }),
                         }
                       }}
                     >
@@ -755,18 +1109,22 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                       size="medium"
                       onClick={() => setLoginOpen(true)}
                       sx={{
-                        backgroundColor: '#8b4513',
-                        color: '#ffffff',
+                        backgroundColor: isDarkMode ? '#ffffff' : '#8b4513',
+                        color: isDarkMode ? '#1a1a1a' : '#ffffff',
                         borderRadius: '25px',
                         fontWeight: 600,
                         px: 4,
                         py: 1.5,
                         fontSize: '1rem',
-                        boxShadow: '0 2px 8px rgba(139, 69, 19, 0.3)',
+                        boxShadow: isDarkMode 
+                          ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 25px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(255, 255, 255, 0.4)'
+                          : '0 2px 8px rgba(139, 69, 19, 0.3)',
                         '&:hover': {
-                          backgroundColor: '#a0522d',
+                          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : '#a0522d',
                           transform: 'translateY(-3px)',
-                          boxShadow: '0 4px 12px rgba(139, 69, 19, 0.4)',
+                          boxShadow: isDarkMode
+                            ? '0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), 0 4px 12px rgba(255, 255, 255, 0.5)'
+                            : '0 4px 12px rgba(139, 69, 19, 0.4)',
                         }
                       }}
                     >
@@ -788,132 +1146,6 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                         height: 40,
                       }}
                     />
-                    <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 50 }}>
-                      <Accordion 
-                        expanded={profileAccordionExpanded} 
-                        onChange={(e, isExpanded) => setProfileAccordionExpanded(isExpanded)}
-                        sx={{
-                          width: '100%',
-                          boxShadow: profileAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                          border: '1px solid #e0e0e0',
-                          borderRadius: '8px',
-                          position: 'relative',
-                          zIndex: profileAccordionExpanded ? 1000 : 1,
-                          backgroundColor: '#ffffff',
-                          '&:before': {
-                            display: 'none',
-                          },
-                          '&.Mui-expanded': {
-                            margin: 0,
-                            minHeight: '40px !important',
-                          },
-                        }}
-                      >
-                        <AccordionSummary sx={{ 
-                          minHeight: 40, 
-                          maxHeight: 40,
-                          '&.Mui-expanded': { 
-                            minHeight: 40,
-                            maxHeight: 40,
-                          } 
-                        }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                            <AccountIcon sx={{ fontSize: 24, color: '#2c3e50' }} />
-                          </Box>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ 
-                          p: 0,
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          width: '200px',
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e0e0e0',
-                          borderTop: 'none',
-                          borderRadius: '0 0 8px 8px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                          zIndex: 1001,
-                          mt: 0,
-                          display: profileAccordionExpanded ? 'block' : 'none',
-                        }}>
-                          <Box>
-                            <ListItemButton
-                              onClick={() => {
-                                window.location.href = '/my-page';
-                                setProfileAccordionExpanded(false);
-                              }}
-                              sx={{
-                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                                px: 2,
-                                py: 1.5,
-                              }}
-                            >
-                              <ListItemIcon>
-                                <AccountIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-                              </ListItemIcon>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {t('navigation.myPage')}
-                              </Typography>
-                            </ListItemButton>
-                            <ListItemButton
-                              onClick={() => {
-                                window.location.href = '/orders';
-                                setProfileAccordionExpanded(false);
-                              }}
-                              sx={{
-                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                                px: 2,
-                                py: 1.5,
-                              }}
-                            >
-                              <ListItemIcon>
-                                <OrdersIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-                              </ListItemIcon>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {t('navigation.myOrders')}
-                              </Typography>
-                            </ListItemButton>
-                            <ListItemButton
-                              onClick={() => {
-                                window.location.href = '/help';
-                                setProfileAccordionExpanded(false);
-                              }}
-                              sx={{
-                                '&:hover': { backgroundColor: 'rgba(139, 69, 19, 0.08)' },
-                                px: 2,
-                                py: 1.5,
-                              }}
-                            >
-                              <ListItemIcon>
-                                <HelpIcon sx={{ color: '#8b4513', fontSize: 20 }} />
-                              </ListItemIcon>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {t('navigation.helpSupport')}
-                              </Typography>
-                            </ListItemButton>
-                            <Divider />
-                            <ListItemButton
-                              onClick={() => {
-                                handleLogoutRequest();
-                                setProfileAccordionExpanded(false);
-                              }}
-                              sx={{
-                                '&:hover': { backgroundColor: 'rgba(231, 76, 60, 0.08)' },
-                                px: 2,
-                                py: 1.5,
-                              }}
-                            >
-                              <ListItemIcon>
-                                <LogoutIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
-                              </ListItemIcon>
-                              <Typography variant="body2" sx={{ fontWeight: 500, color: '#e74c3c' }}>
-                                {t('navigation.logout')}
-                              </Typography>
-                            </ListItemButton>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    </Box>
                   </Box>
                 );
               })()}
@@ -926,14 +1158,20 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                   edge="start"
                   onClick={handleDrawerToggle}
                   sx={{
-                    color: '#8b4513',
-                    backgroundColor: 'rgba(139, 69, 19, 0.08)',
+                    color: isDarkMode ? '#ffffff' : '#8b4513',
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(139, 69, 19, 0.08)',
                     ml: 2,
                     width: 56,
                     height: 56,
+                    ...(isDarkMode && {
+                      boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
+                    }),
                     '&:hover': { 
-                      backgroundColor: 'rgba(139, 69, 19, 0.12)',
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(139, 69, 19, 0.12)',
                       transform: 'scale(1.15)',
+                      ...(isDarkMode && {
+                        boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), 0 0 25px rgba(255, 255, 255, 0.3)',
+                      }),
                     }
                   }}
                 >
@@ -944,7 +1182,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
           </Toolbar>
         </Container>
       </AppBar>
-
+      </Box>
 
       {/* Toolbar Spacer */}
       <Box sx={{ height: 120 }} />

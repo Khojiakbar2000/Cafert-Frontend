@@ -474,3 +474,13 @@
     margin-top: 40px;
   }
   
+
+/* Products Page Wrapper - Optimized for Performance */
+.products-page-wrapper {
+  /* Static background - animations removed for performance */
+}
+
+/* Dark Mode Support for Products Page */
+.dark-mode .products-page-wrapper {
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+}

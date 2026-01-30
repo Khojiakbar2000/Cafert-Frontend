@@ -33,8 +33,9 @@ import {
   Restaurant as RestaurantIcon,
   Cake as CakeIcon,
   Language as LanguageIcon,
+  ShoppingCart as ShoppingCartIcon,
 } from '@mui/icons-material';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGlobals } from '../../hooks/useGlobals';
 import { serverApi } from '../../../lib/config';
@@ -130,33 +131,54 @@ export default function HomeNavbar(props: HomeNavbarProps) {
       </Box>
       
       <List>
-        {navigationItems.map((item) => (
-          <ListItem
-            key={item.path}
-            onClick={handleDrawerToggle}
-            sx={{
-              color: location.pathname === item.path ? '#8B4513' : '#666',
-              backgroundColor: location.pathname === item.path ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
-              margin: '2px 8px',
-              borderRadius: '6px',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(139, 69, 19, 0.05)',
-                transform: 'translateX(2px)',
-              },
-            }}
-          >
-            <NavLink
-              to={item.path}
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%' }}
+        {navigationItems.map((item) => {
+          const isActive = item.path.includes('?') 
+            ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
+            : location.pathname === item.path;
+          
+          return (
+            <ListItem
+              key={item.path}
+              onClick={() => {
+                if (item.path.includes('?')) {
+                  (history as any).push(item.path);
+                }
+                handleDrawerToggle();
+              }}
+              sx={{
+                color: isActive ? '#8B4513' : '#666',
+                backgroundColor: isActive ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
+                margin: '2px 8px',
+                borderRadius: '6px',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(139, 69, 19, 0.05)',
+                  transform: 'translateX(2px)',
+                },
+              }}
             >
-              <MuiListItemIcon sx={{ color: 'inherit' }}>
-                {item.icon}
-              </MuiListItemIcon>
-              <ListItemText primary={item.label} />
-            </NavLink>
-          </ListItem>
-        ))}
+              {item.path.includes('?') ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                  <MuiListItemIcon sx={{ color: 'inherit' }}>
+                    {item.icon}
+                  </MuiListItemIcon>
+                  <ListItemText primary={item.label} />
+                </Box>
+              ) : (
+                <NavLink
+                  to={item.path}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', width: '100%' }}
+                >
+                  <MuiListItemIcon sx={{ color: 'inherit' }}>
+                    {item.icon}
+                  </MuiListItemIcon>
+                  <ListItemText primary={item.label} />
+                </NavLink>
+              )}
+            </ListItem>
+          );
+        })}
       </List>
 
       {/* Language Switcher for Mobile */}
@@ -258,12 +280,40 @@ export default function HomeNavbar(props: HomeNavbarProps) {
           top: 0,
           left: 0,
           right: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : 'none',
-          boxShadow: scrolled ? '0 2px 20px rgba(0,0,0,0.08)' : 'none',
-          transition: 'all 0.3s ease',
+          background: scrolled 
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(50px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+          borderBottom: scrolled 
+            ? '2px solid rgba(255, 255, 255, 0.4)' 
+            : '2px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: scrolled 
+            ? '0 25px 70px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+            : '0 15px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 1200,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
+            pointerEvents: 'none',
+            boxShadow: '0 2px 10px rgba(255, 255, 255, 0.4)',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
+            pointerEvents: 'none',
+          },
         }}
       >
         <Container maxWidth="xl">
@@ -301,27 +351,30 @@ export default function HomeNavbar(props: HomeNavbarProps) {
             {/* Desktop Navigation */}
             {!isMobile && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {navigationItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    style={{ textDecoration: 'none' }}
-                  >
+                {navigationItems.map((item) => {
+                  const isActive = item.path.includes('?') 
+                    ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
+                    : location.pathname === item.path;
+                  
+                  return item.path.includes('?') ? (
                     <Box
+                      key={item.path}
+                      onClick={() => (history as any).push(item.path)}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
                         color: '#333',
-                        fontWeight: location.pathname === item.path ? 600 : 400,
+                        fontWeight: isActive ? 600 : 400,
                         position: 'relative',
                         px: 3,
                         py: 1.5,
                         borderRadius: '8px',
-                        backgroundColor: location.pathname === item.path 
+                        backgroundColor: isActive 
                           ? 'rgba(139, 69, 19, 0.08)'
                           : 'transparent',
                         transition: 'all 0.2s ease',
+                        cursor: 'pointer',
                         '&:hover': {
                           color: '#8B4513',
                           backgroundColor: 'rgba(139, 69, 19, 0.05)',
@@ -331,7 +384,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                           position: 'absolute',
                           bottom: -2,
                           left: '50%',
-                          width: location.pathname === item.path ? '60%' : '0%',
+                          width: isActive ? '60%' : '0%',
                           height: '2px',
                           backgroundColor: '#8B4513',
                           borderRadius: 1,
@@ -348,8 +401,56 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                         {item.label}
                       </Typography>
                     </Box>
-                  </NavLink>
-                ))}
+                  ) : (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          color: '#333',
+                          fontWeight: isActive ? 600 : 400,
+                          position: 'relative',
+                          px: 3,
+                          py: 1.5,
+                          borderRadius: '8px',
+                          backgroundColor: isActive 
+                            ? 'rgba(139, 69, 19, 0.08)'
+                            : 'transparent',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            color: '#8B4513',
+                            backgroundColor: 'rgba(139, 69, 19, 0.05)',
+                          },
+                          '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: -2,
+                            left: '50%',
+                            width: isActive ? '60%' : '0%',
+                            height: '2px',
+                            backgroundColor: '#8B4513',
+                            borderRadius: 1,
+                            transform: 'translateX(-50%)',
+                            transition: 'width 0.2s ease',
+                          },
+                          '&:hover::after': {
+                            width: '60%',
+                          },
+                        }}
+                      >
+                        {item.icon}
+                        <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    </NavLink>
+                  );
+                })}
               </Box>
             )}
 

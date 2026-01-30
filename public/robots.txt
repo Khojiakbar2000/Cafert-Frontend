@@ -1,3 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /orders
+Disallow: /user-profile
+Disallow: /my-page
+Disallow: /stats
+
+# Sitemap
+Sitemap: https://cafert.uz/sitemap.xml

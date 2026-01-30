@@ -9,7 +9,7 @@ import {
   useMediaQuery,
   Chip
 } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useTheme as useThemeContext } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -55,8 +55,8 @@ const StorytellingTimeline: React.FC<StorytellingTimelineProps> = ({
     }
   };
 
-  const itemVariants = {
-    hidden: { 
+  const itemVariants: Variants = {
+    hidden: {
       opacity: 0, 
       y: 50,
       scale: 0.95
@@ -67,31 +67,31 @@ const StorytellingTimeline: React.FC<StorytellingTimelineProps> = ({
       scale: 1,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
+        ease: [0.4, 0, 0.2, 1] as any // easeOut cubic-bezier
       }
     }
   };
 
-  const lineVariants = {
+  const lineVariants: Variants = {
     hidden: { scaleY: 0 },
     visible: {
       scaleY: 1,
       transition: {
         duration: 1.2,
-        ease: "easeInOut",
+        ease: [0.4, 0, 0.6, 1] as any, // easeInOut cubic-bezier
         delay: 0.5
       }
     }
   };
 
-  const dotVariants = {
+  const dotVariants: Variants = {
     hidden: { scale: 0, opacity: 0 },
     visible: {
       scale: 1,
       opacity: 1,
       transition: {
         duration: 0.5,
-        ease: "easeOut"
+        ease: [0.4, 0, 0.2, 1] as any // easeOut cubic-bezier
       }
     }
   };

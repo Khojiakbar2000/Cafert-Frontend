@@ -45,6 +45,24 @@ class OrderService {
      const member = JSON.parse(memberData);
      console.log("Member data:", member);
      
+     // Check cookies before request
+     console.log("=== COOKIE DEBUG ===");
+     console.log("All cookies:", document.cookie);
+     console.log("withCredentials:", true);
+     console.log("axios.defaults.withCredentials:", axios.defaults.withCredentials);
+     console.log("Request URL:", url);
+     console.log("Current origin:", window.location.origin);
+     
+     // In development, cookies might not be sent due to different ports
+     // The backend needs to set cookies with proper domain/path settings
+     if (process.env.NODE_ENV === 'development') {
+       console.log("⚠️ DEVELOPMENT MODE: Ensure backend sets cookies with:");
+       console.log("  - domain: 'localhost' (without port)");
+       console.log("  - sameSite: 'lax' or 'none'");
+       console.log("  - path: '/'");
+       console.log("  - CORS: Access-Control-Allow-Credentials: true");
+     }
+     
      // Send just the orderItems array as the backend expects input to be an array
      const payload = orderItems;
      
@@ -61,7 +79,12 @@ class OrderService {
        productIdLength: item.productId?.length
      })));
      
-     const result = await axios.post(url, payload, {withCredentials: true})
+     const result = await axios.post(url, payload, {
+       withCredentials: true,
+       headers: {
+         'Content-Type': 'application/json',
+       }
+     })
      console.log("createdOrder:", result)
      console.log("createdOrder data:", result.data)
      console.log("createdOrder status:", result.data?.orderStatus)

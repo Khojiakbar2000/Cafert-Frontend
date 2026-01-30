@@ -423,7 +423,7 @@ const AwardsStrip: React.FC = () => {
         <PlantIcon sx={{ fontSize: '1.5rem', color: colors.accent }} />
       </motion.div>
 
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+      <Container maxWidth={false} disableGutters sx={{ position: 'relative', zIndex: 2 }}>
         <motion.div
           initial="hidden"
           whileInView="visible"

@@ -45,7 +45,11 @@ import {
   Whatshot as WhatshotIcon,
   AttachMoney as AttachMoneyIcon,
   DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon
+  LightMode as LightModeIcon,
+  LocalCafe as LocalCafeIcon,
+  RestaurantMenu as RestaurantMenuIcon,
+  Cake as CakeIcon,
+  EmojiFoodBeverage as EmojiFoodBeverageIcon
 } from "@mui/icons-material";
 import { useHistory } from "react-router-dom";
 import { CartItem } from "../../../lib/types/search";
@@ -62,6 +66,8 @@ import { ProductCollection } from "../../../lib/enums/product.enum";
 
 // Lazy load the AwardsStrip component
 const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
+// Lazy load the ProductHeroSlider component
+const ProductHeroSlider = React.lazy(() => import('../../components/ProductHeroSlider'));
 
 // Loading skeleton for cards
 const CardSkeleton = () => (
@@ -121,7 +127,7 @@ export default function Products(props: ProductsProps) {
   const history = useHistory();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { colors } = useCoffeeTheme();
+  const { colors, isDarkMode } = useCoffeeTheme();
   const { t } = useTranslation();
   
   const dispatch = useDispatch();
@@ -299,63 +305,343 @@ export default function Products(props: ProductsProps) {
     { value: 'views', label: 'Views' }
   ];
 
+  // Calculate stats for hero section
+  const heroStats = useMemo(() => {
+    const totalProducts = productsList.length;
+    const totalCategories = new Set(productsList.map(p => p.category)).size;
+    const avgRating = productsList.length > 0
+      ? (productsList.reduce((sum, p) => sum + p.rating, 0) / productsList.length).toFixed(1)
+      : '4.5';
+    const inStockProducts = productsList.filter(p => p.inStock).length;
+    
+    return { totalProducts, totalCategories, avgRating, inStockProducts };
+  }, [productsList]);
+
+  // Prepare slides from products for hero slider (optional background)
+  const heroSlides = useMemo(() => {
+    if (productsList.length === 0) return undefined;
+    // Get top 6 products by views or rating
+    const topProducts = [...productsList]
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 6)
+      .map(product => ({
+        title: product.name,
+        description: product.description || `Discover our premium ${product.name.toLowerCase()}`,
+        media: product.image || '/icons/noimage-list.svg'
+      }));
+    return topProducts.length > 0 ? topProducts : undefined;
+  }, [productsList]);
+
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header Section */}
-      <Box sx={{ mb: 6, textAlign: 'center' }}>
-        <Typography 
-          variant="h2" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 700, 
-            color: colors.text,
-            mb: 2,
-            fontSize: { xs: '2rem', md: '3rem' }
+    <Container maxWidth="xl" sx={{ py: 0 }}>
+      {/* Hero Section */}
+      <Box
+        sx={{
+          position: 'relative',
+          minHeight: { xs: '500px', md: '600px' },
+          mb: 6,
+          borderRadius: { xs: 0, md: '24px' },
+          overflow: 'hidden',
+          background: isDarkMode
+            ? `linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.9) 100%),
+               radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+               radial-gradient(circle at 80% 70%, rgba(179, 142, 106, 0.15) 0%, transparent 50%)`
+            : `linear-gradient(135deg, rgba(248, 249, 250, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%),
+               radial-gradient(circle at 20% 30%, rgba(179, 142, 106, 0.1) 0%, transparent 50%),
+               radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.08) 0%, transparent 50%)`,
+          backgroundAttachment: 'fixed',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          px: { xs: 2, md: 6 },
+          py: { xs: 6, md: 8 },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkMode
+              ? 'radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 70%)'
+              : 'radial-gradient(circle at 50% 50%, rgba(179, 142, 106, 0.08) 0%, transparent 70%)',
+            pointerEvents: 'none',
+            zIndex: 0
+          }
+        }}
+      >
+        {/* Optional: Hero Slider as Background (uncomment to use) */}
+        {/* <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, opacity: 0.3 }}>
+          <Suspense fallback={null}>
+            <ProductHeroSlider slides={heroSlides} />
+          </Suspense>
+        </Box> */}
+
+        {/* Decorative Elements */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '10%',
+            left: '10%',
+            width: { xs: 100, md: 200 },
+            height: { xs: 100, md: 200 },
+            borderRadius: '50%',
+            background: isDarkMode
+              ? 'rgba(255, 215, 0, 0.1)'
+              : 'rgba(179, 142, 106, 0.15)',
+            filter: 'blur(60px)',
+            zIndex: 0,
+            opacity: 0.5
           }}
-        >
-          Our Menu
-        </Typography>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            color: colors.textSecondary,
-            maxWidth: 600,
-            mx: 'auto'
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: '10%',
+            right: '10%',
+            width: { xs: 120, md: 250 },
+            height: { xs: 120, md: 250 },
+            borderRadius: '50%',
+            background: isDarkMode
+              ? 'rgba(179, 142, 106, 0.1)'
+              : 'rgba(255, 215, 0, 0.1)',
+            filter: 'blur(60px)',
+            zIndex: 0,
+            opacity: 0.5
           }}
-        >
-          Discover our carefully curated selection of delicious products
-        </Typography>
+        />
+
+        {/* Hero Content */}
+        <Box sx={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 900 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Icon */}
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+              <Box
+                sx={{
+                  width: { xs: 80, md: 120 },
+                  height: { xs: 80, md: 120 },
+                  borderRadius: '50%',
+                  backgroundColor: isDarkMode
+                    ? 'rgba(255, 215, 0, 0.15)'
+                    : 'rgba(179, 142, 106, 0.15)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: isDarkMode
+                    ? '2px solid rgba(255, 255, 255, 0.1)'
+                    : '2px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: isDarkMode
+                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
+                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)'
+                }}
+              >
+                <RestaurantMenuIcon 
+                  sx={{ 
+                    fontSize: { xs: 40, md: 60 },
+                    color: colors.primary
+                  }} 
+                />
+              </Box>
+            </Box>
+
+            {/* Title */}
+            <Typography 
+              variant="h1" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 800, 
+                color: colors.text,
+                mb: 2,
+                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
+                lineHeight: 1.1,
+                background: isDarkMode
+                  ? 'linear-gradient(135deg, #ffffff 0%, #ffd700 100%)'
+                  : 'linear-gradient(135deg, #2c2c2c 0%, #b38e6a 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: isDarkMode
+                  ? '0 2px 20px rgba(255, 215, 0, 0.3)'
+                  : '0 2px 20px rgba(179, 142, 106, 0.2)'
+              }}
+            >
+              Our Premium Menu
+            </Typography>
+
+            {/* Subtitle */}
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                color: colors.textSecondary,
+                mb: 4,
+                fontSize: { xs: '1rem', md: '1.25rem' },
+                fontWeight: 400,
+                maxWidth: 700,
+                mx: 'auto',
+                lineHeight: 1.6
+              }}
+            >
+              Discover our carefully curated selection of artisanal coffee, 
+              handcrafted beverages, and delightful treats
+            </Typography>
+
+            {/* Stats Cards */}
+            <Box 
+              sx={{ 
+                display: 'grid',
+                gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                gap: 2,
+                mb: 4,
+                maxWidth: 800,
+                mx: 'auto'
+              }}
+            >
+              {[
+                { label: 'Products', value: heroStats.totalProducts, icon: <LocalCafeIcon /> },
+                { label: 'Categories', value: heroStats.totalCategories, icon: <RestaurantMenuIcon /> },
+                { label: 'Avg Rating', value: heroStats.avgRating, icon: <StarIcon /> },
+                { label: 'In Stock', value: heroStats.inStockProducts, icon: <EmojiFoodBeverageIcon /> }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: isDarkMode
+                        ? 'rgba(42, 42, 42, 0.4)'
+                        : 'rgba(248, 249, 250, 0.6)',
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      borderRadius: '16px',
+                      border: isDarkMode
+                        ? '1px solid rgba(255, 255, 255, 0.1)'
+                        : '1px solid rgba(255, 255, 255, 0.5)',
+                      boxShadow: isDarkMode
+                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
+                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
+                      p: 2,
+                      textAlign: 'center',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: isDarkMode
+                          ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03)'
+                          : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9)'
+                      }
+                    }}
+                  >
+                    <Box sx={{ color: colors.primary, mb: 1, display: 'flex', justifyContent: 'center' }}>
+                      {stat.icon}
+                    </Box>
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 700, 
+                        color: colors.text,
+                        mb: 0.5,
+                        fontSize: { xs: '1.5rem', md: '2rem' }
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: colors.textSecondary,
+                        fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: 1
+                      }}
+                    >
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                </motion.div>
+              ))}
+            </Box>
+
+            {/* Search Bar in Hero */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <TextField
+                placeholder="Search for your favorite coffee, drinks, desserts..."
+                value={searchTerm}
+                onChange={handleSearch}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: colors.primary }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ 
+                  maxWidth: 600,
+                  mx: 'auto',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '16px',
+                    backgroundColor: isDarkMode
+                      ? 'rgba(42, 42, 42, 0.4)'
+                      : 'rgba(248, 249, 250, 0.6)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: isDarkMode
+                      ? '1px solid rgba(255, 255, 255, 0.1)'
+                      : '1px solid rgba(255, 255, 255, 0.5)',
+                    boxShadow: isDarkMode
+                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
+                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
+                    fontSize: '1.1rem',
+                    py: 1.5,
+                    '&:hover': {
+                      borderColor: colors.primary,
+                    },
+                    '&.Mui-focused': {
+                      borderColor: colors.primary,
+                      boxShadow: isDarkMode
+                        ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03), 0 0 20px ${colors.primary}30`
+                        : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9), 0 0 20px ${colors.primary}20`
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: colors.text,
+                      '&::placeholder': {
+                        color: colors.textSecondary,
+                        opacity: 0.7
+                      }
+                    }
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    border: 'none'
+                  }
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        </Box>
       </Box>
 
-      {/* Search and Filter Section */}
+      {/* Filter Section */}
       <Box sx={{ mb: 4 }}>
         <Stack 
           direction={{ xs: 'column', md: 'row' }} 
           spacing={3} 
           alignItems="center"
-          justifyContent="space-between"
+          justifyContent="flex-end"
         >
-          {/* Search Bar */}
-          <TextField
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={handleSearch}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ 
-              minWidth: { xs: '100%', md: 300 },
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: colors.background
-              }
-            }}
-          />
-
           {/* Sort Controls - Accordions (Overlay) */}
           <Stack direction="row" spacing={2} sx={{ position: 'relative', zIndex: 10, alignItems: 'flex-start' }}>
             <Box sx={{ position: 'relative', height: 40, flexShrink: 0, width: 150 }}>

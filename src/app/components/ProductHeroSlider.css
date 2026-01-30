@@ -1,0 +1,206 @@
+.slider-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  margin: 0;
+  padding: 0;
+}
+
+.slider-wrapper.loaded {
+  opacity: 1;
+}
+
+.webgl-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.slide-number {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10;
+  color: white;
+  font-size: 1.5rem;
+  font-family: monospace;
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.slide-total {
+  position: absolute;
+  top: 2rem;
+  left: 5rem;
+  z-index: 10;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  font-family: monospace;
+  font-weight: 400;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.slide-content-wrapper {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+.slide-content,
+#slideContent {
+  position: relative !important;
+  z-index: 10 !important;
+  color: white !important;
+  max-width: 800px !important;
+  width: 90% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  pointer-events: auto !important;
+}
+
+.slide-title,
+#mainTitle {
+  font-size: 4rem !important;
+  font-weight: 700 !important;
+  margin: 0 auto 1rem auto !important;
+  padding: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  text-align: center !important;
+  font-family: 'Playfair Display', serif !important;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  line-height: 1.2 !important;
+}
+
+.slide-title span,
+#mainTitle span {
+  display: inline-block !important;
+  text-align: center !important;
+}
+
+.slide-description,
+#mainDesc {
+  font-size: 1.2rem !important;
+  opacity: 0.9 !important;
+  font-family: 'EB Garamond', serif !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  line-height: 1.6 !important;
+  text-align: center !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+.slides-navigation {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.slide-nav-item {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.slide-nav-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-5px);
+}
+
+.slide-nav-item.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.slide-progress-line {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.slide-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: white;
+  width: 0%;
+  transition: width 0.1s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.slide-nav-title {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'EB Garamond', serif;
+}
+
+@media (max-width: 768px) {
+  .slide-title,
+  #mainTitle {
+    font-size: 2.5rem !important;
+  }
+  
+  .slide-description,
+  #mainDesc {
+    font-size: 1rem !important;
+  }
+  
+  .slide-content,
+  #slideContent {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    -webkit-transform: translate(-50%, -50%) !important;
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+  
+  .slides-navigation {
+    right: 1rem;
+    min-width: 150px;
+  }
+  
+  .slide-number,
+  .slide-total {
+    font-size: 1.2rem;
+  }
+}

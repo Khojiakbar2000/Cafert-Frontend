@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 
 interface ThemeColors {
   // Background colors
@@ -179,7 +179,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   const isDarkMode = currentTheme === 'dark';
   
-  const getColors = () => {
+  const colors = useMemo(() => {
     switch (currentTheme) {
       case 'dark':
         return darkTheme;
@@ -188,17 +188,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       default:
         return lightTheme;
     }
-  };
+  }, [currentTheme]);
 
-  const colors = getColors();
-
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setCurrentTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  }, []);
 
-  const setTheme = (theme: string) => {
+  const setTheme = useCallback((theme: string) => {
     setCurrentTheme(theme);
-  };
+  }, []);
 
   useEffect(() => {
     // Save preference to localStorage
@@ -220,15 +218,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     } else {
       document.documentElement.classList.remove('dark-mode');
     }
-  }, [currentTheme, colors, isDarkMode]);
+  }, [currentTheme, isDarkMode, colors.background, colors.text]);
 
-  const value: ThemeContextType = {
+  const value: ThemeContextType = useMemo(() => ({
     isDarkMode,
     currentTheme,
     toggleTheme,
     setTheme,
     colors,
-  };
+  }), [isDarkMode, currentTheme, toggleTheme, setTheme, colors]);
 
   return (
     <ThemeContext.Provider value={value}>

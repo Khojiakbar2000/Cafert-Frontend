@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   Card,
@@ -166,7 +166,11 @@ const StatsPage: React.FC = () => {
     avgOrderValue: 0
   });
 
-  // Calculate totals
+  // Guard to prevent animation loop
+  const animationInitializedRef = useRef(false);
+  const ANIMATION_GUARD_KEY = '__STATS_PAGE_ANIMATION_INITIALIZED__';
+
+  // Calculate totals - memoized with stable reference
   const totals = useMemo(() => {
     const data = mockData.salesData;
     return {
@@ -177,8 +181,16 @@ const StatsPage: React.FC = () => {
     };
   }, []);
 
-  // Animate counters
+  // Animate counters - only run once
   useEffect(() => {
+    // Guard against remounts and double-invocation
+    if (animationInitializedRef.current || (window as any)[ANIMATION_GUARD_KEY]) {
+      return;
+    }
+    
+    animationInitializedRef.current = true;
+    (window as any)[ANIMATION_GUARD_KEY] = true;
+
     const duration = 2000;
     const steps = 60;
     const stepDuration = duration / steps;
@@ -188,11 +200,23 @@ const StatsPage: React.FC = () => {
       currentStep++;
       const progress = currentStep / steps;
       
-      setAnimatedValues({
-        totalSales: Math.floor(totals.totalSales * progress),
-        totalOrders: Math.floor(totals.totalOrders * progress),
-        totalCustomers: Math.floor(totals.totalCustomers * progress),
-        avgOrderValue: parseFloat((totals.avgOrderValue * progress).toFixed(1))
+      setAnimatedValues(prev => {
+        // Only update if values actually changed to prevent unnecessary re-renders
+        const newValues = {
+          totalSales: Math.floor(totals.totalSales * progress),
+          totalOrders: Math.floor(totals.totalOrders * progress),
+          totalCustomers: Math.floor(totals.totalCustomers * progress),
+          avgOrderValue: parseFloat((totals.avgOrderValue * progress).toFixed(1))
+        };
+        
+        // Only return new object if values changed
+        if (prev.totalSales !== newValues.totalSales ||
+            prev.totalOrders !== newValues.totalOrders ||
+            prev.totalCustomers !== newValues.totalCustomers ||
+            prev.avgOrderValue !== newValues.avgOrderValue) {
+          return newValues;
+        }
+        return prev; // Keep previous reference if values are the same
       });
       
       if (currentStep >= steps) {
@@ -200,8 +224,11 @@ const StatsPage: React.FC = () => {
       }
     }, stepDuration);
     
-    return () => clearInterval(interval);
-  }, [totals]);
+    return () => {
+      clearInterval(interval);
+      // Don't reset guard on cleanup to prevent remount loops
+    };
+  }, []); // Empty dependency array - totals values are stable
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -211,148 +238,158 @@ const StatsPage: React.FC = () => {
     // Refresh functionality
   };
 
-  // Chart configurations
-  const lineChartData = {
-    labels: mockData.salesData.map(item => item.month),
-    datasets: [
-      {
-        label: 'Sales ($)',
-        data: mockData.salesData.map(item => item.sales),
-        borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-        backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.1)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-        pointBorderColor: isDarkMode ? '#000' : '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8
-      },
-      {
-        label: 'Orders',
-        data: mockData.salesData.map(item => item.orders),
-        borderColor: isDarkMode ? '#00CED1' : '#4682B4',
-        backgroundColor: isDarkMode ? 'rgba(0, 206, 209, 0.1)' : 'rgba(70, 130, 180, 0.1)',
-        borderWidth: 3,
-        fill: false,
-        tension: 0.4,
-        pointBackgroundColor: isDarkMode ? '#00CED1' : '#4682B4',
-        pointBorderColor: isDarkMode ? '#000' : '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8
-      }
-    ]
-  };
+  // Chart configurations - memoized to prevent re-renders and loops
+  const lineChartData = useMemo(() => {
+    return {
+      labels: mockData.salesData.map(item => item.month),
+      datasets: [
+        {
+          label: 'Sales ($)',
+          data: mockData.salesData.map(item => item.sales),
+          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
+          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
+          pointBorderColor: isDarkMode ? '#000' : '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        },
+        {
+          label: 'Orders',
+          data: mockData.salesData.map(item => item.orders),
+          borderColor: isDarkMode ? '#00CED1' : '#4682B4',
+          backgroundColor: isDarkMode ? 'rgba(0, 206, 209, 0.1)' : 'rgba(70, 130, 180, 0.1)',
+          borderWidth: 3,
+          fill: false,
+          tension: 0.4,
+          pointBackgroundColor: isDarkMode ? '#00CED1' : '#4682B4',
+          pointBorderColor: isDarkMode ? '#000' : '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }
+      ]
+    };
+  }, [isDarkMode]);
 
-  const barChartData = {
-    labels: mockData.hourlyData.map(item => item.hour),
-    datasets: [
-      {
-        label: 'Orders',
-        data: mockData.hourlyData.map(item => item.orders),
-        backgroundColor: isDarkMode 
-          ? 'rgba(255, 215, 0, 0.8)' 
-          : 'rgba(139, 69, 19, 0.8)',
-        borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-        borderWidth: 2,
-        borderRadius: 8,
-        borderSkipped: false,
-      }
-    ]
-  };
+  const barChartData = useMemo(() => {
+    return {
+      labels: mockData.hourlyData.map(item => item.hour),
+      datasets: [
+        {
+          label: 'Orders',
+          data: mockData.hourlyData.map(item => item.orders),
+          backgroundColor: isDarkMode 
+            ? 'rgba(255, 215, 0, 0.8)' 
+            : 'rgba(139, 69, 19, 0.8)',
+          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false,
+        }
+      ]
+    };
+  }, [isDarkMode]);
 
-  const doughnutData = {
-    labels: mockData.categoryData.map(item => item.name),
-    datasets: [
-      {
-        data: mockData.categoryData.map(item => item.sales),
-        backgroundColor: mockData.categoryData.map(item => item.color),
-        borderColor: isDarkMode ? '#333' : '#fff',
-        borderWidth: 3,
-        hoverBorderWidth: 5,
-        hoverBorderColor: isDarkMode ? '#FFD700' : '#8B4513'
-      }
-    ]
-  };
+  const doughnutData = useMemo(() => {
+    return {
+      labels: mockData.categoryData.map(item => item.name),
+      datasets: [
+        {
+          data: mockData.categoryData.map(item => item.sales),
+          backgroundColor: mockData.categoryData.map(item => item.color),
+          borderColor: isDarkMode ? '#333' : '#fff',
+          borderWidth: 3,
+          hoverBorderWidth: 5,
+          hoverBorderColor: isDarkMode ? '#FFD700' : '#8B4513'
+        }
+      ]
+    };
+  }, [isDarkMode]);
 
-  const radarData = {
-    labels: ['Sales Growth', 'Customer Satisfaction', 'Order Efficiency', 'Product Quality', 'Service Speed', 'Cost Management'],
-    datasets: [
-      {
-        label: 'Performance Metrics',
-        data: [85, 92, 78, 95, 88, 82],
-        backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.2)',
-        borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-        borderWidth: 3,
-        pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-        pointBorderColor: isDarkMode ? '#000' : '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8
-      }
-    ]
-  };
+  const radarData = useMemo(() => {
+    return {
+      labels: ['Sales Growth', 'Customer Satisfaction', 'Order Efficiency', 'Product Quality', 'Service Speed', 'Cost Management'],
+      datasets: [
+        {
+          label: 'Performance Metrics',
+          data: [85, 92, 78, 95, 88, 82],
+          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.2)',
+          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
+          borderWidth: 3,
+          pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
+          pointBorderColor: isDarkMode ? '#000' : '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }
+      ]
+    };
+  }, [isDarkMode]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          color: isDarkMode ? '#fff' : '#333',
-          font: {
+  const chartOptions = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: {
+            color: isDarkMode ? '#fff' : '#333',
+            font: {
+              size: 16,
+              weight: 'bold' as const
+            },
+            padding: 20
+          }
+        },
+        tooltip: {
+          backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          titleColor: isDarkMode ? '#fff' : '#333',
+          bodyColor: isDarkMode ? '#fff' : '#333',
+          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
+          borderWidth: 2,
+          cornerRadius: 12,
+          displayColors: true,
+          titleFont: {
             size: 16,
             weight: 'bold' as const
           },
-          padding: 20
+          bodyFont: {
+            size: 14
+          },
+          padding: 12
         }
       },
-      tooltip: {
-        backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-        titleColor: isDarkMode ? '#fff' : '#333',
-        bodyColor: isDarkMode ? '#fff' : '#333',
-        borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-        borderWidth: 2,
-        cornerRadius: 12,
-        displayColors: true,
-        titleFont: {
-          size: 16,
-          weight: 'bold' as const
-        },
-        bodyFont: {
-          size: 14
-        },
-        padding: 12
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-        },
-        ticks: {
-          color: isDarkMode ? '#fff' : '#333',
-          font: {
-            size: 14
+      scales: {
+        x: {
+          grid: {
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: {
+            color: isDarkMode ? '#fff' : '#333',
+            font: {
+              size: 14
+            }
           }
-        }
-      },
-      y: {
-        grid: {
-          color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
         },
-        ticks: {
-          color: isDarkMode ? '#fff' : '#333',
-          font: {
-            size: 14
+        y: {
+          grid: {
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+          },
+          ticks: {
+            color: isDarkMode ? '#fff' : '#333',
+            font: {
+              size: 14
+            }
           }
         }
       }
-    }
-  };
+    };
+  }, [isDarkMode]);
 
   return (
     <Box sx={{

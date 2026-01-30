@@ -1,7 +1,9 @@
 // @ts-nocheck
 import React, { useState, useEffect, Suspense, lazy } from "react";
-import { Route, Switch, useLocation } from "react-router-dom";
+import { Route, Switch, useLocation, Redirect } from "react-router-dom";
 import { Box } from "@mui/material";
+import { useAppDispatch } from "./hooks";
+import { clearAllOrders } from "./screens/ordersPage/slice";
 
 // Import i18n configuration
 import "../i18n";
@@ -29,12 +31,13 @@ import { Messages } from "../lib/config";
 import AuthenticationModal from "./components/auth";
 import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorBoundary from "./components/ErrorBoundary";
+import CoffeeMoodWidget from "../mui-coffee/components/CoffeeMoodWidget";
 
 // Create an instance of MemberService
 const memberService = new MemberService();
 
 // Lazy load components for better performance
-const OrdersPage = lazy(() => import("./screens/ordersPage"));
+const OrdersPage = lazy(() => import("./screens/ordersPage/CheckoutOrdersPage"));
 const UserProfilePage = lazy(() => import("./screens/userPage"));
 const MyPage = lazy(() => import("../mui-coffee/screens/MyPage"));
 const HelpPage = lazy(() => import("./screens/helpPage"));
@@ -43,11 +46,14 @@ const ImageTest = lazy(() => import("../mui-coffee/ImageTest"));
 const VerticalBasketDemo = lazy(() => import("../mui-coffee/components/VerticalBasketDemo"));
 const StatsPage = lazy(() => import("../mui-coffee/screens/StatsPage"));
 const ProductsPage = lazy(() => import("./screens/productsPage"));
+const CoffeeScrollPage = lazy(() => import("../mui-coffee/screens/CoffeeScrollPage"));
+const OrderOnlinePage = lazy(() => import("./screens/orderOnlinePage/OrderOnlinePage"));
 
 function App() {
   const location = useLocation();
   const { authMember, setAuthMember } = useGlobals();
   const { cartItems, onAdd, onRemove, onDelete, onDeleteAll } = useBasket();
+  const dispatch = useAppDispatch();
 
   // Fix viewport height for mobile & VPS (critical fix)
   useEffect(() => {
@@ -59,6 +65,15 @@ function App() {
     window.addEventListener('resize', setVh);
     return () => window.removeEventListener('resize', setVh);
   }, []);
+
+  // Clear orders and cart when user logs out or changes
+  useEffect(() => {
+    if (!authMember) {
+      // User logged out - clear orders and cart
+      dispatch(clearAllOrders());
+      onDeleteAll();
+    }
+  }, [authMember, dispatch, onDeleteAll]);
 
 
 
@@ -81,12 +96,17 @@ function App() {
   const handleLogoutRequest = async () => {
     try {
       const result = await memberService.logout();
+      // Clear orders and cart before clearing auth
+      dispatch(clearAllOrders());
+      onDeleteAll();
       setAuthMember(null);
       handleCloseLogout();
       sweetTopSuccessAlert("Logout successful", 700);
     } catch (err: any) {
       console.log("ERROR handleLogoutRequest ::", err);
       // Even if the server logout fails, clear the local state
+      dispatch(clearAllOrders());
+      onDeleteAll();
       setAuthMember(null);
       handleCloseLogout();
       sweetErrorHandling(err).then();
@@ -117,8 +137,17 @@ function App() {
               <Route path="/products">
                 <ProductsPage onAdd={onAdd} />
               </Route>
+              <Route path="/order">
+                <Redirect to="/orders?tab=menu" />
+              </Route>
               <Route path="/orders">
-                <OrdersPage />
+                <OrdersPage 
+                  onAdd={onAdd}
+                  cartItems={cartItems}
+                  onRemove={onRemove}
+                  onDelete={onDelete}
+                  onDeleteAll={onDeleteAll}
+                />
               </Route>
               <Route path="/user-profile">
                 <UserProfilePage />
@@ -141,6 +170,12 @@ function App() {
               <Route path="/vertical-basket">
                 <VerticalBasketDemo />
               </Route>
+              <Route path="/coffee-scroll">
+                <CoffeeScrollPage />
+              </Route>
+              <Route path="/order-online">
+                <Redirect to="/orders?tab=menu" />
+              </Route>
               <Route path="/">
                 <CoffeeHomePage setSignupOpen={setSignupOpen} setLoginOpen={setLoginOpen} />
               </Route>
@@ -153,6 +188,9 @@ function App() {
             handleLoginClose={handleLoginClose}
             handleSignupClose={handleSignupClose}
           />
+          
+          {/* Floating Coffee Mood Widget - appears on all pages */}
+          <CoffeeMoodWidget />
         </Box>
       </ThemeProvider>
     </ErrorBoundary>
