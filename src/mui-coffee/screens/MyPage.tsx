@@ -278,7 +278,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     if (!authMember?._id) return;
     
     const interval = setInterval(() => {
-      console.log('Periodic refresh triggered');
       fetchUserData();
     }, 30000); // Refresh every 30 seconds
     
@@ -288,7 +287,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   // Ensure orders are loaded from Redux store on component mount
   useEffect(() => {
     if (authMember?._id && (pausedOrders.length === 0 && processOrders.length === 0 && finishedOrders.length === 0)) {
-      console.log('No orders in Redux store, fetching orders...');
       fetchUserData();
     }
   }, [authMember?._id, pausedOrders.length, processOrders.length, finishedOrders.length, fetchUserData]);
@@ -308,7 +306,9 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         history.push('/');
       }, 1000);
     } catch (err) {
-      console.log(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       setSnackbarMessage('Error logging out');
       setSnackbarType('error');
       setShowSnackbar(true);

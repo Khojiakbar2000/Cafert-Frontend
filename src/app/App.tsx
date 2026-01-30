@@ -73,7 +73,8 @@ function App() {
       dispatch(clearAllOrders());
       onDeleteAll();
     }
-  }, [authMember, dispatch, onDeleteAll]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authMember]);
 
 
 

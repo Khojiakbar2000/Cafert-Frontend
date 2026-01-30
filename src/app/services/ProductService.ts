@@ -21,7 +21,6 @@ class ProductService {
 
     constructor() {
         this.path = serverApi;
-        console.log("🔧 ProductService initialized with path:", this.path);
     }
     
     public async getProducts(input: ProductInquiry):Promise<Product[]>{
@@ -36,11 +35,11 @@ class ProductService {
             if(input.search) url += `&search=${input.search}`;
 
             const result = await axios.get(url);
-            console.log("getProducts:", result);
-
             return result.data;
         }catch(err){
-            console.log("Error, getProducts:", err)
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, getProducts:", err);
+            }
             throw err;
         }
     }
@@ -48,14 +47,12 @@ class ProductService {
     public async getProduct(productId: string): Promise<Product>{
         try{
             const url = `${this.path}product/${productId}`;
-            console.log(" Fetching product from URL:", url);
             const result = await axios.get(url);
-            console.log(" getProduct result:", result.data);
             return result.data;
         }catch(err){
-            console.log(" Error, getProduct:", err);
-            console.log(" Error response:", err.response?.data);
-            console.log(" Error status:", err.response?.status);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, getProduct:", err);
+            }
             throw err;
         }
     }
@@ -64,15 +61,12 @@ class ProductService {
     public async createProduct(input: ProductInput): Promise<Product>{
         try{
             const url = `${this.path}product/create`;
-            console.log("Creating product with URL:", url);
-            console.log("Product input:", input);
-            
             const result = await axios.post(url, input, {withCredentials: true});
-            console.log("Product created successfully:", result.data);
             return result.data;
         }catch(err){
-            console.log("Error, createProduct:", err);
-            console.log("Error response:", err.response?.data);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, createProduct:", err);
+            }
             throw err;
         }
     }
@@ -81,15 +75,12 @@ class ProductService {
     public async updateProduct(productId: string, input: Partial<ProductInput>): Promise<Product>{
         try{
             const url = `${this.path}product/${productId}`;
-            console.log("Updating product with URL:", url);
-            console.log("Update input:", input);
-            
             const result = await axios.put(url, input, {withCredentials: true});
-            console.log("Product updated successfully:", result.data);
             return result.data;
         }catch(err){
-            console.log("Error, updateProduct:", err);
-            console.log("Error response:", err.response?.data);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, updateProduct:", err);
+            }
             throw err;
         }
     }
@@ -98,13 +89,11 @@ class ProductService {
     public async deleteProduct(productId: string): Promise<void>{
         try{
             const url = `${this.path}product/${productId}`;
-            console.log("Deleting product with URL:", url);
-            
-            const result = await axios.delete(url, {withCredentials: true});
-            console.log("Product deleted successfully:", result.data);
+            await axios.delete(url, {withCredentials: true});
         }catch(err){
-            console.log("Error, deleteProduct:", err);
-            console.log("Error response:", err.response?.data);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, deleteProduct:", err);
+            }
             throw err;
         }
     }
@@ -113,8 +102,6 @@ class ProductService {
     public async uploadProductImage(file: File): Promise<string>{
         try{
             const url = `${this.path}product/upload-image`;
-            console.log("Uploading image with URL:", url);
-            
             const formData = new FormData();
             formData.append('image', file);
             
@@ -124,11 +111,11 @@ class ProductService {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            console.log("Image uploaded successfully:", result.data);
             return result.data.imageUrl;
         }catch(err){
-            console.log("Error, uploadProductImage:", err);
-            console.log("Error response:", err.response?.data);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, uploadProductImage:", err);
+            }
             throw err;
         }
     }
@@ -138,10 +125,11 @@ class ProductService {
         try{
             const url = `${this.path}product/collection/${collection}?limit=${limit}`;
             const result = await axios.get(url);
-            console.log(`Products for collection ${collection}:`, result.data);
             return result.data;
         }catch(err){
-            console.log("Error, getProductsByCollection:", err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, getProductsByCollection:", err);
+            }
             throw err;
         }
     }
@@ -151,10 +139,11 @@ class ProductService {
         try{
             const url = `${this.path}product/search?q=${encodeURIComponent(searchTerm)}&limit=${limit}`;
             const result = await axios.get(url);
-            console.log(`Search results for "${searchTerm}":`, result.data);
             return result.data;
         }catch(err){
-            console.log("Error, searchProducts:", err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, searchProducts:", err);
+            }
             throw err;
         }
     }
@@ -164,10 +153,11 @@ class ProductService {
         try {
             const url = `${this.path}product/${productId}/view`;
             await axios.post(url);
-            console.log(`Incremented views for product: ${productId}`);
         } catch (err) {
-            console.log("Error incrementing product views:", err);
             // Don't throw error - views are not critical functionality
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error incrementing product views:", err);
+            }
         }
     }
 }

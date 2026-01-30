@@ -16,12 +16,11 @@ try{
     const url = `${this.path.replace(/\/$/, "")}/member/top-users`;
 
     const result = await axios.get(url);
-    console.log("getTopUsers:", result)
     return result.data;
-
-   
 }catch(err){
-    console.log("Error, getTopUsers:", err)
+    if (process.env.NODE_ENV === 'development') {
+        console.error("Error, getTopUsers:", err);
+    }
     throw err;
 }
     }
@@ -35,10 +34,11 @@ try{
          const url = this.path + "member/restaurant";
          
          const result = await axios.get(url);
-         console.log("getRestaurant:", result)
          return result.data;
         }catch(err){
-        console.log("Error, getRestaurant:", err);
+        if (process.env.NODE_ENV === 'development') {
+            console.error("Error, getRestaurant:", err);
+        }
         throw err;
         }
     }
@@ -47,14 +47,13 @@ try{
             const url = this.path + "member/signup";
 
          const result = await axios.post(url, input, {withCredentials: true})
-         console.log("result:", result)
-
          const member: Member= result.data.member;
-         console.log("member:", member)
          localStorage.setItem("memberData", JSON.stringify(member))
          return member;
         }catch(err){
-            console.log("Error,signup:", err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error,signup:", err);
+            }
         throw err;
 
         }
@@ -68,14 +67,13 @@ try{
                 const url = this.path + "member/login";
     
              const result = await axios.post(url, input, {withCredentials: true})
-             console.log("result:", result)
-    
              const member: Member= result.data.member;
-             console.log("member:", member)
              localStorage.setItem("memberData", JSON.stringify(member))
              return member;
             }catch(err){
-                console.log("Error, login:", err);
+                if (process.env.NODE_ENV === 'development') {
+                    console.error("Error, login:", err);
+                }
             throw err;
     
             }
@@ -96,12 +94,12 @@ try{
             const url = this.path + "member/logout";
     
          const result = await axios.post(url, {}, {withCredentials: true})
-         console.log("result:", result)
-    
          localStorage.removeItem("memberData")
          return result.data.logout;
         }catch(err){
-            console.log("Error, logout:", err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error, logout:", err);
+            }
         throw err;
     
         }
@@ -126,13 +124,13 @@ try{
             },
          })
 
-         console.log("updateMember:", result);
-
          const member: Member = result.data;
          localStorage.setItem("memberData",JSON.stringify(member) )
          return member;
         }catch(err){
-            console.log("Error,updateMember:", err);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Error,updateMember:", err);
+            }
         throw err;
 
         }

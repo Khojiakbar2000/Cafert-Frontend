@@ -26,7 +26,7 @@ axios.defaults.withCredentials = true;
 // In development, cookies might not work properly due to different ports
 // This helps ensure cookies are accessible
 if (process.env.NODE_ENV === 'development') {
-  // Log cookie status for debugging
+  // Log cookie status for debugging (only in development)
   console.log('=== DEVELOPMENT MODE ===');
   console.log('Current origin:', window.location.origin);
   console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:3003');

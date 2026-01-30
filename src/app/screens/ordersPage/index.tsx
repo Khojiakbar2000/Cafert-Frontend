@@ -167,14 +167,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     if (!authMember?._id) return;
     
-    console.log("=== ORDERS PAGE DEBUG ===");
-    console.log("authMember:", authMember);
-    console.log("orderBuilder:", orderBuilder);
-    console.log("orderInquiry:", orderInquiry);
-    
     const order = new OrderService()
-
-    console.log("Fetching orders for user:", authMember._id);
     
     try {
       let pausedData: Order[] = [];
@@ -185,35 +178,29 @@ export default function OrdersPage() {
       try {
         // Fetch paused orders
         pausedData = await order.getMyOrders({...orderInquiry, orderStatus: OrderStatus.PAUSE});
-        console.log("Paused orders fetched:", pausedData);
         
         // Fetch process orders
         processData = await order.getMyOrders({...orderInquiry, orderStatus: OrderStatus.PROCESS});
-        console.log("Process orders fetched:", processData);
         
         // Fetch finished orders
         finishedData = await order.getMyOrders({...orderInquiry, orderStatus: OrderStatus.FINISH});
-        console.log("Finished orders fetched:", finishedData);
         
         // If no real orders, use mock data
         if ((!pausedData || pausedData.length === 0) && 
             (!processData || processData.length === 0) && 
             (!finishedData || finishedData.length === 0)) {
-          console.log("No real orders found, using mock data");
           pausedData = mockOrders.filter(o => o.orderStatus === OrderStatus.PAUSE);
           processData = mockOrders.filter(o => o.orderStatus === OrderStatus.PROCESS);
           finishedData = mockOrders.filter(o => o.orderStatus === OrderStatus.FINISH);
         }
       } catch (error) {
-        console.log("API failed, using mock data:", error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error("API failed, using mock data:", error);
+        }
         pausedData = mockOrders.filter(o => o.orderStatus === OrderStatus.PAUSE);
         processData = mockOrders.filter(o => o.orderStatus === OrderStatus.PROCESS);
         finishedData = mockOrders.filter(o => o.orderStatus === OrderStatus.FINISH);
       }
-
-      console.log("Number of paused orders:", pausedData?.length || 0);
-      console.log("Number of process orders:", processData?.length || 0);
-      console.log("Number of finished orders:", finishedData?.length || 0);
       
       setPausedOrders(pausedData || []);
       setProcessOrders(processData || []);
@@ -234,7 +221,6 @@ export default function OrdersPage() {
 
   // Add a manual refresh function
   const handleRefresh = () => {
-    console.log("Manual refresh triggered");
     fetchOrders();
   };
 

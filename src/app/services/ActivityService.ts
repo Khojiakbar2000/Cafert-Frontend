@@ -20,7 +20,6 @@ class ActivityService {
         timeout: 5000, // 5 second timeout
         signal: AbortSignal.timeout(5000) // Abort after 5 seconds
       });
-      console.log("getActiveUsers (using top-users):", result);
       
       // Transform Member data to UserActivity format
       const members: Member[] = result.data;
@@ -49,10 +48,8 @@ class ActivityService {
       });
     } catch (err: any) {
       // Don't log aborted requests as errors
-      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
-        console.log("getActiveUsers request was aborted");
-      } else {
-        console.log("Error, getActiveUsers:", err);
+      if (process.env.NODE_ENV === 'development' && err.code !== 'ECONNABORTED' && err.name !== 'AbortError') {
+        console.error("Error, getActiveUsers:", err);
       }
       // Return fallback data if API fails
       return this.getFallbackActiveUsers();
@@ -65,7 +62,6 @@ class ActivityService {
       // Use the existing top users endpoint to get some real user data
       const url = `${this.path.replace(/\/$/, "")}/member/top-users`;
       const result = await axios.get(url);
-      console.log("getRecentActivities (using top-users):", result);
       
       const members: Member[] = result.data;
       const activities: RecentActivity[] = [];
@@ -99,7 +95,9 @@ class ActivityService {
       
       return activities;
     } catch (err) {
-      console.log("Error, getRecentActivities:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error, getRecentActivities:", err);
+      }
       // Return fallback data if API fails
       return this.getFallbackRecentActivities();
     }

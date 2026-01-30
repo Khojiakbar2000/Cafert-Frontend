@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Container, Box, Typography, Card, CardContent, Button } from "@mui/material";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { Product } from "../../../lib/types/product";
 import ProductService from "../../services/ProductService";
@@ -15,10 +15,6 @@ export default function HomePage() {
     const [newDishes, setNewDishes] = useState<Product[]>([]);
     const [topUsers, setTopUsers] = useState<Member[]>([]);
     const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
 
     useEffect(() => {
         // Backend server data fetch => Data
@@ -33,7 +29,11 @@ export default function HomePage() {
             .then(data => {
                 setPopularDishes(data);
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(err);
+                }
+            });
 
         product.getProducts({
             page: 1,
@@ -44,12 +44,20 @@ export default function HomePage() {
             .then(data => {
                 setNewDishes(data);
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(err);
+                }
+            });
 
         const member = new MemberService();
         member.getTopUsers()
             .then((data) => setTopUsers(data))
-            .catch((err) => console.log(err))
+            .catch((err) => {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(err);
+                }
+            })
     }, [])
 
     // Enhanced animation variants with better timing and easing

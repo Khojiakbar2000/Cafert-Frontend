@@ -81,7 +81,6 @@ interface OrdersPageProps {
 }
 
 const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
-  console.log('🔄 OrdersPage component loaded - VERSION WITH NEW BUTTONS');
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -299,8 +298,6 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
         };
       });
       
-      console.log('🎯 Transformed orders:', transformedOrders);
-      console.log('📈 Final orders count:', transformedOrders.length);
       
       setOrders(transformedOrders);
       setFilteredOrders(transformedOrders);
@@ -320,13 +317,9 @@ const OrdersPage: React.FC<OrdersPageProps> = ({ colors }) => {
         });
       }
     } catch (error) {
-      console.error('❌ Error fetching orders:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching orders:', error);
+      }
       
       // Fallback to sample data if API fails
       setOrders(sampleOrders);

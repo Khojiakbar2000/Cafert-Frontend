@@ -13,10 +13,12 @@ class OrderService {
     public async createOrder(input: CartItem[]): Promise<Order>{
      try{
      const orderItems: OrderItemInput[] = input.map((cartItem: CartItem)=>{
-     console.log("Processing cartItem:", cartItem);
-     console.log("cartItem._id:", cartItem._id);
-     console.log("cartItem._id type:", typeof cartItem._id);
-     console.log("cartItem._id length:", cartItem._id?.length);
+     if (process.env.NODE_ENV === 'development') {
+       console.log("Processing cartItem:", cartItem);
+       console.log("cartItem._id:", cartItem._id);
+       console.log("cartItem._id type:", typeof cartItem._id);
+       console.log("cartItem._id length:", cartItem._id?.length);
+     }
      
      return {
         itemQuantity: cartItem.quantity,
@@ -27,14 +29,16 @@ class OrderService {
 
      const url = `${this.path}order/create`;
      
-     // Debug logging
-     console.log("=== ORDER SERVICE DEBUG ===");
-     console.log("URL:", url);
-     console.log("Input cartItems:", input);
-     console.log("Transformed orderItems:", orderItems);
-     console.log("orderItems type:", typeof orderItems);
-     console.log("orderItems isArray:", Array.isArray(orderItems));
-     console.log("orderItems length:", orderItems.length);
+     // Debug logging (only in development)
+     if (process.env.NODE_ENV === 'development') {
+       console.log("=== ORDER SERVICE DEBUG ===");
+       console.log("URL:", url);
+       console.log("Input cartItems:", input);
+       console.log("Transformed orderItems:", orderItems);
+       console.log("orderItems type:", typeof orderItems);
+       console.log("orderItems isArray:", Array.isArray(orderItems));
+       console.log("orderItems length:", orderItems.length);
+     }
      
      // Get member data from localStorage
      const memberData = localStorage.getItem("memberData");
@@ -43,19 +47,18 @@ class OrderService {
      }
      
      const member = JSON.parse(memberData);
-     console.log("Member data:", member);
-     
-     // Check cookies before request
-     console.log("=== COOKIE DEBUG ===");
-     console.log("All cookies:", document.cookie);
-     console.log("withCredentials:", true);
-     console.log("axios.defaults.withCredentials:", axios.defaults.withCredentials);
-     console.log("Request URL:", url);
-     console.log("Current origin:", window.location.origin);
-     
-     // In development, cookies might not be sent due to different ports
-     // The backend needs to set cookies with proper domain/path settings
      if (process.env.NODE_ENV === 'development') {
+       console.log("Member data:", member);
+     }
+     
+     // Check cookies before request (only in development)
+     if (process.env.NODE_ENV === 'development') {
+       console.log("=== COOKIE DEBUG ===");
+       console.log("All cookies:", document.cookie);
+       console.log("withCredentials:", true);
+       console.log("axios.defaults.withCredentials:", axios.defaults.withCredentials);
+       console.log("Request URL:", url);
+       console.log("Current origin:", window.location.origin);
        console.log("⚠️ DEVELOPMENT MODE: Ensure backend sets cookies with:");
        console.log("  - domain: 'localhost' (without port)");
        console.log("  - sameSite: 'lax' or 'none'");
@@ -66,18 +69,20 @@ class OrderService {
      // Send just the orderItems array as the backend expects input to be an array
      const payload = orderItems;
      
-     console.log("Final payload (orderItems array):", payload);
-     console.log("Payload JSON:", JSON.stringify(payload, null, 2));
-     console.log("Payload type:", typeof payload);
-     console.log("Payload isArray:", Array.isArray(payload));
-     console.log("Each orderItem structure:", payload.map((item, index) => ({
-       index,
-       itemQuantity: item.itemQuantity,
-       itemPrice: item.itemPrice,
-       productId: item.productId,
-       productIdType: typeof item.productId,
-       productIdLength: item.productId?.length
-     })));
+     if (process.env.NODE_ENV === 'development') {
+       console.log("Final payload (orderItems array):", payload);
+       console.log("Payload JSON:", JSON.stringify(payload, null, 2));
+       console.log("Payload type:", typeof payload);
+       console.log("Payload isArray:", Array.isArray(payload));
+       console.log("Each orderItem structure:", payload.map((item, index) => ({
+         index,
+         itemQuantity: item.itemQuantity,
+         itemPrice: item.itemPrice,
+         productId: item.productId,
+         productIdType: typeof item.productId,
+         productIdLength: item.productId?.length
+       })));
+     }
      
      const result = await axios.post(url, payload, {
        withCredentials: true,
@@ -85,19 +90,25 @@ class OrderService {
          'Content-Type': 'application/json',
        }
      })
-     console.log("createdOrder:", result)
-     console.log("createdOrder data:", result.data)
-     console.log("createdOrder status:", result.data?.orderStatus)
-     console.log("createdOrder memberId:", result.data?.memberId)
-     console.log("createdOrder _id:", result.data?._id)
+     
+     if (process.env.NODE_ENV === 'development') {
+       console.log("createdOrder:", result)
+       console.log("createdOrder data:", result.data)
+       console.log("createdOrder status:", result.data?.orderStatus)
+       console.log("createdOrder memberId:", result.data?.memberId)
+       console.log("createdOrder _id:", result.data?._id)
+     }
 
      return result.data
      }catch(err){
-        console.log("Error.createOrder:", err)
-        console.log("Error response data:", err.response?.data);
-        console.log("Error response status:", err.response?.status);
-        console.log("Error response headers:", err.response?.headers);
-        console.log("Full error response:", JSON.stringify(err.response?.data, null, 2));
+        // Always log errors, even in production
+        console.error("Error.createOrder:", err)
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Error response data:", err.response?.data);
+          console.log("Error response status:", err.response?.status);
+          console.log("Error response headers:", err.response?.headers);
+          console.log("Full error response:", JSON.stringify(err.response?.data, null, 2));
+        }
         throw err;
      }
     }
@@ -114,28 +125,35 @@ class OrderService {
             query += `&orderStatus=${input.orderStatus}`;
           }
 
-          console.log("getMyOrders URL:", url + query);
-          console.log("getMyOrders withCredentials:", true);
+          if (process.env.NODE_ENV === 'development') {
+            console.log("getMyOrders URL:", url + query);
+            console.log("getMyOrders withCredentials:", true);
+          }
           
           // Get member data from localStorage to verify user
           const memberData = localStorage.getItem("memberData");
-          if (memberData) {
+          if (memberData && process.env.NODE_ENV === 'development') {
             const member = JSON.parse(memberData);
             console.log("Current member data:", member);
           }
 
           const result = await axios.get(url+query, {withCredentials:true})
-          console.log("getMyOrders:", result)
-          console.log("getMyOrders response data:", result.data)
-          console.log("getMyOrders response status:", result.status)
-          console.log("getMyOrders response headers:", result.headers)
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log("getMyOrders:", result)
+            console.log("getMyOrders response data:", result.data)
+            console.log("getMyOrders response status:", result.status)
+            console.log("getMyOrders response headers:", result.headers)
+          }
 
           return result.data;
       
         }catch(err){
-           console.log("Error.getMyOrders:", err)
-           console.log("Error response:", err.response?.data);
-           console.log("Error status:", err.response?.status);
+           console.error("Error.getMyOrders:", err)
+           if (process.env.NODE_ENV === 'development') {
+             console.log("Error response:", err.response?.data);
+             console.log("Error status:", err.response?.status);
+           }
            throw err;
         }
        }
@@ -147,11 +165,14 @@ class OrderService {
        
       const url = `${this.path}order/update`
       const result = await axios.post(url, input, {withCredentials: true})
-      console.log("updateOrder:", result)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log("updateOrder:", result)
+      }
 
       return result.data
         }catch(err){
-           console.log("Error.updateOrder:", err)
+           console.error("Error.updateOrder:", err)
            throw err;
         }
        }

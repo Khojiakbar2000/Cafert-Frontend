@@ -409,7 +409,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
     {
       id: 2,
       text: "Amazing food and coffee. This place has become my go-to spot for meetings and casual dining.",
-      author: "Michael Chen",
+      author: "Martin",
       rating: 5,
       avatar: "/img/food/martin.webp"
     },
@@ -1808,7 +1808,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
                         console.error('Image failed to load:', item.image);
                         (e.target as HTMLImageElement).src = '/img/coffee/coffee-placeholder.jpg';
                       }}
-                      onLoad={() => console.log('Image loaded successfully:', item.image)}
+                      onLoad={() => {}}
                     />
                     {/* Gradient Overlay */}
                     <Box sx={{
@@ -2341,7 +2341,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
           {
             id: '2',
             quote: 'Amazing atmosphere and even better coffee. This place has become my daily ritual.',
-            author: 'Michael Chen',
+            author: 'Martin',
             role: 'Regular Customer',
             avatar: '/img/food/martin.webp',
             rating: 5,
