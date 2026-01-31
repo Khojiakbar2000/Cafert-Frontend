@@ -124,10 +124,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Debug logging
-  console.log('MyPage - authMember:', authMember);
-  console.log('MyPage - localStorage memberData:', localStorage.getItem('memberData'));
-
   const componentColors = colors || {
     primary: isDarkMode ? '#ffd700' : '#b38e6a',
     secondary: isDarkMode ? '#ffed4e' : '#8b6b4a',
@@ -142,18 +138,12 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   // Remove hardcoded mock data - now using Redux store data
   const fetchUserData = useCallback(async () => {
     if (!authMember?._id) {
-      console.log('No authMember._id found');
       return;
     }
     
-    console.log('=== MY PAGE DEBUG ===');
-    console.log('Fetching orders for user:', authMember._id);
     setIsLoadingOrders(true);
     try {
       const orderService = new OrderService();
-      
-      // Try to fetch real orders first
-      console.log('=== TEST 1: Fetching orders by status ===');
       
       let allOrders: any[] = [];
       
@@ -164,42 +154,18 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           orderStatus: undefined
         };
         
-        console.log('Fetching all orders with inquiry:', allOrdersInquiry);
         allOrders = await orderService.getMyOrders(allOrdersInquiry);
-        console.log('Real orders received:', allOrders);
         
         if (!allOrders || allOrders.length === 0) {
-          console.log('No real orders found, using Redux store data');
           // Combine all orders from Redux store
           allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
         }
       } catch (error) {
-        console.log('API failed, using Redux store data:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('API failed, using Redux store data:', error);
+        }
         // Combine all orders from Redux store
         allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
-      }
-      
-      console.log('Final orders to display:', allOrders);
-      console.log('Number of orders:', allOrders?.length || 0);
-      
-      if (allOrders && allOrders.length > 0) {
-        console.log('Order statuses found:', allOrders.map(o => o.orderStatus));
-        console.log('Completed orders:', allOrders.filter(o => o.orderStatus === OrderStatus.FINISH));
-        console.log('Process orders:', allOrders.filter(o => o.orderStatus === OrderStatus.PROCESS));
-        console.log('Paused orders:', allOrders.filter(o => o.orderStatus === OrderStatus.PAUSE));
-        
-        // Log each order details
-        allOrders.forEach((order, index) => {
-          console.log(`Order ${index + 1}:`, {
-            id: order._id,
-            status: order.orderStatus,
-            total: order.orderTotal,
-            createdAt: order.createdAt,
-            memberId: order.memberId
-          });
-        });
-      } else {
-        console.log('No orders found at all');
       }
       
       // Set recent orders (show all orders, sorted by creation date)
@@ -207,7 +173,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ) || [];
       
-      console.log('Sorted orders for recent orders:', sortedOrders.slice(0, 5));
       setRecentOrders(sortedOrders);
       
       // Calculate enhanced stats
@@ -229,8 +194,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       // Calculate loyalty points (1 point per $1 spent)
       const loyaltyPoints = Math.floor(totalSpent);
       
-      console.log('Final order stats:', { total, completed, inProgress, active, monthly: thisMonth, totalSpent, loyaltyPoints });
-      
       setOrderStats({
         total,
         completed,
@@ -242,9 +205,10 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       });
       
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching user data:', error);
+      }
       // Use Redux store data as fallback
-      console.log('Using Redux store data as fallback');
       const allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
       setRecentOrders(allOrders);
       const now = new Date();
@@ -427,7 +391,9 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         handleCloseProfileDialog();
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating profile:', error);
+      }
       setSnackbarMessage('Failed to update profile. Please try again.');
       setSnackbarType('error');
       setShowSnackbar(true);
