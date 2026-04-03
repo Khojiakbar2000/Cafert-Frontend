@@ -1,48 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Box, Typography, IconButton, Link as MuiLink } from '@mui/material';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Paper,
-  useTheme,
-  useMediaQuery,
-  Chip,
-  IconButton,
-  Tooltip,
-  Divider,
-  LinearProgress,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Switch,
-  FormControlLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Tabs,
-  Tab
-} from '@mui/material';
-import {
-  TrendingUp,
-  BarChart,
-  ShowChart,
-  People,
-  AttachMoney,
+  Payments,
   ShoppingCart,
-  LocalCafe,
-  Refresh,
-  Download,
+  Person,
+  Receipt,
+  Search,
   Settings,
-  TrendingFlat,
-  Star,
-  Analytics,
-  Dashboard
 } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -55,12 +21,12 @@ import {
   Tooltip as ChartTooltip,
   Legend,
   Filler,
-  RadialLinearScale
+  RadialLinearScale,
 } from 'chart.js';
-import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import { useTheme as useThemeContext } from '../context/ThemeContext';
+import { STITCH_PULP_THEME } from '../../components/stitchUi';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -75,7 +41,10 @@ ChartJS.register(
   RadialLinearScale
 );
 
-// Mock data for sophisticated analytics
+const P = STITCH_PULP_THEME;
+const AVATAR_SRC =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDP2lro-i9JmMzwqSHVGKWKWkorzic79BYfqy8yz1Ke9B3ur2pQvu1iHsRB_QPNT5neDbQX42PoNMgqCSCnDdStswq3uWJGrRmoEv7kS1IV5Fv73o-3P8CqIHpDO3YDPrYEkqJu1ca51urAzv4hV8CcjXo6WqftoONeHuJjufDPiLWqhQnKBxvFtVgfXmn1uBPkytRZdNMTuPjG229GEFij3bIkkHdVLsqGaF2qANYi9aQ12oubzo399tJcWYJWHEYiRZ4XncKKsX_C';
+
 const mockData = {
   salesData: [
     { month: 'Jan', sales: 12500, orders: 450, customers: 320, avgOrder: 27.8 },
@@ -89,866 +58,440 @@ const mockData = {
     { month: 'Sep', sales: 25600, orders: 920, customers: 650, avgOrder: 27.8 },
     { month: 'Oct', sales: 29800, orders: 1080, customers: 750, avgOrder: 27.6 },
     { month: 'Nov', sales: 33400, orders: 1200, customers: 820, avgOrder: 27.8 },
-    { month: 'Dec', sales: 38700, orders: 1380, customers: 920, avgOrder: 28.0 }
+    { month: 'Dec', sales: 38700, orders: 1380, customers: 920, avgOrder: 28.0 },
   ],
   categoryData: [
-    { name: 'Espresso', sales: 35, growth: 12.5, color: '#8B4513' },
-    { name: 'Cappuccino', sales: 28, growth: 8.2, color: '#D2691E' },
-    { name: 'Latte', sales: 22, growth: 15.7, color: '#CD853F' },
-    { name: 'Americano', sales: 15, growth: 5.3, color: '#A0522D' }
+    { name: 'Espresso', pct: 43 },
+    { name: 'Cappuccino', pct: 25 },
+    { name: 'Lattes', pct: 18 },
+    { name: 'Cold Brew', pct: 12 },
   ],
-  topProducts: [
-    { name: 'Classic Espresso', sales: 2840, growth: 18.5, rating: 4.8, orders: 156 },
-    { name: 'Vanilla Latte', sales: 2650, growth: 12.3, rating: 4.6, orders: 142 },
-    { name: 'Caramel Macchiato', sales: 2480, growth: 22.1, rating: 4.7, orders: 138 },
-    { name: 'Cappuccino', sales: 2320, growth: 8.9, rating: 4.5, orders: 128 },
-    { name: 'Mocha', sales: 2180, growth: 15.2, rating: 4.4, orders: 115 }
-  ],
-  customerSegments: [
-    { segment: 'Regulars', count: 420, percentage: 35, avgSpend: 45.2 },
-    { segment: 'Occasional', count: 380, percentage: 32, avgSpend: 28.7 },
-    { segment: 'New', count: 280, percentage: 23, avgSpend: 18.9 },
-    { segment: 'VIP', count: 120, percentage: 10, avgSpend: 78.3 }
-  ],
-  hourlyData: [
-    { hour: '6AM', orders: 12, sales: 340 },
-    { hour: '7AM', orders: 28, sales: 780 },
-    { hour: '8AM', orders: 45, sales: 1250 },
-    { hour: '9AM', orders: 38, sales: 1080 },
-    { hour: '10AM', orders: 32, sales: 920 },
-    { hour: '11AM', orders: 35, sales: 980 },
-    { hour: '12PM', orders: 52, sales: 1450 },
-    { hour: '1PM', orders: 48, sales: 1320 },
-    { hour: '2PM', orders: 42, sales: 1180 },
-    { hour: '3PM', orders: 38, sales: 1080 },
-    { hour: '4PM', orders: 45, sales: 1250 },
-    { hour: '5PM', orders: 58, sales: 1620 },
-    { hour: '6PM', orders: 52, sales: 1450 },
-    { hour: '7PM', orders: 38, sales: 1080 },
-    { hour: '8PM', orders: 25, sales: 720 },
-    { hour: '9PM', orders: 15, sales: 420 }
-  ]
 };
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+const comicBorder = `3px solid ${P.ink}`;
+const comicShadow = `4px 4px 0px 0px ${P.ink}`;
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`analytics-tabpanel-${index}`}
-      aria-labelledby={`analytics-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+const halftoneSx = {
+  backgroundImage: `radial-gradient(circle, ${P.ink} 0.5px, transparent 0.5px)`,
+  backgroundSize: '6px 6px',
+};
+
+/** Edge padding only — no max-width cap so the dashboard uses the full viewport */
+const pageGutterSx = {
+  width: '100%',
+  maxWidth: '100%',
+  mx: 'auto',
+  px: { xs: 2, sm: 2.5, md: 3, lg: 3.5, xl: 4 },
+  boxSizing: 'border-box' as const,
+};
 
 const StatsPage: React.FC = () => {
-  const theme = useTheme();
   const { isDarkMode } = useThemeContext();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const [tabValue, setTabValue] = useState(0);
-  const [timeRange, setTimeRange] = useState('12months');
-  const [showRealTime, setShowRealTime] = useState(true);
+  const ink = isDarkMode ? P.cream : P.ink;
+  const cream = isDarkMode ? '#1a1614' : P.cream;
+  const surfaceVar = isDarkMode ? '#2a2620' : P.surfaceVariant;
+  const orange = P.orange;
+  const panelBg = isDarkMode ? '#242019' : '#ffffff';
+
   const [animatedValues, setAnimatedValues] = useState({
     totalSales: 0,
     totalOrders: 0,
     totalCustomers: 0,
-    avgOrderValue: 0
+    avgOrderValue: 0,
   });
 
-  // Guard to prevent animation loop
   const animationInitializedRef = useRef(false);
-  const ANIMATION_GUARD_KEY = '__STATS_PAGE_ANIMATION_INITIALIZED__';
-
-  // Calculate totals - memoized with stable reference
   const totals = useMemo(() => {
     const data = mockData.salesData;
     return {
-      totalSales: data.reduce((sum, item) => sum + item.sales, 0),
-      totalOrders: data.reduce((sum, item) => sum + item.orders, 0),
-      totalCustomers: data.reduce((sum, item) => sum + item.customers, 0),
-      avgOrderValue: data.reduce((sum, item) => sum + item.avgOrder, 0) / data.length
+      totalSales: data.reduce((s, d) => s + d.sales, 0),
+      totalOrders: data.reduce((s, d) => s + d.orders, 0),
+      totalCustomers: data.reduce((s, d) => s + d.customers, 0),
+      avgOrderValue: data.reduce((s, d) => s + d.avgOrder, 0) / data.length,
     };
   }, []);
 
-  // Animate counters - only run once
   useEffect(() => {
-    // Guard against remounts and double-invocation
-    if (animationInitializedRef.current || (window as any)[ANIMATION_GUARD_KEY]) {
-      return;
-    }
-    
+    if (animationInitializedRef.current) return;
     animationInitializedRef.current = true;
-    (window as any)[ANIMATION_GUARD_KEY] = true;
-
-    const duration = 2000;
     const steps = 60;
-    const stepDuration = duration / steps;
-    
-    let currentStep = 0;
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / steps;
-      
-      setAnimatedValues(prev => {
-        // Only update if values actually changed to prevent unnecessary re-renders
-        const newValues = {
-          totalSales: Math.floor(totals.totalSales * progress),
-          totalOrders: Math.floor(totals.totalOrders * progress),
-          totalCustomers: Math.floor(totals.totalCustomers * progress),
-          avgOrderValue: parseFloat((totals.avgOrderValue * progress).toFixed(1))
-        };
-        
-        // Only return new object if values changed
-        if (prev.totalSales !== newValues.totalSales ||
-            prev.totalOrders !== newValues.totalOrders ||
-            prev.totalCustomers !== newValues.totalCustomers ||
-            prev.avgOrderValue !== newValues.avgOrderValue) {
-          return newValues;
-        }
-        return prev; // Keep previous reference if values are the same
+    let step = 0;
+    const id = setInterval(() => {
+      step++;
+      const p = step / steps;
+      setAnimatedValues({
+        totalSales: Math.floor(totals.totalSales * p),
+        totalOrders: Math.floor(totals.totalOrders * p),
+        totalCustomers: Math.floor(totals.totalCustomers * p),
+        avgOrderValue: parseFloat((totals.avgOrderValue * p).toFixed(2)),
       });
-      
-      if (currentStep >= steps) {
-        clearInterval(interval);
-      }
-    }, stepDuration);
-    
-    return () => {
-      clearInterval(interval);
-      // Don't reset guard on cleanup to prevent remount loops
-    };
-  }, []); // Empty dependency array - totals values are stable
+      if (step >= steps) clearInterval(id);
+    }, 33);
+    return () => clearInterval(id);
+  }, [totals]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleRefresh = () => {
-    // Refresh functionality
-  };
-
-  // Chart configurations - memoized to prevent re-renders and loops
-  const lineChartData = useMemo(() => {
-    return {
-      labels: mockData.salesData.map(item => item.month),
+  const lineChartData = useMemo(
+    () => ({
+      labels: mockData.salesData.map((d) => d.month),
       datasets: [
         {
           label: 'Sales ($)',
-          data: mockData.salesData.map(item => item.sales),
-          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.1)',
+          data: mockData.salesData.map((d) => d.sales),
+          borderColor: orange,
+          backgroundColor: `${orange}22`,
           borderWidth: 3,
           fill: true,
-          tension: 0.4,
-          pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-          pointBorderColor: isDarkMode ? '#000' : '#fff',
+          tension: 0.35,
+          pointBackgroundColor: orange,
+          pointBorderColor: P.ink,
           pointBorderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8
+          pointRadius: 5,
         },
-        {
-          label: 'Orders',
-          data: mockData.salesData.map(item => item.orders),
-          borderColor: isDarkMode ? '#00CED1' : '#4682B4',
-          backgroundColor: isDarkMode ? 'rgba(0, 206, 209, 0.1)' : 'rgba(70, 130, 180, 0.1)',
-          borderWidth: 3,
-          fill: false,
-          tension: 0.4,
-          pointBackgroundColor: isDarkMode ? '#00CED1' : '#4682B4',
-          pointBorderColor: isDarkMode ? '#000' : '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8
-        }
-      ]
-    };
-  }, [isDarkMode]);
+      ],
+    }),
+    [orange]
+  );
 
-  const barChartData = useMemo(() => {
-    return {
-      labels: mockData.hourlyData.map(item => item.hour),
-      datasets: [
-        {
-          label: 'Orders',
-          data: mockData.hourlyData.map(item => item.orders),
-          backgroundColor: isDarkMode 
-            ? 'rgba(255, 215, 0, 0.8)' 
-            : 'rgba(139, 69, 19, 0.8)',
-          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-          borderWidth: 2,
-          borderRadius: 8,
-          borderSkipped: false,
-        }
-      ]
-    };
-  }, [isDarkMode]);
-
-  const doughnutData = useMemo(() => {
-    return {
-      labels: mockData.categoryData.map(item => item.name),
-      datasets: [
-        {
-          data: mockData.categoryData.map(item => item.sales),
-          backgroundColor: mockData.categoryData.map(item => item.color),
-          borderColor: isDarkMode ? '#333' : '#fff',
-          borderWidth: 3,
-          hoverBorderWidth: 5,
-          hoverBorderColor: isDarkMode ? '#FFD700' : '#8B4513'
-        }
-      ]
-    };
-  }, [isDarkMode]);
-
-  const radarData = useMemo(() => {
-    return {
-      labels: ['Sales Growth', 'Customer Satisfaction', 'Order Efficiency', 'Product Quality', 'Service Speed', 'Cost Management'],
-      datasets: [
-        {
-          label: 'Performance Metrics',
-          data: [85, 92, 78, 95, 88, 82],
-          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.2)',
-          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
-          borderWidth: 3,
-          pointBackgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-          pointBorderColor: isDarkMode ? '#000' : '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8
-        }
-      ]
-    };
-  }, [isDarkMode]);
-
-  const chartOptions = useMemo(() => {
-    return {
+  const chartOptions = useMemo(
+    () => ({
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'top' as const,
-          labels: {
-            color: isDarkMode ? '#fff' : '#333',
-            font: {
-              size: 16,
-              weight: 'bold' as const
-            },
-            padding: 20
-          }
+          display: false,
         },
         tooltip: {
-          backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-          titleColor: isDarkMode ? '#fff' : '#333',
-          bodyColor: isDarkMode ? '#fff' : '#333',
-          borderColor: isDarkMode ? '#FFD700' : '#8B4513',
+          backgroundColor: isDarkMode ? P.ink : '#fff',
+          titleColor: isDarkMode ? cream : P.ink,
+          bodyColor: isDarkMode ? cream : P.ink,
+          borderColor: orange,
           borderWidth: 2,
-          cornerRadius: 12,
-          displayColors: true,
-          titleFont: {
-            size: 16,
-            weight: 'bold' as const
-          },
-          bodyFont: {
-            size: 14
-          },
-          padding: 12
-        }
+        },
       },
       scales: {
         x: {
-          grid: {
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-          },
-          ticks: {
-            color: isDarkMode ? '#fff' : '#333',
-            font: {
-              size: 14
-            }
-          }
+          grid: { color: `${P.ink}22` },
+          ticks: { color: ink, font: { family: P.grotesk, size: 11, weight: 700 } },
         },
         y: {
-          grid: {
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-          },
-          ticks: {
-            color: isDarkMode ? '#fff' : '#333',
-            font: {
-              size: 14
-            }
-          }
-        }
-      }
-    };
-  }, [isDarkMode]);
+          grid: { color: `${P.ink}22` },
+          ticks: { color: ink, font: { family: P.grotesk, size: 11 } },
+        },
+      },
+    }),
+    [cream, ink, isDarkMode, orange]
+  );
+
+  const navLinkSx = (active: boolean) => ({
+    fontFamily: P.grotesk,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    fontSize: '0.875rem',
+    letterSpacing: '0.08em',
+    color: ink,
+    textDecoration: 'none',
+    opacity: active ? 1 : 0.55,
+    borderBottom: active ? `2px solid ${orange}` : '2px solid transparent',
+    pb: 0.25,
+    '&:hover': { opacity: 1 },
+  });
+
+  const barFill = (i: number) => {
+    if (i === 0) return orange;
+    if (i === 1) return `${P.ink}CC`;
+    if (i === 2) return `${P.ink}66`;
+    return `${P.ink}33`;
+  };
 
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      background: isDarkMode
-        ? 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'
-        : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      paddingTop: '80px', // Add top padding for navbar
-      transition: 'background 0.3s',
-    }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Analytics sx={{ fontSize: 32, color: isDarkMode ? '#FFD700' : '#8B4513' }} />
-            <Typography variant="h4" component="h1" sx={{ 
-              fontWeight: 'bold',
-              color: isDarkMode ? '#fff' : '#333',
-              textShadow: isDarkMode ? '0 0 10px rgba(255, 215, 0, 0.3)' : 'none'
-            }}>
-              Coffee Analytics Dashboard
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title="Refresh Data">
-              <IconButton onClick={handleRefresh} sx={{ color: isDarkMode ? '#FFD700' : '#8B4513' }}>
-                <Refresh />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Export Data">
-              <IconButton sx={{ color: isDarkMode ? '#FFD700' : '#8B4513' }}>
-                <Download />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Settings">
-              <IconButton sx={{ color: isDarkMode ? '#FFD700' : '#8B4513' }}>
-                <Settings />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
-        
-        {/* Controls */}
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel sx={{ color: isDarkMode ? '#fff' : '#333' }}>Time Range</InputLabel>
-            <Select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              sx={{ 
-                color: isDarkMode ? '#fff' : '#333',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'
-                }
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: cream,
+        color: ink,
+        fontFamily: P.grotesk,
+        pb: 4,
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap');
+      `}</style>
+
+      <Box
+        component="header"
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          width: '100%',
+          py: 2,
+          bgcolor: cream,
+          borderBottom: `4px solid ${P.ink}`,
+        }}
+      >
+        <Box
+          sx={{
+            ...pageGutterSx,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, md: 4 }, flexWrap: 'wrap' }}>
+            <Typography
+              component={Link}
+              to="/"
+              sx={{
+                fontFamily: P.grotesk,
+                fontWeight: 900,
+                fontSize: '1.35rem',
+                textTransform: 'uppercase',
+                letterSpacing: '-0.03em',
+                color: ink,
+                textDecoration: 'none',
               }}
             >
-              <MenuItem value="7days">Last 7 Days</MenuItem>
-              <MenuItem value="30days">Last 30 Days</MenuItem>
-              <MenuItem value="3months">Last 3 Months</MenuItem>
-              <MenuItem value="6months">Last 6 Months</MenuItem>
-              <MenuItem value="12months">Last 12 Months</MenuItem>
-            </Select>
-          </FormControl>
-          
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showRealTime}
-                onChange={(e) => setShowRealTime(e.target.checked)}
-                sx={{
-                  '& .MuiSwitch-switchBase.Mui-checked': {
-                    color: isDarkMode ? '#FFD700' : '#8B4513'
-                  },
-                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                    backgroundColor: isDarkMode ? '#FFD700' : '#8B4513'
-                  }
-                }}
-              />
-            }
-            label="Real-time Updates"
-            sx={{ color: isDarkMode ? '#fff' : '#333' }}
-          />
+              The Pulp Alchemist
+            </Typography>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3, alignItems: 'center' }}>
+              <MuiLink component={Link} to="/products" sx={navLinkSx(false)}>
+                Inventory
+              </MuiLink>
+              <MuiLink component={Link} to="/stats" sx={navLinkSx(true)}>
+                Analytics
+              </MuiLink>
+              <MuiLink component={Link} to="/help" sx={navLinkSx(false)}>
+                Staff
+              </MuiLink>
+              <MuiLink component={Link} to="/orders" sx={navLinkSx(false)}>
+                Sales
+              </MuiLink>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <IconButton
+              size="small"
+              sx={{ border: `2px solid ${P.ink}`, bgcolor: panelBg, borderRadius: 0, color: ink }}
+              aria-label="Search"
+            >
+              <Search fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              sx={{ border: `2px solid ${P.ink}`, bgcolor: panelBg, borderRadius: 0, color: ink }}
+            >
+              <Settings fontSize="small" />
+            </IconButton>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                border: `2px solid ${P.ink}`,
+                bgcolor: P.ink,
+                overflow: 'hidden',
+              }}
+            >
+              <Box component="img" src={AVATAR_SRC} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1)' }} />
+            </Box>
+          </Box>
         </Box>
       </Box>
 
-      {/* Summary Cards */}
-      <Grid container spacing={4} sx={{ mb: 6 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{
-            background: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.05)' 
-              : 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            borderRadius: 4,
-            transition: 'all 0.3s ease',
-            minHeight: 200,
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: isDarkMode 
-                ? '0 15px 40px rgba(255, 215, 0, 0.3)' 
-                : '0 15px 40px rgba(139, 69, 19, 0.3)'
-            }
-          }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h5" sx={{ color: isDarkMode ? '#fff' : '#333', mb: 2, fontWeight: 'bold' }}>
-                    Total Sales
-                  </Typography>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 'bold',
-                    color: isDarkMode ? '#FFD700' : '#8B4513',
-                    mb: 2
-                  }}>
-                    ${animatedValues.totalSales.toLocaleString()}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                    <TrendingUp sx={{ color: '#4CAF50', fontSize: 24, mr: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                      +12.5% vs last period
-                    </Typography>
-                  </Box>
-                </Box>
-                <AttachMoney sx={{ 
-                  fontSize: 72, 
-                  color: isDarkMode ? '#FFD700' : '#8B4513',
-                  opacity: 0.7
-                }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Box
+        component="main"
+        sx={{
+          ...pageGutterSx,
+          py: { xs: 4, md: 5 },
+          display: 'flex',
+          flexDirection: 'column',
+          gap: { xs: 4, md: 5 },
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box
+            component="span"
+            sx={{
+              alignSelf: 'flex-start',
+              bgcolor: orange,
+              color: '#fff',
+              px: 1.5,
+              py: 0.25,
+              fontSize: '0.7rem',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+            }}
+          >
+            Operations Dashboard
+          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              m: 0,
+              fontFamily: P.grotesk,
+              fontWeight: 900,
+              fontSize: { xs: '2.5rem', sm: '3rem', md: '3.35rem' },
+              textTransform: 'uppercase',
+              letterSpacing: '-0.04em',
+              lineHeight: 1,
+            }}
+          >
+            Coffee Analytics
+          </Typography>
+          <Box sx={{ width: 96, height: 6, bgcolor: P.ink, mt: 0.5 }} />
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{
-            background: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.05)' 
-              : 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            borderRadius: 4,
-            transition: 'all 0.3s ease',
-            minHeight: 200,
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: isDarkMode 
-                ? '0 15px 40px rgba(255, 215, 0, 0.3)' 
-                : '0 15px 40px rgba(139, 69, 19, 0.3)'
-            }
-          }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h5" sx={{ color: isDarkMode ? '#fff' : '#333', mb: 2, fontWeight: 'bold' }}>
-                    Total Orders
-                  </Typography>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 'bold',
-                    color: isDarkMode ? '#FFD700' : '#8B4513',
-                    mb: 2
-                  }}>
-                    {animatedValues.totalOrders.toLocaleString()}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                    <TrendingUp sx={{ color: '#4CAF50', fontSize: 24, mr: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                      +8.3% vs last period
-                    </Typography>
-                  </Box>
-                </Box>
-                <ShoppingCart sx={{ 
-                  fontSize: 72, 
-                  color: isDarkMode ? '#FFD700' : '#8B4513',
-                  opacity: 0.7
-                }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{
-            background: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.05)' 
-              : 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            borderRadius: 4,
-            transition: 'all 0.3s ease',
-            minHeight: 200,
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: isDarkMode 
-                ? '0 15px 40px rgba(255, 215, 0, 0.3)' 
-                : '0 15px 40px rgba(139, 69, 19, 0.3)'
-            }
-          }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h5" sx={{ color: isDarkMode ? '#fff' : '#333', mb: 2, fontWeight: 'bold' }}>
-                    Customers
-                  </Typography>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 'bold',
-                    color: isDarkMode ? '#FFD700' : '#8B4513',
-                    mb: 2
-                  }}>
-                    {animatedValues.totalCustomers.toLocaleString()}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                    <TrendingUp sx={{ color: '#4CAF50', fontSize: 24, mr: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                      +15.2% vs last period
-                    </Typography>
-                  </Box>
-                </Box>
-                <People sx={{ 
-                  fontSize: 72, 
-                  color: isDarkMode ? '#FFD700' : '#8B4513',
-                  opacity: 0.7
-                }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{
-            background: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.05)' 
-              : 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            borderRadius: 4,
-            transition: 'all 0.3s ease',
-            minHeight: 200,
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              boxShadow: isDarkMode 
-                ? '0 15px 40px rgba(255, 215, 0, 0.3)' 
-                : '0 15px 40px rgba(139, 69, 19, 0.3)'
-            }
-          }}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h5" sx={{ color: isDarkMode ? '#fff' : '#333', mb: 2, fontWeight: 'bold' }}>
-                    Avg Order
-                  </Typography>
-                  <Typography variant="h3" sx={{ 
-                    fontWeight: 'bold',
-                    color: isDarkMode ? '#FFD700' : '#8B4513',
-                    mb: 2
-                  }}>
-                    ${animatedValues.avgOrderValue}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                    <TrendingFlat sx={{ color: '#FF9800', fontSize: 24, mr: 1 }} />
-                    <Typography variant="h6" sx={{ color: '#FF9800', fontWeight: 'bold' }}>
-                      +2.1% vs last period
-                    </Typography>
-                  </Box>
-                </Box>
-                <LocalCafe sx={{ 
-                  fontSize: 72, 
-                  color: isDarkMode ? '#FFD700' : '#8B4513',
-                  opacity: 0.7
-                }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Tabs */}
-      <Paper sx={{
-        background: isDarkMode 
-          ? 'rgba(255, 255, 255, 0.05)' 
-          : 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-        borderRadius: 4,
-        overflow: 'hidden'
-      }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
+        <Box
           sx={{
-            borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-            '& .MuiTab-root': {
-              color: isDarkMode ? '#fff' : '#333',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              padding: '16px 24px',
-              '&.Mui-selected': {
-                color: isDarkMode ? '#FFD700' : '#8B4513'
-              }
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-              height: 4
-            }
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, minmax(0, 1fr))' },
+            gap: { xs: 2, md: 2.5 },
           }}
         >
-          <Tab label="Overview" icon={<Dashboard />} iconPosition="start" />
-          <Tab label="Sales Analytics" icon={<ShowChart />} iconPosition="start" />
-          <Tab label="Customer Insights" icon={<People />} iconPosition="start" />
-          <Tab label="Product Performance" icon={<BarChart />} iconPosition="start" />
-        </Tabs>
+          {[
+            {
+              label: 'Revenue',
+              value: `$${animatedValues.totalSales.toLocaleString()}`,
+              foot: (
+                <>
+                  <Box component="span" sx={{ color: '#059669', fontWeight: 700 }}>↑ 12.4%</Box>
+                  <Box component="span" sx={{ opacity: 0.4, textTransform: 'uppercase' }}>vs last month</Box>
+                </>
+              ),
+              icon: <Payments sx={{ fontSize: 16, opacity: 0.5 }} />,
+              accent: true,
+            },
+            {
+              label: 'Orders',
+              value: animatedValues.totalOrders.toLocaleString(),
+              foot: (
+                <>
+                  <Box component="span" sx={{ color: '#059669', fontWeight: 700 }}>↑ 10.2%</Box>
+                  <Box component="span" sx={{ opacity: 0.4, textTransform: 'uppercase' }}>from baseline</Box>
+                </>
+              ),
+              icon: <ShoppingCart sx={{ fontSize: 16, opacity: 0.5 }} />,
+              accent: false,
+            },
+            {
+              label: 'Customers',
+              value: animatedValues.totalCustomers.toLocaleString(),
+              foot: (
+                <>
+                  <Box component="span" sx={{ color: P.error, fontWeight: 700 }}>↓ 3.4%</Box>
+                  <Box component="span" sx={{ opacity: 0.4, textTransform: 'uppercase' }}>retention dip</Box>
+                </>
+              ),
+              icon: <Person sx={{ fontSize: 16, opacity: 0.5 }} />,
+              accent: false,
+            },
+            {
+              label: 'Avg Ticket',
+              value: `$${animatedValues.avgOrderValue.toFixed(2)}`,
+              foot: (
+                <>
+                  <Box component="span" sx={{ color: '#059669', fontWeight: 700 }}>↑ 4.1%</Box>
+                  <Box component="span" sx={{ opacity: 0.4, textTransform: 'uppercase' }}>lifecycle growth</Box>
+                </>
+              ),
+              icon: <Receipt sx={{ fontSize: 16, opacity: 0.5 }} />,
+              accent: false,
+            },
+          ].map((k) => (
+            <Box
+              key={k.label}
+              sx={{
+                bgcolor: panelBg,
+                border: comicBorder,
+                boxShadow: comicShadow,
+                p: { xs: 2.5, md: 3 },
+                minHeight: { md: 148 },
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.5, mb: 1.25 }}>
+                <span>{k.label}</span>
+                {k.icon}
+              </Box>
+              <Typography sx={{ fontSize: { xs: '2.15rem', sm: '2.5rem', md: '2.65rem' }, fontWeight: 900, color: k.accent ? orange : ink, lineHeight: 1.05 }}>
+                {k.value}
+              </Typography>
+              <Box sx={{ mt: 2, fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                {k.foot}
+              </Box>
+            </Box>
+          ))}
+        </Box>
 
-        <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={4}>
-            <Grid item xs={12} lg={8}>
-              <Card sx={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                borderRadius: 4,
-                height: 500
-              }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                    Sales & Orders Trend
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <Line data={lineChartData} options={chartOptions} />
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(12, 1fr)' }, gap: { xs: 2.5, md: 3 } }}>
+          <Box
+            sx={{
+              gridColumn: { lg: 'span 8' },
+              bgcolor: panelBg,
+              border: comicBorder,
+              boxShadow: comicShadow,
+              p: { xs: 2.5, md: 3.5 },
+              position: 'relative',
+            }}
+          >
+            <Box sx={{ position: 'absolute', top: 0, right: 0, width: 96, height: 96, ...halftoneSx, opacity: 0.1, pointerEvents: 'none' }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+              <Typography sx={{ fontSize: { xs: '1.1rem', md: '1.35rem' }, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                Revenue Trends
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 3, fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box sx={{ width: 8, height: 8, bgcolor: orange }} /> Actual
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box sx={{ width: 8, height: 8, border: `1px solid ${P.ink}`, bgcolor: isDarkMode ? '#333' : '#f5f5f5' }} /> Forecast
+                </Box>
+              </Box>
+            </Box>
+            <Box sx={{ height: { xs: 280, md: 340 }, minHeight: 260, borderLeft: `2px solid ${P.ink}33`, borderBottom: `2px solid ${P.ink}33`, position: 'relative' }}>
+              <Line data={lineChartData} options={chartOptions} />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              gridColumn: { lg: 'span 4' },
+              bgcolor: surfaceVar,
+              border: comicBorder,
+              boxShadow: comicShadow,
+              p: { xs: 2.5, md: 3.5 },
+            }}
+          >
+            <Typography sx={{ fontSize: { xs: '1.1rem', md: '1.35rem' }, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', mb: 3 }}>
+              Product Mix
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.25 }}>
+              {mockData.categoryData.map((c, i) => (
+                <Box key={c.name}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', mb: 0.5 }}>
+                    <span>{c.name}</span>
+                    <span>{c.pct}%</span>
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} lg={4}>
-              <Card sx={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                borderRadius: 4,
-                height: 500
-              }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                    Category Distribution
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <Doughnut data={doughnutData} options={chartOptions} />
+                  <Box sx={{ width: '100%', height: 18, bgcolor: panelBg, border: `2px solid ${P.ink}`, overflow: 'hidden' }}>
+                    <Box sx={{ height: '100%', width: `${c.pct}%`, bgcolor: barFill(i), transition: 'width 0.6s ease' }} />
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Card sx={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                borderRadius: 4
-              }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                    Performance Metrics
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <Radar data={radarData} options={chartOptions} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <Grid container spacing={4}>
-            <Grid item xs={12}>
-              <Card sx={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                borderRadius: 4,
-                height: 500
-              }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                    Hourly Order Distribution
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <Bar data={barChartData} options={chartOptions} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <Card sx={{
-                background: isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.05)' 
-                  : 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                borderRadius: 4
-              }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 3, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                    Customer Segments
-                  </Typography>
-                  <List>
-                    {mockData.customerSegments.map((segment, index) => (
-                      <React.Fragment key={segment.segment}>
-                        <ListItem sx={{ py: 2 }}>
-                          <ListItemAvatar>
-                            <Avatar sx={{ 
-                              bgcolor: isDarkMode ? '#FFD700' : '#8B4513',
-                              color: isDarkMode ? '#000' : '#fff',
-                              width: 60,
-                              height: 60,
-                              fontSize: '1.2rem',
-                              fontWeight: 'bold'
-                            }}>
-                              {segment.percentage}%
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Typography variant="h6" sx={{ 
-                                color: isDarkMode ? '#fff' : '#333',
-                                fontWeight: 'bold',
-                                mb: 1
-                              }}>
-                                {segment.segment}
-                              </Typography>
-                            }
-                            secondary={
-                              <Typography variant="h6" sx={{ 
-                                color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
-                                fontWeight: 'bold'
-                              }}>
-                                {segment.count} customers • Avg: ${segment.avgSpend}
-                              </Typography>
-                            }
-                          />
-                          <LinearProgress
-                            variant="determinate"
-                            value={segment.percentage}
-                            sx={{
-                              width: 150,
-                              height: 12,
-                              borderRadius: 6,
-                              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                              '& .MuiLinearProgress-bar': {
-                                backgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-                                borderRadius: 6
-                              }
-                            }}
-                          />
-                        </ListItem>
-                        {index < mockData.customerSegments.length - 1 && <Divider sx={{ my: 2 }} />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={3}>
-          <Grid container spacing={4}>
-            {mockData.topProducts.map((product, index) => (
-              <Grid item xs={12} sm={6} md={4} key={product.name}>
-                <Card sx={{
-                  background: isDarkMode 
-                    ? 'rgba(255, 255, 255, 0.05)' 
-                    : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(10px)',
-                  border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                  borderRadius: 4,
-                  transition: 'all 0.3s ease',
-                  minHeight: 300,
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: isDarkMode 
-                      ? '0 15px 40px rgba(255, 215, 0, 0.3)' 
-                      : '0 15px 40px rgba(139, 69, 19, 0.3)'
-                  }
-                }}>
-                  <CardContent sx={{ p: 4 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                      <Typography variant="h5" sx={{ color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                        {product.name}
-                      </Typography>
-                      <Chip
-                        label={`#${index + 1}`}
-                        size="medium"
-                        sx={{
-                          backgroundColor: isDarkMode ? '#FFD700' : '#8B4513',
-                          color: isDarkMode ? '#000' : '#fff',
-                          fontWeight: 'bold',
-                          fontSize: '1rem',
-                          padding: '8px 16px'
-                        }}
-                      />
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          sx={{
-                            color: i < Math.floor(product.rating) ? '#FFD700' : 'rgba(0, 0, 0, 0.2)',
-                            fontSize: 24
-                          }}
-                        />
-                      ))}
-                      <Typography variant="h6" sx={{ ml: 2, color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold' }}>
-                        {product.rating}
-                      </Typography>
-                    </Box>
-                    
-                    <Typography variant="h4" sx={{ 
-                      fontWeight: 'bold',
-                      color: isDarkMode ? '#FFD700' : '#8B4513',
-                      mb: 3
-                    }}>
-                      ${product.sales.toLocaleString()}
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Typography variant="h6" sx={{ color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)', fontWeight: 'bold' }}>
-                        {product.orders} orders
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <TrendingUp sx={{ color: '#4CAF50', fontSize: 24, mr: 1 }} />
-                        <Typography variant="h6" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                          +{product.growth}%
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </TabPanel>
-      </Paper>
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ mt: 3, pt: 3, borderTop: `2px solid ${P.ink}1a` }}>
+              <Typography sx={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, lineHeight: 1.4 }}>
+                Most profitable item this week: Double Shot Espresso (+15.2% Margin)
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };
 
-export default StatsPage; 
+export default StatsPage;

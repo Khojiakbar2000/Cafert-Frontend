@@ -1,580 +1,474 @@
-// @ts-nocheck
 import React from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  IconButton,
-  Button,
-  Divider,
-  useTheme,
-  useMediaQuery,
-  Stack,
-  Chip
-} from '@mui/material';
-
-import {
-  Facebook as FacebookIcon,
-  Twitter as TwitterIcon,
-  Instagram as InstagramIcon,
-  YouTube as YouTubeIcon,
-  LinkedIn as LinkedInIcon,
-  LocationOn as LocationIcon,
-  Phone as PhoneIcon,
-  Email as EmailIcon,
-  AccessTime as TimeIcon,
-  ArrowUpward as ArrowUpIcon,
-  LocalCafe as CoffeeIcon,
-  Favorite as HeartIcon
-} from '@mui/icons-material';
+import { Box } from '@mui/material';
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import { Link } from 'react-router-dom';
-import { useGlobals } from '../../hooks/useGlobals';
-import { useTranslation } from 'react-i18next';
 
-export default function Footer() {
-  const { authMember } = useGlobals();
-  const theme = useTheme();
-  const { t } = useTranslation();
+/** stitch.md — Pulp Alchemist tokens */
+const INK = '#1A0F0D';
+const CREAM = '#FDF6E3';
+const ORANGE = '#FF4E00';
+const SURFACE = '#fcf6e8';
+const SURFACE_CONTAINER = '#eee8d8';
+const PRIMARY_CONTAINER = '#ff784d';
+const TERTIARY_CONTAINER = '#fecc00';
+const PRIMARY = '#a83100';
+const ON_PRIMARY = '#ffefeb';
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+const COMIC_IMAGES = {
+  roast:
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuAC2cfKjNmSxyeolgGZ3jNpuztJrRrhvd7eS6pf9kcnDvrwX-JLxlsofVEomUWOwtkF4Plz14Kj71ErqfRgKvB8UYHuBNdhWcWpSLFS3TzsubbEaxx9o4jKpaoorgDxv42Jd9zvYFHFRA8IxXiE6XrD6L8uP0auKSG68-aSIWUooy0gffaYemz7cd1LtLmvcHtxapIM0gYcVNbpf5H4YNLe0SbBmyF7R1-rlEKMa1WluLxWGByFkG5TBjfwBIP-QkqwA1llQiMU_4ti',
+  pour:
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuC39dxm1QmeCk9zUMk60Fua5zSo2icQgtSW-zYJe1cumr_iqWdS7vLm21r5chF-oTdvQjaOwPssq_yra87sPSFKM8xFLGDh8XMFFuZrGrX3FYHPt41c1GtclQAmUdRJ6CKpPEN8a7xvqpMscTL6mr8cVzm8FhDDd0Vb0mVEaR_bx98jS6uY44x6tzY4tixIwQRoXfwnZPR1e1BWsGKEfrL0Axgu2x5PnUGDIiYU6_WAWFi82GVP5H3-HIgoXYVhuYdeotAUkJhmCWB7',
+  script:
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuD3I83R1mG1gh5obmbXRFTyu4cicAgWMTuoORN-3C7UDIO8DDXnbc14rce9Esb_xekQ6JeI5JkzddlN6yRmtOhb-r0YmnZiQdZ_Sn-EI-YlAslLYYSWuIYFUEA3Tzs170Y1jDOFBP5tI6RgMQjzYiKEd5W-1N4Rj41pDVgzS_Rx-YnkYjfG9ehe437Y_bqTYSNj33nufhBLmKGFDVipgh7KmsUjt1dIFmNsTv9BEbgZOIfofVjp9YGIj9P1yEudIxUtlS5GL_-Psp1b',
+} as const;
 
-  const currentYear = new Date().getFullYear();
+const NAV_ITEMS: { label: string; to?: string; href?: string }[] = [
+  { label: 'Story', to: '/help' },
+  { label: 'Menu', to: '/products' },
+  { label: 'Locations', to: '/help' },
+  { label: 'Shop', to: '/products' },
+];
 
-  const footerSections = [
-    {
-      title: t('footer.quickLinks'),
-      links: [
-        { label: t('navigation.home'), path: '/' },
-        { label: t('navigation.products'), path: '/products' },
-        { label: t('navigation.drinks'), path: '/coffees' },
-        { label: t('navigation.about'), path: '/help' },
-        ...(authMember ? [{ label: t('navigation.orders'), path: '/orders' }] : []),
-      ]
-    },
-    {
-      title: t('footer.services'),
-      links: [
-        { label: t('footer.dineIn'), path: '/services/dine-in' },
-        { label: t('footer.takeaway'), path: '/services/takeaway' },
-        { label: t('footer.delivery'), path: '/services/delivery' },
-        { label: t('footer.catering'), path: '/services/catering' },
-        { label: t('footer.events'), path: '/services/events' },
-      ]
-    },
-    {
-      title: t('footer.aboutUs'),
-      links: [
-        { label: t('footer.ourStory'), path: '/about/story' },
-        { label: t('footer.team'), path: '/about/team' },
-        { label: t('footer.careers'), path: '/about/careers' },
-        { label: t('footer.press'), path: '/about/press' },
-        { label: t('footer.blog'), path: '/blog' },
-      ]
-    }
-  ];
+const SOCIAL = [
+  { Icon: ShareOutlinedIcon, href: 'https://twitter.com', label: 'Share' },
+  { Icon: CampaignOutlinedIcon, href: 'https://instagram.com', label: 'News' },
+  { Icon: GroupsOutlinedIcon, href: 'https://facebook.com', label: 'Community' },
+];
 
-  const socialLinks = [
-    { icon: <FacebookIcon />, url: 'https://facebook.com', label: 'Facebook' },
-    { icon: <TwitterIcon />, url: 'https://twitter.com', label: 'Twitter' },
-    { icon: <InstagramIcon />, url: 'https://instagram.com', label: 'Instagram' },
-    { icon: <YouTubeIcon />, url: 'https://youtube.com', label: 'YouTube' },
-    { icon: <LinkedInIcon />, url: 'https://linkedin.com', label: 'LinkedIn' },
-  ];
-
-  const contactInfo = [
-    { icon: <LocationIcon />, label: 'Location', value: 'Downtown, New York', action: () => window.open('https://maps.google.com') },
-    { icon: <PhoneIcon />, label: 'Phone', value: '+971 4 554 7777', action: () => window.open('tel:+97145547777') },
-    { icon: <EmailIcon />, label: 'Email', value: 'info@coffeeshop.com', action: () => window.open('mailto:info@coffeeshop.com') },
-    { icon: <TimeIcon />, label: 'Hours', value: '24/7 Service', action: null },
-  ];
-
+function StitchFooterFonts() {
   return (
-    <Box
-      component="footer"
-      sx={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #1a1a1a 100%)',
-        color: '#fff',
-        position: 'relative',
-        overflow: 'visible',
-        marginBottom: '-100px',
-        paddingBottom: '100px',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '6px',
-          background: 'linear-gradient(90deg, #8B4513, #A0522D, #CD853F, #D2691E, #8B4513)',
-          backgroundSize: '200% 100%',
-          animation: 'gradientShift 3s ease-in-out infinite',
-          zIndex: 10,
-        },
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          width: '100%',
-          height: '100px',
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 50%, #1a1a1a 100%)',
-          clipPath: 'ellipse(100% 100px at 50% 100%)',
-          WebkitClipPath: 'ellipse(100% 100px at 50% 100%)',
-          zIndex: 1,
-        },
-        '@keyframes gradientShift': {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-        },
-        '@media (max-width: 768px)': {
-          marginBottom: '-60px',
-          paddingBottom: '60px',
-          '&::after': {
-            height: '60px',
-            clipPath: 'ellipse(100% 60px at 50% 100%)',
-            WebkitClipPath: 'ellipse(100% 60px at 50% 100%)',
-          }
-        }
-      }}
-    >
-      {/* Main Footer Content */}
-      <Container maxWidth="xl" sx={{ py: 8, position: 'relative', zIndex: 2 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 6,
-          flexWrap: 'wrap'
-        }}>
-          {/* Company Info */}
-          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 35%' }, minWidth: { lg: '350px' } }}>
-            <Box sx={{ mb: 5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                <CoffeeIcon sx={{ fontSize: 48, color: '#8B4513', mr: 3 }} />
-                <Typography
-                  variant="h3"
-                  sx={{
-                    color: '#fff',
-                    fontWeight: 800,
-                    fontStyle: 'italic',
-                    letterSpacing: '-0.03em',
-                    fontSize: { xs: '2.5rem', md: '3rem' }
-                  }}
-                >
-                  Cafert
-                </Typography>
-              </Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 4, 
-                  lineHeight: 1.8, 
-                  color: '#d0d0d0',
-                  fontSize: { xs: '1.1rem', md: '1.25rem' },
-                  fontWeight: 400
-                }}
-              >
-                {t('footer.aboutText')}
-              </Typography>
-              
-              {/* Social Media */}
-              <Box sx={{ mb: 5 }}>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    mb: 3, 
-                    color: '#fff', 
-                    fontWeight: 700,
-                    fontSize: { xs: '1.5rem', md: '1.75rem' }
-                  }}
-                >
-                  {t('footer.social')}
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  {socialLinks.map((social, index) => (
-                    <IconButton
-                      key={index}
-                      href={social.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        backgroundColor: 'rgba(139, 69, 19, 0.15)',
-                        color: '#8B4513',
-                        width: 56,
-                        height: 56,
-                        '&:hover': {
-                          backgroundColor: '#8B4513',
-                          color: '#fff',
-                          transform: 'translateY(-4px) scale(1.1)',
-                          boxShadow: '0 8px 25px rgba(139, 69, 19, 0.4)',
-                        },
-                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                        '& svg': {
-                          fontSize: 28,
-                        }
-                      }}
-                    >
-                      {social.icon}
-                    </IconButton>
-                  ))}
-                </Stack>
-              </Box>
-
-              {/* Newsletter Signup */}
-              <Box>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    mb: 3, 
-                    color: '#fff', 
-                    fontWeight: 700,
-                    fontSize: { xs: '1.5rem', md: '1.75rem' }
-                  }}
-                >
-                  {t('footer.stayUpdated')}
-                </Typography>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 3, 
-                    color: '#d0d0d0',
-                    fontSize: { xs: '1rem', md: '1.1rem' },
-                    fontWeight: 400
-                  }}
-                >
-                  {t('footer.newsletterText')}
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  sx={{
-                    borderColor: '#8B4513',
-                    borderWidth: 2,
-                    color: '#8B4513',
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    px: 4,
-                    py: 1.5,
-                    '&:hover': {
-                      borderColor: '#A0522D',
-                      backgroundColor: 'rgba(139, 69, 19, 0.15)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(139, 69, 19, 0.3)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {t('footer.subscribe')}
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Navigation Links */}
-          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 30%' }, minWidth: { lg: '300px' } }}>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', md: 'row' },
-              gap: 4,
-              flexWrap: 'wrap'
-            }}>
-              {footerSections.map((section, index) => (
-                <Box key={index} sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' }, minWidth: { md: '200px' } }}>
-                  <Typography 
-                    variant="h5" 
-                    sx={{ 
-                      mb: 4, 
-                      color: '#fff', 
-                      fontWeight: 700,
-                      fontSize: { xs: '1.4rem', md: '1.6rem' }
-                    }}
-                  >
-                    {section.title}
-                  </Typography>
-                  <Stack spacing={2}>
-                    {section.links.map((link, linkIndex) => (
-                      <Link
-                        key={linkIndex}
-                        to={link.path}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: '#d0d0d0',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            fontSize: { xs: '1rem', md: '1.1rem' },
-                            fontWeight: 500,
-                            '&:hover': {
-                              color: '#8B4513',
-                              transform: 'translateX(8px)',
-                              fontWeight: 600,
-                            }
-                          }}
-                        >
-                          {link.label}
-                        </Typography>
-                      </Link>
-                    ))}
-                  </Stack>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Contact Information */}
-          <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 35%' }, minWidth: { lg: '350px' } }}>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                mb: 4, 
-                color: '#fff', 
-                fontWeight: 700,
-                fontSize: { xs: '1.5rem', md: '1.75rem' }
-              }}
-            >
-              Contact Information
-            </Typography>
-            <Stack spacing={3}>
-              {contactInfo.map((contact, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: contact.action ? 'pointer' : 'default',
-                    p: 2,
-                    borderRadius: 2,
-                    '&:hover': contact.action ? {
-                      transform: 'translateX(8px)',
-                      backgroundColor: 'rgba(139, 69, 19, 0.1)',
-                      transition: 'all 0.3s ease',
-                    } : {},
-                  }}
-                  onClick={contact.action || undefined}
-                >
-                  <Box
-                    sx={{
-                      backgroundColor: 'rgba(139, 69, 19, 0.2)',
-                      borderRadius: '50%',
-                      p: 2,
-                      mr: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minWidth: 56,
-                      minHeight: 56,
-                    }}
-                  >
-                    {React.cloneElement(contact.icon, { 
-                      sx: { fontSize: 28, color: '#8B4513' } 
-                    })}
-                  </Box>
-                  <Box>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        color: '#8B4513', 
-                        fontWeight: 700,
-                        fontSize: { xs: '1.1rem', md: '1.2rem' },
-                        mb: 0.5
-                      }}
-                    >
-                      {contact.label}
-                    </Typography>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        color: '#d0d0d0',
-                        fontSize: { xs: '1rem', md: '1.1rem' },
-                        fontWeight: 400
-                      }}
-                    >
-                      {contact.value}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Stack>
-
-            {/* Opening Hours */}
-            <Box sx={{ mt: 5 }}>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  mb: 3, 
-                  color: '#fff', 
-                  fontWeight: 700,
-                  fontSize: { xs: '1.4rem', md: '1.6rem' }
-                }}
-              >
-                Opening Hours
-              </Typography>
-              <Stack spacing={2}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  p: 2,
-                  borderRadius: 2,
-                  backgroundColor: 'rgba(139, 69, 19, 0.1)',
-                }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      color: '#d0d0d0',
-                      fontSize: { xs: '1rem', md: '1.1rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Monday - Friday
-                  </Typography>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      color: '#8B4513', 
-                      fontWeight: 700,
-                      fontSize: { xs: '1rem', md: '1.1rem' }
-                    }}
-                  >
-                    7:00 AM - 10:00 PM
-                  </Typography>
-                </Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  p: 2,
-                  borderRadius: 2,
-                  backgroundColor: 'rgba(139, 69, 19, 0.1)',
-                }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      color: '#d0d0d0',
-                      fontSize: { xs: '1rem', md: '1.1rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Saturday - Sunday
-                  </Typography>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      color: '#8B4513', 
-                      fontWeight: 700,
-                      fontSize: { xs: '1rem', md: '1.1rem' }
-                    }}
-                  >
-                    8:00 AM - 11:00 PM
-                  </Typography>
-                </Box>
-                <Chip
-                  label="24/7 Online Ordering"
-                  size="large"
-                  sx={{
-                    backgroundColor: 'rgba(139, 69, 19, 0.25)',
-                    color: '#8B4513',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    height: 48,
-                    alignSelf: 'flex-start',
-                    '& .MuiChip-label': {
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                    }
-                  }}
-                />
-              </Stack>
-            </Box>
-          </Box>
-        </Box>
-      </Container>
-
-      {/* Bottom Section */}
-      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.15)', borderWidth: 2 }} />
-      
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', md: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'center', md: 'center' },
-          gap: 3
-        }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: '#d0d0d0', 
-              textAlign: { xs: 'center', md: 'left' },
-              fontSize: { xs: '1rem', md: '1.1rem' },
-              fontWeight: 500
-            }}
-          >
-            © {currentYear} Cafert. All rights reserved. Made with{' '}
-            <HeartIcon sx={{ fontSize: 20, color: '#8B4513', verticalAlign: 'middle' }} />
-            {' '}for coffee lovers.
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Link to="/privacy" style={{ textDecoration: 'none' }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#d0d0d0', 
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  fontWeight: 500,
-                  '&:hover': { 
-                    color: '#8B4513',
-                    fontWeight: 600,
-                  } 
-                }}
-              >
-                Privacy Policy
-              </Typography>
-            </Link>
-            <Link to="/terms" style={{ textDecoration: 'none' }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#d0d0d0', 
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  fontWeight: 500,
-                  '&:hover': { 
-                    color: '#8B4513',
-                    fontWeight: 600,
-                  } 
-                }}
-              >
-                Terms of Service
-              </Typography>
-            </Link>
-            <IconButton
-              onClick={scrollToTop}
-              sx={{
-                backgroundColor: 'rgba(139, 69, 19, 0.2)',
-                color: '#8B4513',
-                width: 56,
-                height: 56,
-                '&:hover': {
-                  backgroundColor: '#8B4513',
-                  color: '#fff',
-                  transform: 'translateY(-4px) scale(1.1)',
-                  boxShadow: '0 8px 25px rgba(139, 69, 19, 0.4)',
-                },
-                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                '& svg': {
-                  fontSize: 28,
-                }
-              }}
-            >
-              <ArrowUpIcon />
-            </IconButton>
-          </Box>
-        </Box>
-      </Container>
-    </Box>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:ital,wght@0,300..700;1,300..700&display=swap');
+    `}</style>
   );
 }
 
+const halftoneLayer = (tint: string) => ({
+  content: '""',
+  position: 'absolute' as const,
+  inset: 0,
+  pointerEvents: 'none' as const,
+  backgroundImage: 'radial-gradient(#1A0F0D 10%, transparent 11%)',
+  backgroundSize: '10px 10px',
+  color: tint,
+  opacity: 0.2,
+});
+
+export type FooterProps = {
+  /** When true, panel uses dark ink background (comic night mode). */
+  isDarkMode?: boolean;
+};
+
+/**
+ * Footer + bottom comic strip — from `src/components/stitch.md` (Simplified Footer + strips).
+ */
+export default function Footer({ isDarkMode = false }: FooterProps) {
+  const year = new Date().getFullYear();
+  const panelBg = isDarkMode ? 'rgba(22, 18, 16, 0.98)' : CREAM;
+  const navColor = isDarkMode ? SURFACE : INK;
+
+  return (
+    <Box
+      className="stitch-md-footer-root"
+      sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        fontFamily: '"Space Grotesk", system-ui, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+        mt: { xs: '3rem', md: '5rem' },
+      }}
+    >
+      <StitchFooterFonts />
+      <Box
+        component="footer"
+        sx={{
+          width: '100%',
+          maxWidth: '80rem',
+          mx: 'auto',
+          bgcolor: panelBg,
+          color: navColor,
+          border: `8px solid ${INK}`,
+          boxSizing: 'border-box',
+        }}
+      >
+        <Box
+          sx={{
+            p: { xs: '2rem', md: '4rem' },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <Box sx={{ mb: '3rem' }}>
+            <Box
+              component="span"
+              sx={{
+                display: 'block',
+                fontSize: { xs: '3rem', md: '4.5rem' },
+                fontWeight: 900,
+                fontStyle: 'italic',
+                color: ORANGE,
+                textShadow: `4px 4px 0 ${INK}`,
+                lineHeight: 1,
+                textTransform: 'uppercase',
+              }}
+            >
+              THE PULP
+            </Box>
+            <Box
+              component="span"
+              sx={{
+                display: 'block',
+                fontSize: { xs: '3rem', md: '4.5rem' },
+                fontWeight: 900,
+                fontStyle: 'italic',
+                color: isDarkMode ? SURFACE : INK,
+                textShadow: `4px 4px 0 ${ORANGE}`,
+                lineHeight: 1,
+                textTransform: 'uppercase',
+              }}
+            >
+              ALCHEMIST
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: { xs: '1.5rem', md: '3rem' },
+              mb: '3rem',
+            }}
+          >
+            {NAV_ITEMS.map((item) =>
+              item.to ? (
+                <Box
+                  key={item.label}
+                  component={Link}
+                  to={item.to}
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    fontStyle: 'italic',
+                    color: navColor,
+                    textDecoration: 'none',
+                    transition: 'color 0.15s ease',
+                    '@media (hover: hover)': { '&:hover': { color: ORANGE } },
+                  }}
+                >
+                  {item.label}
+                </Box>
+              ) : (
+                <Box
+                  key={item.label}
+                  component="a"
+                  href={item.href}
+                  sx={{
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    fontStyle: 'italic',
+                    color: navColor,
+                    textDecoration: 'none',
+                    transition: 'color 0.15s ease',
+                    '@media (hover: hover)': { '&:hover': { color: ORANGE } },
+                  }}
+                >
+                  {item.label}
+                </Box>
+              )
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '2rem',
+              mb: '3rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            {SOCIAL.map(({ Icon, href, label }) => (
+              <Box
+                key={label}
+                component="a"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                sx={{
+                  width: '3.5rem',
+                  height: '3.5rem',
+                  bgcolor: ORANGE,
+                  color: INK,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: `4px solid ${INK}`,
+                  transition: 'transform 0.15s ease',
+                  '@media (hover: hover)': { '&:hover': { transform: 'translateY(-4px)' } },
+                }}
+              >
+                <Icon sx={{ fontSize: '1.75rem' }} />
+              </Box>
+            ))}
+          </Box>
+
+          <Box
+            sx={{
+              pt: '2rem',
+              borderTop: `4px solid ${INK}`,
+              width: '100%',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem',
+            }}
+          >
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                opacity: 0.85,
+                color: navColor,
+              }}
+            >
+              © {year} THE PULP ALCHEMIST. ALL RIGHTS RESERVED.
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 8, height: 8, bgcolor: ORANGE, flexShrink: 0 }} />
+              <Box
+                component="span"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  fontStyle: 'italic',
+                  color: navColor,
+                }}
+              >
+                Transmitted from the Ink-Verse
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Bottom comic strips — stitch.md */}
+      <Box
+        component="section"
+        aria-label="Comic strip panels"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' },
+          gap: '1.5rem',
+          width: '100%',
+          maxWidth: '80rem',
+          mx: 'auto',
+          pt: '3rem',
+          pb: '3rem',
+          px: { xs: '1rem', md: 0 },
+          boxSizing: 'border-box',
+        }}
+      >
+        <Box
+          sx={{
+            height: { xs: 200, md: 256 },
+            bgcolor: SURFACE_CONTAINER,
+            border: `6px solid ${INK}`,
+            position: 'relative',
+            overflow: 'hidden',
+            '&:hover .comic-footer-img': {
+              filter: 'grayscale(0) contrast(1.08)',
+            },
+          }}
+        >
+          <Box
+            component="img"
+            className="comic-footer-img"
+            src={COMIC_IMAGES.roast}
+            alt="Close-up of a rustic coffee cup"
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              filter: 'grayscale(1) contrast(1.1)',
+              transition: 'filter 0.5s ease',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              bgcolor: PRIMARY_CONTAINER,
+              p: '0.5rem',
+              borderTop: `4px solid ${INK}`,
+              borderRight: `4px solid ${INK}`,
+              fontWeight: 900,
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              fontSize: '0.875rem',
+              color: '#460f00',
+            }}
+          >
+            Issue #01: The Roast
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            height: { xs: 200, md: 256 },
+            bgcolor: SURFACE_CONTAINER,
+            border: `6px solid ${INK}`,
+            position: 'relative',
+            overflow: 'hidden',
+            transform: { md: 'rotate(1deg)' },
+            '&:hover .comic-footer-img': {
+              filter: 'grayscale(0) contrast(1.08)',
+            },
+          }}
+        >
+          <Box
+            component="img"
+            className="comic-footer-img"
+            src={COMIC_IMAGES.pour}
+            alt="Barista pouring milk"
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              filter: 'grayscale(1) contrast(1.15)',
+              transition: 'filter 0.5s ease',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              bgcolor: TERTIARY_CONTAINER,
+              color: '#584500',
+              p: '0.5rem',
+              borderTop: `4px solid ${INK}`,
+              borderRight: `4px solid ${INK}`,
+              fontWeight: 900,
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              fontSize: '0.875rem',
+            }}
+          >
+            Issue #02: The Pour
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            height: { xs: 200, md: 256 },
+            bgcolor: SURFACE_CONTAINER,
+            border: `6px solid ${INK}`,
+            position: 'relative',
+            overflow: 'hidden',
+            transform: { md: 'rotate(-1deg)' },
+            '&:hover .comic-footer-img': {
+              filter: 'grayscale(0) contrast(1.08)',
+            },
+          }}
+        >
+          <Box
+            component="img"
+            className="comic-footer-img"
+            src={COMIC_IMAGES.script}
+            alt="Vintage typewriter"
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              filter: 'grayscale(1) contrast(1.12)',
+              transition: 'filter 0.5s ease',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              bgcolor: PRIMARY,
+              color: ON_PRIMARY,
+              p: '0.5rem',
+              borderTop: `4px solid ${INK}`,
+              borderRight: `4px solid ${INK}`,
+              fontWeight: 900,
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              fontSize: '0.875rem',
+            }}
+          >
+            Issue #03: The Script
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            height: { xs: 200, md: 256 },
+            bgcolor: SURFACE_CONTAINER,
+            border: `6px solid ${INK}`,
+            position: 'relative',
+            overflow: 'hidden',
+            transform: { md: 'rotate(2deg)' },
+          }}
+        >
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              bgcolor: INK,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              p: '2rem',
+              textAlign: 'center',
+              '&::after': halftoneLayer('rgba(252,246,232,0.4)'),
+            }}
+          >
+            <Box
+              component="span"
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                color: SURFACE,
+                fontWeight: 900,
+                fontStyle: 'italic',
+                textTransform: 'uppercase',
+                fontSize: { xs: '1.35rem', md: '1.5rem' },
+                letterSpacing: '-0.03em',
+                lineHeight: 1.15,
+              }}
+            >
+              TO BE <br />
+              CONTINUED...
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}

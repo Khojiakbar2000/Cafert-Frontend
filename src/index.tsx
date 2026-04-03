@@ -59,9 +59,19 @@ const root = createRoot(container);
   }
   const zoomState = (window as any).__ZOOM_STATE__;
 
+  /** Opt-out via `<html data-disable-viewport-zoom="true">` only (no route exceptions). */
+  const shouldSkipViewportZoom = () =>
+    document.documentElement.getAttribute("data-disable-viewport-zoom") === "true";
+
   const applyZoom = () => {
     // Prevent infinite loop - don't apply if already applying
     if (zoomState.isApplyingZoom) {
+      return;
+    }
+
+    if (shouldSkipViewportZoom()) {
+      document.documentElement.style.zoom = "1";
+      zoomState.lastAppliedZoom = "1";
       return;
     }
 

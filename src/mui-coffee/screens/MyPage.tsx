@@ -1,17 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Grid,
   Avatar,
   Button,
-  Chip,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   useTheme,
   useMediaQuery,
   Dialog,
@@ -24,36 +17,34 @@ import {
   TextField,
   IconButton,
   Stack,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
 } from '@mui/material';
 import {
   Person as PersonIcon,
   ShoppingCart as OrdersIcon,
-  Help as HelpIcon,
   Logout as LogoutIcon,
   Edit as EditIcon,
   LocalShipping as ShippingIcon,
-  CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  ArrowForward as ArrowForwardIcon,
-  Add as AddIcon,
   PhotoCamera as PhotoCameraIcon,
   Delete as DeleteIcon,
-  Refresh as RefreshIcon,
   Replay as ReplayIcon,
-  TrackChanges as TrackChangesIcon,
   LocationOn as LocationOnIcon,
-  Receipt as ReceiptIcon,
-  Payment as PaymentIcon,
-  PlayArrow as PlayArrowIcon,
-  TrendingUp as TrendingUpIcon,
   AttachMoney as AttachMoneyIcon,
   Star as StarIcon,
-  ExpandMore as ExpandMoreIcon
+  Dashboard as DashboardIcon,
+  ShoppingBag as ShoppingBagIcon,
+  CalendarMonth as CalendarMonthIcon,
+  Payments as PaymentsIcon,
+  EmojiEvents as EmojiEventsIcon,
+  LocalCafe as LocalCafeIcon,
+  Settings as SettingsIcon,
+  Home as HomeIcon,
+  History as HistoryIcon,
+  WorkspacePremium as WorkspacePremiumIcon,
+  Notifications as NotificationsIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Coffee as CoffeeIcon,
+  Cake as CakeIcon
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
 import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGlobals } from '../../app/hooks/useGlobals';
@@ -64,8 +55,6 @@ import MemberService from '../../app/services/MemberService';
 import OrderService from '../../app/services/OrderService';
 import { OrderInquiry } from '../../lib/types/order';
 import { OrderStatus } from '../../lib/enums/order.enum';
-import { ProductStatus, ProductCollection, ProductSize } from '../../lib/enums/product.enum';
-import { CartItem } from '../../lib/types/search';
 import { retrievePausedOrders, retrieveProcessOrders, retrieveFinishedOrders } from '../../app/screens/ordersPage/selector';
 
 interface MyPageProps {
@@ -80,6 +69,33 @@ interface MyPageProps {
     surface: string;
   };
 }
+
+/** Tokens from `src/components/stitch.md` (Pulp Alchemist profile). */
+const PULP = {
+  surface: '#fcf6e8',
+  ink: '#1A0F0D',
+  primary: '#a83100',
+  primaryContainer: '#ff784d',
+  onSurface: '#312f26',
+  onSurfaceVariant: '#5f5b51',
+  tertiaryContainer: '#fecc00',
+  surfaceContainer: '#eee8d8',
+  surfaceContainerLow: '#f6f0e1',
+  surfaceContainerHigh: '#e8e2d1',
+  surfaceBright: '#fcf6e8',
+  surfaceContainerHighest: '#e3ddcb',
+  onPrimary: '#ffefeb',
+  onPrimaryContainer: '#460f00',
+  onTertiaryFixed: '#413200',
+  onTertiaryFixedVariant: '#634e00',
+  onBackground: '#312f26',
+} as const;
+
+const PULP_INK_BORDER = `6px solid ${PULP.ink}`;
+const PULP_INK_BORDER_SM = `3px solid ${PULP.ink}`;
+const PULP_COMIC_SHADOW = '6px 6px 0 0 #1A0F0D';
+const PULP_COMIC_SHADOW_LG = '8px 8px 0 0 #1A0F0D';
+const PULP_GROTESK = '"Space Grotesk", system-ui, sans-serif';
 
 const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   const { authMember, setAuthMember } = useGlobals();
@@ -402,36 +418,6 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case OrderStatus.PAUSE: return '#ff9800';
-      case OrderStatus.PROCESS: return '#2196f3';
-      case OrderStatus.FINISH: return '#4caf50';
-      case OrderStatus.DELETE: return '#f44336';
-      default: return componentColors.textSecondary;
-    }
-  };
-
-  const getStatusLabel = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.PAUSE: return 'Paused';
-      case OrderStatus.PROCESS: return 'Processing';
-      case OrderStatus.FINISH: return 'Finished';
-      case OrderStatus.DELETE: return 'Cancelled';
-      default: return 'Unknown';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case OrderStatus.PAUSE: return <ScheduleIcon />;
-      case OrderStatus.PROCESS: return <ShippingIcon />;
-      case OrderStatus.FINISH: return <CheckCircleIcon />;
-      case OrderStatus.DELETE: return <CheckCircleIcon />;
-      default: return <ScheduleIcon />;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -441,53 +427,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   };
 
   // Get last order for reorder action
-  const lastOrder = recentOrders.length > 0 ? recentOrders[0] : null;
   const activeOrder = recentOrders.find(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus));
-
-  // Smart Actions based on user state
-  const smartActions = useMemo(() => {
-    const actions: Array<{
-      title: string;
-      description: string;
-      icon: React.ReactElement;
-      color: string;
-      action: () => void;
-    }> = [];
-    
-    if (lastOrder) {
-      actions.push({
-        title: 'Reorder Last Order',
-        description: `Quick reorder from ${formatDate(lastOrder.createdAt)}`,
-        icon: <ReplayIcon />,
-        color: componentColors.accent,
-        action: () => {
-          history.push('/orders');
-        }
-      });
-    }
-    
-    if (activeOrder) {
-      actions.push({
-        title: `Track Order #${activeOrder._id?.slice(-4) || '0001'}`,
-        description: 'View real-time order status',
-        icon: <TrackChangesIcon />,
-        color: '#2196f3',
-        action: () => history.push('/orders')
-      });
-    }
-    
-    if (authMember?.memberAddress) {
-      actions.push({
-        title: 'Update Delivery Info',
-        description: 'Change your delivery address',
-        icon: <LocationOnIcon />,
-        color: '#4caf50',
-        action: handleEditProfile
-      });
-    }
-    
-    return actions;
-  }, [recentOrders, authMember, componentColors.accent, history]);
 
   // Enhanced stats with trends
   const stats = [
@@ -522,6 +462,29 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     },
   ];
 
+  const surfaceBg = isDarkMode ? PULP.ink : PULP.surface;
+  const textMain = isDarkMode ? PULP.surface : PULP.onSurface;
+  const memberLevel = Math.min(99, Math.max(1, Math.floor(orderStats.loyaltyPoints / 30) + 1));
+  const nextPerkPts = Math.max(0, 50 - (orderStats.loyaltyPoints % 50));
+  const memberSinceYear = authMember?.createdAt
+    ? new Date(authMember.createdAt as any).getFullYear()
+    : 2021;
+
+  const getOrderLineTitle = (order: any) => {
+    const names = order?.productData?.map((p: any) => p.productName).filter(Boolean);
+    if (names?.length) return names.slice(0, 2).join(' & ');
+    return `Order #${order?._id?.slice(-4) || '—'}`;
+  };
+
+  const activeProgressWidth = (status: string) => {
+    if (status === OrderStatus.PAUSE) return '45%';
+    if (status === OrderStatus.PROCESS) return '66%';
+    if (status === OrderStatus.FINISH) return '100%';
+    return '20%';
+  };
+
+  const avatarSrc = authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : '/icons/default-user.svg';
+
   // Temporarily comment out auth check for debugging
   // if (!authMember) {
   //   history.push('/');
@@ -529,1043 +492,693 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   // }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        backgroundColor: componentColors.background,
-        background: isDarkMode
-          ? `radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
-             radial-gradient(circle at 80% 80%, rgba(179, 142, 106, 0.1) 0%, transparent 50%),
-             ${componentColors.background}`
-          : `radial-gradient(circle at 20% 50%, rgba(179, 142, 106, 0.08) 0%, transparent 50%),
-             radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
-             ${componentColors.background}`,
-        backgroundAttachment: 'fixed',
-        pt: 12,
-        pb: 4,
-        px: isMobile ? 2 : 4,
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: isDarkMode
-            ? 'radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 70%)'
-            : 'radial-gradient(circle at 50% 50%, rgba(179, 142, 106, 0.05) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 0
-        }
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+    <>
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap');`}
+      </style>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: surfaceBg,
+          color: textMain,
+          fontFamily: PULP_GROTESK,
+          position: 'relative',
+          pb: { xs: 10, md: 0 },
+          '&::after': {
+            content: '""',
+            position: 'fixed',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            opacity: 0.03,
+            backgroundImage: "url(https://www.transparenttextures.com/patterns/stardust.png)",
+          },
+        }}
       >
-        {/* Bento Grid Container */}
+        {/* Top nav — stitch.md */}
         <Box
+          component="nav"
           sx={{
-            display: 'grid',
-            gridTemplateColumns: isMobile 
-              ? '1fr' 
-              : 'repeat(12, 1fr)',
-            gridAutoRows: 'minmax(200px, auto)',
-            gap: 3,
-            mb: 4
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+            px: { xs: 2, md: 3 },
+            py: 2,
+            bgcolor: surfaceBg,
+            borderBottom: '8px solid',
+            borderColor: PULP.ink,
+            boxShadow: PULP_COMIC_SHADOW,
           }}
         >
-          {/* Profile Header - Large Card (spans 2 columns on desktop) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{
-              gridColumn: isMobile ? '1' : 'span 12',
-              gridRow: 'span 1'
+          <Typography
+            component="button"
+            type="button"
+            onClick={() => history.push('/')}
+            sx={{
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              fontFamily: PULP_GROTESK,
+              fontSize: { xs: '1.35rem', md: '1.85rem' },
+              fontWeight: 900,
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              color: isDarkMode ? PULP.surface : PULP.ink,
+              letterSpacing: '-0.04em',
+              textShadow: isDarkMode ? `4px 4px 0 ${PULP.primary}` : `4px 4px 0 ${PULP.primary}`,
+              textAlign: 'left',
             }}
           >
-            <Card
+            The Pulp Alchemist
+          </Typography>
+          <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
+            <Typography
+              onClick={handleEditProfile}
               sx={{
-                backgroundColor: componentColors.surface,
-                borderRadius: '20px',
-                border: `1px solid ${componentColors.border}`,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                height: '100%',
-                background: isDarkMode 
-                  ? `linear-gradient(135deg, ${componentColors.surface} 0%, ${componentColors.surface}dd 100%)`
-                  : `linear-gradient(135deg, ${componentColors.surface} 0%, #ffffff 100%)`,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                  transform: 'translateY(-2px)'
-                }
+                fontWeight: 700,
+                fontStyle: 'italic',
+                textTransform: 'uppercase',
+                color: PULP.primary,
+                textDecoration: 'underline',
+                textDecorationThickness: 4,
+                cursor: 'pointer',
+                '&:hover': { transform: 'translate(4px, 4px)' },
+                transition: 'transform 0.15s',
               }}
             >
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <Avatar
-                      src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        border: isDarkMode
-                          ? '3px solid rgba(255, 255, 255, 0.2)'
-                          : '3px solid rgba(255, 255, 255, 0.8)',
-                        boxShadow: isDarkMode
-                          ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02), 0 0 20px ${componentColors.accent}30`
-                          : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 20px ${componentColors.accent}20`
-                      }}
-                    />
-                    <Box>
-                      <Typography
-                        variant="h4"
-                        sx={{
-                          color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                          fontWeight: 700,
-                          mb: 0.5,
-                          fontSize: isMobile ? '1.5rem' : '2rem'
-                        }}
-                      >
-                        {authMember?.memberNick || 'Guest User'}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: componentColors.textSecondary,
-                          fontSize: '1rem'
-                        }}
-                      >
-                        {authMember?.memberType || 'Regular customer'} • Last order {lastOrder ? `${Math.floor((Date.now() - new Date(lastOrder.createdAt).getTime()) / (1000 * 60 * 60))} hours ago` : 'never'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<EditIcon />}
-                      onClick={handleEditProfile}
-                      sx={{
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(42, 42, 42, 0.3)'
-                          : 'rgba(248, 249, 250, 0.5)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        borderColor: isDarkMode
-                          ? 'rgba(255, 255, 255, 0.15)'
-                          : 'rgba(255, 255, 255, 0.6)',
-                        color: componentColors.text,
-                        px: 2.5,
-                        py: 1.5,
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        fontSize: '0.9rem',
-                        boxShadow: isDarkMode
-                          ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
-                          : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
-                        '&:hover': {
-                          borderColor: componentColors.accent,
-                          backgroundColor: isDarkMode
-                            ? 'rgba(42, 42, 42, 0.5)'
-                            : 'rgba(248, 249, 250, 0.7)',
-                          boxShadow: isDarkMode
-                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03)'
-                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9)',
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      Edit Profile
-                    </Button>
-                    {activeOrder ? (
-                      <Button
-                        variant="contained"
-                        startIcon={<TrackChangesIcon />}
-                        onClick={() => history.push('/orders')}
-                        sx={{
-                          backgroundColor: componentColors.accent,
-                          color: 'white',
-                          px: 3,
-                          py: 1.5,
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          fontSize: '1rem',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          boxShadow: isDarkMode
-                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
-                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
-                          '&:hover': {
-                            backgroundColor: componentColors.secondary,
-                            boxShadow: isDarkMode
-                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
-                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        Track Active Order
-                      </Button>
-                    ) : lastOrder ? (
-                      <Button
-                        variant="contained"
-                        startIcon={<ReplayIcon />}
-                        onClick={() => history.push('/orders')}
-                        sx={{
-                          backgroundColor: componentColors.accent,
-                          color: 'white',
-                          px: 3,
-                          py: 1.5,
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          fontSize: '1rem',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          boxShadow: isDarkMode
-                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
-                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
-                          '&:hover': {
-                            backgroundColor: componentColors.secondary,
-                            boxShadow: isDarkMode
-                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
-                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        Order Again
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => history.push('/coffees')}
-                        sx={{
-                          backgroundColor: componentColors.accent,
-                          color: 'white',
-                          px: 3,
-                          py: 1.5,
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          textTransform: 'none',
-                          fontSize: '1rem',
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
-                          boxShadow: isDarkMode
-                            ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 6px 6px 12px rgba(0, 0, 0, 0.4), -3px -3px 6px rgba(255, 255, 255, 0.1)'
-                            : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 6px 6px 12px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.5)',
-                          '&:hover': {
-                            backgroundColor: componentColors.secondary,
-                            boxShadow: isDarkMode
-                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 8px 8px 16px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.15)'
-                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 8px 8px 16px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.6)',
-                            transform: 'translateY(-2px)',
-                          },
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        Place First Order
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </motion.div>
+              Profile
+            </Typography>
+            <Typography
+              onClick={() => history.push('/products')}
+              sx={{
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                '&:hover': { transform: 'translate(4px, 4px)' },
+                transition: 'transform 0.15s',
+              }}
+            >
+              Inventory
+            </Typography>
+            <Typography
+              onClick={() => history.push('/kinetic-archive')}
+              sx={{
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                '&:hover': { transform: 'translate(4px, 4px)' },
+                transition: 'transform 0.15s',
+              }}
+            >
+              The Lab
+            </Typography>
+          </Stack>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <IconButton onClick={() => history.push('/orders?tab=menu')} sx={{ color: PULP.primary }}>
+              <OrdersIcon />
+            </IconButton>
+            <IconButton sx={{ color: PULP.primary }}>
+              <NotificationsIcon />
+            </IconButton>
+            <Box
+              component="img"
+              src={avatarSrc}
+              alt=""
+              sx={{
+                width: 40,
+                height: 40,
+                objectFit: 'cover',
+                border: PULP_INK_BORDER_SM,
+                transform: 'rotate(3deg)',
+              }}
+            />
+          </Stack>
+        </Box>
 
-          {/* Stats Cards - Bento Grid Layout */}
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 + index * 0.05 }}
-              style={{
-                gridColumn: isMobile 
-                  ? '1' 
-                  : index === 0 ? 'span 6' : index === 1 ? 'span 6' : index === 2 ? 'span 4' : 'span 4',
-                gridRow: 'span 1'
-              }}
-            >
-              <motion.div
-                whileHover={{ y: -4, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Card
-                  sx={{
-                    backgroundColor: stat.highlighted 
-                      ? (isDarkMode 
-                          ? 'rgba(33, 150, 243, 0.25)' 
-                          : 'rgba(33, 150, 243, 0.15)')
-                      : (isDarkMode 
-                          ? 'rgba(42, 42, 42, 0.4)' 
-                          : 'rgba(248, 249, 250, 0.6)'),
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    borderRadius: '24px',
-                    border: isDarkMode
-                      ? '1px solid rgba(255, 255, 255, 0.1)'
-                      : '1px solid rgba(255, 255, 255, 0.5)',
-                    boxShadow: isDarkMode
-                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
-                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
-                    textAlign: 'center',
-                    p: 3,
-                    height: '100%',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '1px',
-                      background: isDarkMode
-                        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                        : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                      zIndex: 1
-                    },
-                    '&:hover': {
-                      boxShadow: isDarkMode
-                        ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03), 0 0 20px ${stat.color}20`
-                        : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9), 0 0 20px ${stat.color}15`,
-                      borderColor: stat.color,
-                      transform: 'translateY(-4px) scale(1.02)',
-                      backgroundColor: stat.highlighted 
-                        ? (isDarkMode 
-                            ? 'rgba(33, 150, 243, 0.3)' 
-                            : 'rgba(33, 150, 243, 0.2)')
-                        : (isDarkMode 
-                            ? 'rgba(42, 42, 42, 0.5)' 
-                            : 'rgba(248, 249, 250, 0.7)')
-                    },
-                    '&:active': {
-                      transform: 'scale(0.98)',
-                      boxShadow: isDarkMode
-                        ? 'inset 2px 2px 4px rgba(0, 0, 0, 0.3), inset -2px -2px 4px rgba(255, 255, 255, 0.02)'
-                        : 'inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.8)'
-                    }
-                  }}
-                  onClick={() => history.push('/orders')}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      mb: 2
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        backgroundColor: `${stat.color}20`,
-                        borderRadius: '16px',
-                        p: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: `0 4px 12px ${stat.color}20`
-                      }}
-                    >
-                      <Box sx={{ color: stat.color, fontSize: 28 }}>
-                        {stat.icon}
-                      </Box>
-                    </Box>
-                  </Box>
-                  <Typography
-                    variant="h3"
-                    sx={{
-                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                      fontWeight: 700,
-                      mb: 0.5,
-                      fontSize: isMobile ? '1.75rem' : '2.25rem'
-                    }}
-                  >
-                    {stat.value}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: componentColors.textSecondary,
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      mb: 1
-                    }}
-                  >
-                    {stat.label}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: componentColors.textSecondary,
-                      fontSize: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 0.5
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 14 }} />
-                    {stat.trend}
-                  </Typography>
-                </Card>
-              </motion.div>
-            </motion.div>
-          ))}
-
-          {/* Quick Actions - Medium Card */}
-          {smartActions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              style={{
-                gridColumn: isMobile ? '1' : 'span 4',
-                gridRow: 'span 2'
-              }}
-            >
-              <Card
+        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 80px)', position: 'relative', zIndex: 1 }}>
+          {/* Sidebar — desktop */}
+          <Box
+            component="aside"
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              flexDirection: 'column',
+              p: 2,
+              gap: 3,
+              bgcolor: surfaceBg,
+              width: 256,
+              flexShrink: 0,
+              borderRight: '8px solid',
+              borderColor: PULP.ink,
+              position: 'sticky',
+              top: 80,
+              alignSelf: 'flex-start',
+              height: 'calc(100vh - 80px)',
+            }}
+          >
+            <Box sx={{ py: 2 }}>
+              <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, fontStyle: 'italic', color: textMain }}>
+                The Archive
+              </Typography>
+              <Typography
                 sx={{
-                  backgroundColor: isDarkMode 
-                    ? 'rgba(42, 42, 42, 0.4)'
-                    : 'rgba(248, 249, 250, 0.6)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  borderRadius: '24px',
-                  border: isDarkMode
-                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: isDarkMode
-                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
-                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
-                  height: '100%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '1px',
-                    background: isDarkMode
-                      ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                      : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                    zIndex: 1
-                  },
-                  '&:hover': {
-                    boxShadow: isDarkMode
-                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 12px 12px 24px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.03)'
-                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 12px 12px 24px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.9)',
-                    transform: 'translateY(-4px)',
-                    borderColor: isDarkMode
-                      ? 'rgba(255, 255, 255, 0.15)'
-                      : 'rgba(255, 255, 255, 0.7)'
-                  }
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  color: PULP.primary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.2em',
+                  mt: 0.5,
                 }}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                      fontWeight: 700,
-                      mb: 3,
-                      fontSize: '1.25rem'
-                    }}
-                  >
-                    Quick Actions
-                  </Typography>
-                  <Stack spacing={2}>
-                    {smartActions.map((action, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{ x: 4 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Button
-                          fullWidth
-                          startIcon={action.icon}
-                          onClick={action.action}
-                          sx={{
-                            justifyContent: 'flex-start',
-                            textAlign: 'left',
-                            p: 2,
-                            borderRadius: '12px',
-                            backgroundColor: isDarkMode
-                              ? 'rgba(42, 42, 42, 0.3)'
-                              : 'rgba(248, 249, 250, 0.5)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: isDarkMode
-                              ? '1px solid rgba(255, 255, 255, 0.1)'
-                              : '1px solid rgba(255, 255, 255, 0.5)',
-                            color: componentColors.text,
-                            textTransform: 'none',
-                            boxShadow: isDarkMode
-                              ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
-                              : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
-                            '&:hover': {
-                              backgroundColor: isDarkMode
-                                ? 'rgba(42, 42, 42, 0.5)'
-                                : 'rgba(248, 249, 250, 0.7)',
-                              boxShadow: isDarkMode
-                                ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03), 0 0 15px ${action.color}20`
-                                : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 15px ${action.color}15`,
-                              transform: 'translateX(4px)',
-                              borderColor: action.color,
-                            },
-                            transition: 'all 0.3s ease',
-                          }}
-                        >
-                          <Box sx={{ flex: 1, textAlign: 'left' }}>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 600,
-                                color: componentColors.text,
-                                mb: 0.5
-                              }}
-                            >
-                              {action.title}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: componentColors.textSecondary,
-                                fontSize: '0.8rem',
-                                display: 'block'
-                              }}
-                            >
-                              {action.description}
-                            </Typography>
-                          </Box>
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                Rank: Master Alchemist
+              </Typography>
+            </Box>
+            <Stack spacing={1}>
+              {[
+                { icon: <DashboardIcon />, label: 'Dashboard', onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+                { icon: <HistoryIcon />, label: 'Order History', onClick: () => history.push('/orders') },
+                { icon: <StarIcon />, label: 'Roast Points', onClick: () => window.scrollTo({ top: 400, behavior: 'smooth' }) },
+                { icon: <LocalCafeIcon />, label: 'Brew Methods', onClick: () => history.push('/coffee-demo') },
+                {
+                  icon: <SettingsIcon />,
+                  label: 'Settings',
+                  onClick: handleEditProfile,
+                  active: true,
+                },
+              ].map((item) => (
+                <Box
+                  key={item.label}
+                  onClick={item.onClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: 1.5,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    color: textMain,
+                    bgcolor: item.active ? PULP.primaryContainer : 'transparent',
+                    border: item.active ? '4px solid' : 'none',
+                    borderColor: PULP.ink,
+                    transform: item.active ? 'rotate(-1deg)' : 'none',
+                    boxShadow: item.active ? '4px 4px 0 #1A0F0D' : 'none',
+                    '&:hover': { bgcolor: PULP.surfaceContainerLow, transform: item.active ? 'rotate(-1deg) scale(1.02)' : 'scale(1.02)' },
+                  }}
+                >
+                  {item.icon}
+                  {item.label}
+                </Box>
+              ))}
+            </Stack>
+            <Box sx={{ pt: 4, mt: 'auto' }}>
+              <Button
+                fullWidth
+                onClick={() => history.push('/orders?tab=menu')}
+                sx={{
+                  py: 2,
+                  bgcolor: PULP.primary,
+                  color: PULP.onPrimary,
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  textTransform: 'uppercase',
+                  letterSpacing: '-0.02em',
+                  border: PULP_INK_BORDER,
+                  borderRadius: 0,
+                  boxShadow: PULP_COMIC_SHADOW,
+                  '&:hover': { bgcolor: PULP.primary, transform: 'translate(4px, 4px)' },
+                }}
+              >
+                New Order
+              </Button>
+              <Button
+                fullWidth
+                onClick={handleLogout}
+                disabled={isLoading}
+                sx={{ mt: 1, color: PULP.ink, textTransform: 'none', fontWeight: 700 }}
+                startIcon={isLoading ? <CircularProgress size={16} /> : <LogoutIcon />}
+              >
+                Log out
+              </Button>
+            </Box>
+          </Box>
 
-          {/* Recent Orders - Large Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            style={{
-              gridColumn: isMobile ? '1' : smartActions.length > 0 ? 'span 8' : 'span 12',
-              gridRow: 'span 2'
+          {/* Main */}
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              p: { xs: 2, md: 6 },
+              maxWidth: { md: '80rem' },
+              mx: 'auto',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
             }}
           >
-            <Card
+            <Box
               sx={{
-                backgroundColor: isDarkMode 
-                  ? 'rgba(42, 42, 42, 0.4)'
-                  : 'rgba(248, 249, 250, 0.6)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                borderRadius: '24px',
-                border: isDarkMode
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid rgba(255, 255, 255, 0.5)',
-                boxShadow: isDarkMode
-                  ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
-                  : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
-                height: '100%',
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.3s ease',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '1px',
-                  background: isDarkMode
-                    ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                    : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                  zIndex: 1
-                },
-                '&:hover': {
-                  boxShadow: isDarkMode
-                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 12px 12px 24px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.03)'
-                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 12px 12px 24px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.9)',
-                  transform: 'translateY(-4px)',
-                  borderColor: isDarkMode
-                    ? 'rgba(255, 255, 255, 0.15)'
-                    : 'rgba(255, 255, 255, 0.7)'
-                }
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: { md: 'flex-end' },
+                justifyContent: 'space-between',
+                gap: 4,
+                pb: 4,
+                borderBottom: '4px dashed',
+                borderColor: textMain,
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography
-                    variant="h6"
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <Box sx={{ position: 'relative' }}>
+                  <Box
                     sx={{
-                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                      fontWeight: 700,
-                      fontSize: '1.25rem'
+                      width: 128,
+                      height: 128,
+                      border: PULP_INK_BORDER,
+                      transform: 'rotate(-3deg)',
+                      overflow: 'hidden',
+                      bgcolor: PULP.surfaceContainerHigh,
+                      boxShadow: PULP_COMIC_SHADOW,
                     }}
                   >
-                    Recent Orders
-                  </Typography>
-                  <Button
-                    variant="text"
-                    onClick={() => history.push('/orders')}
-                    sx={{
-                      color: componentColors.accent,
-                      textTransform: 'none',
-                      fontSize: '0.9rem',
-                      '&:hover': {
-                        backgroundColor: `${componentColors.accent}08`
-                      }
-                    }}
-                  >
-                    View All
-                  </Button>
-                </Box>
-                {isLoadingOrders ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress sx={{ color: componentColors.accent }} />
+                    <Box component="img" src={avatarSrc} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </Box>
-                ) : recentOrders.length > 0 ? (
-                  <Box sx={{ position: 'relative' }}>
-                    {/* Timeline line */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -8,
+                      right: -8,
+                      bgcolor: PULP.tertiaryContainer,
+                      color: PULP.onTertiaryFixed,
+                      fontWeight: 900,
+                      px: 1.5,
+                      py: 0.5,
+                      border: `2px solid ${PULP.onBackground}`,
+                      transform: 'rotate(12deg)',
+                    }}
+                  >
+                    LVL {memberLevel}
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '3.5rem', md: '6rem' },
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      textTransform: 'uppercase',
+                      letterSpacing: '-0.04em',
+                      lineHeight: 0.95,
+                      color: textMain,
+                      textShadow: `6px 6px 0 ${PULP.primary}`,
+                    }}
+                  >
+                    {authMember?.memberNick || 'Agent'}
+                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+                    <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#22c55e', border: `2px solid ${PULP.onBackground}` }} />
+                    <Typography sx={{ fontSize: '1.15rem', fontWeight: 700, fontStyle: 'italic', color: isDarkMode ? PULP.surfaceContainer : PULP.onSurfaceVariant }}>
+                      Brewing excellence since {memberSinceYear}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Box>
+              <Stack direction="row" spacing={2}>
+                <Box sx={{ bgcolor: PULP.surfaceContainer, p: 2, border: PULP_INK_BORDER_SM, transform: 'rotate(1deg)', textAlign: 'center', minWidth: 120 }}>
+                  <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: PULP.onSurfaceVariant }}>Status</Typography>
+                  <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: PULP.primary }}>ELITE</Typography>
+                </Box>
+                <Box sx={{ bgcolor: PULP.surfaceContainer, p: 2, border: PULP_INK_BORDER_SM, transform: 'rotate(-2deg)', textAlign: 'center', minWidth: 120 }}>
+                  <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: PULP.onSurfaceVariant }}>Next perk</Typography>
+                  <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: textMain }}>{nextPerkPts}pts</Typography>
+                </Box>
+              </Stack>
+            </Box>
+
+            {/* Stat cards */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+                gap: 3,
+              }}
+            >
+              {[
+                {
+                  icon: <ShoppingBagIcon sx={{ fontSize: 40, color: PULP.primary }} />,
+                  badge: 'Active',
+                  value: stats[0].value,
+                  sub: stats[0].label,
+                  foot: activeOrder ? 'In progress — track in Orders' : 'All clear',
+                  bg: PULP.surfaceBright,
+                  rot: '1deg',
+                },
+                {
+                  icon: <CalendarMonthIcon sx={{ fontSize: 40, color: PULP.primary }} />,
+                  value: stats[1].value,
+                  sub: stats[1].label,
+                  foot: stats[1].trend,
+                  bg: PULP.surfaceBright,
+                  rot: '-1deg',
+                },
+                {
+                  icon: <PaymentsIcon sx={{ fontSize: 40, color: PULP.onPrimary }} />,
+                  value: stats[2].value,
+                  sub: stats[2].label,
+                  foot: 'Master tier member',
+                  bg: PULP.primary,
+                  rot: '1deg',
+                  darkCard: true,
+                },
+                {
+                  icon: <EmojiEventsIcon sx={{ fontSize: 40, color: PULP.onTertiaryFixed }} />,
+                  value: stats[3].value,
+                  sub: stats[3].label,
+                  foot: stats[3].trend,
+                  bg: PULP.tertiaryContainer,
+                  rot: '-2deg',
+                  dots: true,
+                },
+              ].map((card, i) => (
+                <Box
+                  key={i}
+                  onClick={() => history.push('/orders')}
+                  sx={{
+                    p: 3,
+                    border: PULP_INK_BORDER,
+                    boxShadow: PULP_COMIC_SHADOW_LG,
+                    transform: `rotate(${card.rot})`,
+                    bgcolor: card.bg,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    '&:hover': { transform: `rotate(${card.rot}) translateY(-8px)` },
+                    transition: 'transform 0.2s',
+                  }}
+                >
+                  {card.dots && (
                     <Box
                       sx={{
                         position: 'absolute',
-                        left: 20,
-                        top: 0,
-                        bottom: 0,
-                        width: 2,
-                        backgroundColor: componentColors.border,
+                        inset: 0,
+                        opacity: 0.1,
+                        pointerEvents: 'none',
+                        backgroundImage: `radial-gradient(circle, ${PULP.ink} 1px, transparent 1px)`,
+                        backgroundSize: '8px 8px',
                       }}
                     />
-                    <Stack spacing={2}>
-                      {recentOrders.slice(0, 5).map((order, index) => {
-                          const statusColor = getStatusColor(order.orderStatus);
-                          const getActionButton = () => {
-                            switch (order.orderStatus) {
-                              case OrderStatus.PAUSE:
-                                return (
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    startIcon={<PlayArrowIcon />}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      history.push('/orders');
-                                    }}
-                                    sx={{
-                                      backgroundColor: statusColor,
-                                      backdropFilter: 'blur(10px)',
-                                      WebkitBackdropFilter: 'blur(10px)',
-                                      textTransform: 'none',
-                                      fontSize: '0.75rem',
-                                      px: 1.5,
-                                      py: 0.5,
-                                      borderRadius: '8px',
-                                      boxShadow: isDarkMode
-                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 3px 3px 6px rgba(0, 0, 0, 0.3), -1px -1px 3px rgba(255, 255, 255, 0.1)'
-                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 3px 3px 6px rgba(0, 0, 0, 0.15), -1px -1px 3px rgba(255, 255, 255, 0.5)',
-                                      '&:hover': {
-                                        backgroundColor: statusColor,
-                                        boxShadow: isDarkMode
-                                          ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 4px 4px 8px rgba(0, 0, 0, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.15)'
-                                          : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.6)',
-                                        transform: 'scale(1.05)',
-                                      },
-                                      transition: 'all 0.2s ease',
-                                    }}
-                                  >
-                                    Resume
-                                  </Button>
-                                );
-                              case OrderStatus.PROCESS:
-                                return (
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    startIcon={<PaymentIcon />}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      history.push('/orders');
-                                    }}
-                              sx={{
-                                      backgroundColor: statusColor,
-                                      textTransform: 'none',
-                                      fontSize: '0.75rem',
-                                      px: 1.5,
-                                      py: 0.5,
-                                      '&:hover': {
-                                        backgroundColor: statusColor,
-                                        opacity: 0.9,
-                                        transform: 'scale(1.05)',
-                                      },
-                                      transition: 'all 0.2s ease',
-                                    }}
-                                  >
-                                    Pay
-                                  </Button>
-                                );
-                              case OrderStatus.FINISH:
-                                return (
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    startIcon={<ReceiptIcon />}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      history.push('/orders');
-                                    }}
-                                sx={{
-                                      backgroundColor: isDarkMode
-                                        ? 'rgba(42, 42, 42, 0.3)'
-                                        : 'rgba(248, 249, 250, 0.5)',
-                                      backdropFilter: 'blur(10px)',
-                                      WebkitBackdropFilter: 'blur(10px)',
-                                      borderColor: statusColor,
-                                      color: statusColor,
-                                      textTransform: 'none',
-                                      fontSize: '0.75rem',
-                                      px: 1.5,
-                                      py: 0.5,
-                                      borderRadius: '8px',
-                                      boxShadow: isDarkMode
-                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 3px 3px 6px rgba(0, 0, 0, 0.2), -1px -1px 3px rgba(255, 255, 255, 0.02)'
-                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 3px 3px 6px rgba(0, 0, 0, 0.08), -1px -1px 3px rgba(255, 255, 255, 0.8)',
-                                      '&:hover': {
-                                        borderColor: statusColor,
-                                        backgroundColor: isDarkMode
-                                          ? 'rgba(42, 42, 42, 0.5)'
-                                          : 'rgba(248, 249, 250, 0.7)',
-                                        boxShadow: isDarkMode
-                                          ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 4px 4px 8px rgba(0, 0, 0, 0.3), -2px -2px 4px rgba(255, 255, 255, 0.03), 0 0 10px ${statusColor}20`
-                                          : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 4px 4px 8px rgba(0, 0, 0, 0.12), -2px -2px 4px rgba(255, 255, 255, 0.9), 0 0 10px ${statusColor}15`,
-                                        transform: 'scale(1.05)',
-                                      },
-                                      transition: 'all 0.2s ease',
-                                    }}
-                                  >
-                                    Receipt
-                                  </Button>
-                                );
-                              default:
-                                return null;
-                            }
-                          };
+                  )}
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                    {card.icon}
+                    {card.badge && (
+                      <Typography sx={{ bgcolor: '#705900', color: PULP.tertiaryContainer, fontSize: '0.65rem', fontWeight: 900, px: 1, py: 0.25, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                        {card.badge}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Typography
+                    sx={{
+                      fontSize: '2.25rem',
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      color: card.darkCard ? PULP.onPrimary : textMain,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {card.value}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', color: card.darkCard ? PULP.onPrimaryContainer : PULP.onSurfaceVariant, mt: 0.5 }}>
+                    {card.sub}
+                  </Typography>
+                  <Box sx={{ mt: 2, pt: 2, borderTop: '2px dotted', borderColor: card.darkCard ? PULP.onPrimary : PULP.onBackground }}>
+                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: card.darkCard ? PULP.onPrimary : PULP.primary }}>{card.foot}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
 
-                          return (
-                            <motion.div
-                              key={order._id || index}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.3, delay: index * 0.1 }}
-                              whileHover={{ x: 4 }}
-                            >
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  gap: 2,
-                                  alignItems: 'flex-start',
-                                  pl: 4,
-                                  position: 'relative',
-                                  cursor: 'pointer',
-                                  '&:hover': {
-                                    '& .order-content': {
-                                      backgroundColor: isDarkMode
-                                        ? 'rgba(42, 42, 42, 0.5)'
-                                        : 'rgba(248, 249, 250, 0.7)',
-                                      boxShadow: isDarkMode
-                                        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.03)'
-                                        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.12), -3px -3px 6px rgba(255, 255, 255, 0.9)',
-                                      borderColor: isDarkMode
-                                        ? 'rgba(255, 255, 255, 0.15)'
-                                        : 'rgba(255, 255, 255, 0.7)',
-                                      transform: 'translateX(4px)'
-                                    }
-                                  }
-                                }}
-                                onClick={() => history.push('/orders')}
-                              >
-                                {/* Timeline dot */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
+                gap: 6,
+              }}
+            >
+              {/* Recent orders */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-end">
+                  <Typography sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', color: textMain, textShadow: `4px 4px 0 ${PULP.primary}` }}>
+                    Recent Orders
+                  </Typography>
+                  <Button onClick={() => history.push('/orders')} sx={{ fontWeight: 900, textTransform: 'uppercase', color: PULP.primary, borderBottom: '4px solid', borderRadius: 0, borderColor: PULP.primary, pb: 0.25 }}>
+                    View All
+                  </Button>
+                </Stack>
+
+                {isLoadingOrders ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                    <CircularProgress sx={{ color: PULP.primary }} />
+                  </Box>
+                ) : recentOrders.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 6, border: PULP_INK_BORDER, bgcolor: PULP.surfaceContainerLow }}>
+                    <OrdersIcon sx={{ fontSize: 48, opacity: 0.5, mb: 2 }} />
+                    <Typography sx={{ fontWeight: 700, mb: 2 }}>No orders yet</Typography>
+                    <Button variant="contained" onClick={() => history.push('/orders?tab=menu')} sx={{ bgcolor: PULP.primary, borderRadius: 0, border: PULP_INK_BORDER_SM, boxShadow: PULP_COMIC_SHADOW }}>
+                      Browse menu
+                    </Button>
+                  </Box>
+                ) : (
+                  <Stack spacing={3}>
+                    {recentOrders[0] && (
+                      <Box sx={{ border: PULP_INK_BORDER, p: 3, bgcolor: PULP.surfaceContainerLow, position: 'relative', overflow: 'hidden' }}>
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            opacity: 0.05,
+                            pointerEvents: 'none',
+                            backgroundImage: `radial-gradient(circle, ${PULP.ink} 1px, transparent 1px)`,
+                            backgroundSize: '8px 8px',
+                          }}
+                        />
+                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 3, position: 'relative' }}>
+                          <Box>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, bgcolor: PULP.onBackground, color: surfaceBg, px: 1, py: 0.5, display: 'inline-block', textTransform: 'uppercase' }}>
+                              Order #{recentOrders[0]._id?.slice(-6)}
+                            </Typography>
+                            <Typography sx={{ fontSize: '1.35rem', fontWeight: 900, fontStyle: 'italic', mt: 1.5, color: textMain }}>
+                              {getOrderLineTitle(recentOrders[0])}
+                            </Typography>
+                          </Box>
+                          <Typography sx={{ fontSize: '1.25rem', fontWeight: 900 }}>${recentOrders[0].orderTotal?.toFixed(2) ?? '0.00'}</Typography>
+                        </Stack>
+                        <Box sx={{ position: 'relative', pt: 3 }}>
+                          <Box sx={{ height: 8, bgcolor: PULP.surfaceContainerHighest, width: '100%', position: 'absolute', top: 24 }} />
+                          <Box sx={{ height: 8, bgcolor: PULP.primary, width: activeProgressWidth(recentOrders[0].orderStatus), position: 'absolute', top: 24 }} />
+                          <Stack direction="row" justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
+                            {['Roasting', 'Brewing', 'Dispatch', 'Delivered'].map((step, si) => (
+                              <Box key={step} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <Box
                                   sx={{
-                                    position: 'absolute',
-                                    left: 14,
-                                    top: 8,
-                                    width: 12,
-                                    height: 12,
-                                    borderRadius: '50%',
-                                    backgroundColor: statusColor,
-                                    border: `2px solid ${componentColors.surface}`,
-                                    zIndex: 1,
+                                    width: 22,
+                                    height: 22,
+                                    bgcolor: si < 3 ? PULP.primary : PULP.surfaceContainer,
+                                    border: PULP_INK_BORDER_SM,
+                                    transform: 'rotate(45deg)',
                                   }}
                                 />
-
-                                {/* Order Content */}
-                                <Box
-                                  className="order-content"
-                                  sx={{
-                                    flex: 1,
-                                    p: 2,
-                                    borderRadius: '16px',
-                                    backgroundColor: isDarkMode 
-                                      ? 'rgba(42, 42, 42, 0.3)'
-                                      : 'rgba(248, 249, 250, 0.5)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
-                                    border: isDarkMode
-                                      ? '1px solid rgba(255, 255, 255, 0.1)'
-                                      : '1px solid rgba(255, 255, 255, 0.5)',
-                                    boxShadow: isDarkMode
-                                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
-                                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
-                                    transition: 'all 0.3s ease',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    '&::before': {
-                                      content: '""',
-                                      position: 'absolute',
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      height: '1px',
-                                      background: isDarkMode
-                                        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                                        : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                                      zIndex: 1
-                                    }
-                                  }}
-                                >
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                              <Box>
-                                <Typography
-                                        variant="body1"
-                                  sx={{
-                                          fontWeight: 700,
-                                          color: isDarkMode ? '#e0e0e0' : '#2c2c2c',
-                                          mb: 0.5
-                                  }}
-                                >
-                                        Order #{order._id?.slice(-4) || String(index + 1).padStart(3, '0')}
-                                </Typography>
-                                <Typography
-                                        variant="caption"
-                                  sx={{
-                                    color: componentColors.textSecondary,
-                                    fontSize: '0.8rem'
-                                  }}
-                                >
-                                        {formatDate(order.createdAt)} • ${order.orderTotal?.toFixed(2) || '0.00'}
-                                </Typography>
+                                <Typography sx={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', mt: 1 }}>{step}</Typography>
                               </Box>
-                          <Chip
-                                      label={getStatusLabel(order.orderStatus as OrderStatus)}
-                            size="small"
-                            sx={{
-                                        backgroundColor: `${statusColor}15`,
-                                        color: statusColor,
-                                        fontWeight: 600,
-                                        fontSize: '0.7rem',
-                                        height: 24
-                                      }}
-                                    />
-                                  </Box>
+                            ))}
+                          </Stack>
+                        </Box>
+                      </Box>
+                    )}
+                    {recentOrders.slice(1, 4).map((order: any, idx: number) => {
+                      const icon = idx % 2 === 0 ? <CoffeeIcon /> : <CakeIcon />;
+                      return (
+                        <Stack
+                          key={order._id || idx}
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          onClick={() => history.push('/orders')}
+                          sx={{
+                            border: PULP_INK_BORDER_SM,
+                            p: 2,
+                            bgcolor: '#fff',
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: PULP.surfaceContainerLow },
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Box sx={{ width: 48, height: 48, bgcolor: PULP.surfaceContainer, border: PULP_INK_BORDER_SM, display: 'flex', alignItems: 'center', justifyContent: 'center', color: PULP.onSurfaceVariant }}>
+                              {icon}
+                            </Box>
+                            <Box>
+                              <Typography sx={{ fontWeight: 900, fontStyle: 'italic' }}>{getOrderLineTitle(order)}</Typography>
+                              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: PULP.onSurfaceVariant }}>{formatDate(order.createdAt)}</Typography>
+                            </Box>
+                          </Stack>
+                          <Typography sx={{ fontWeight: 900 }}>${order.orderTotal?.toFixed(2) ?? '0.00'}</Typography>
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </Box>
 
-                                  {/* Order Progress Bar (for active orders) */}
-                                  {[OrderStatus.PROCESS, OrderStatus.PAUSE].includes(order.orderStatus) && (
-                                    <Box sx={{ mb: 1.5, mt: 1 }}>
-                                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
-                                          Ordered
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
-                                          {order.orderStatus === OrderStatus.PROCESS ? 'Preparing' : 'Paused'}
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
-                                          Ready
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: componentColors.textSecondary }}>
-                                          Delivered
-                                        </Typography>
-                                      </Box>
-                                      <Box
-                                        sx={{
-                                          height: 4,
-                                          backgroundColor: componentColors.border,
-                                          borderRadius: 2,
-                                          position: 'relative',
-                                          overflow: 'hidden'
-                                        }}
-                                      >
-                                        <Box
-                                          sx={{
-                                            height: '100%',
-                                            width: order.orderStatus === OrderStatus.PROCESS ? '50%' : '25%',
-                                            backgroundColor: statusColor,
-                                            borderRadius: 2,
-                                            transition: 'width 0.3s ease'
-                                          }}
-                                        />
-                                      </Box>
-                                    </Box>
-                                  )}
-
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        color: componentColors.textSecondary,
-                                        fontSize: '0.75rem'
-                                      }}
-                                    >
-                                      {order.orderItems?.length || 0} item(s)
-                                    </Typography>
-                                    {getActionButton()}
-                                  </Box>
-                                </Box>
-                              </Box>
-                            </motion.div>
-                          );
-                        })}
-                      </Stack>
+              {/* Quick actions */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Typography sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-0.02em', color: textMain, textShadow: `4px 4px 0 ${PULP.primary}` }}>
+                  Quick Actions
+                </Typography>
+                <Stack spacing={2}>
+                  <Button
+                    fullWidth
+                    onClick={() => history.push('/orders')}
+                    sx={{
+                      justifyContent: 'space-between',
+                      textAlign: 'left',
+                      py: 3,
+                      px: 3,
+                      bgcolor: PULP.primaryContainer,
+                      color: PULP.onPrimaryContainer,
+                      border: PULP_INK_BORDER,
+                      borderRadius: 0,
+                      boxShadow: PULP_COMIC_SHADOW_LG,
+                      transform: 'rotate(1deg)',
+                      fontFamily: PULP_GROTESK,
+                      '&:active': { transform: 'translate(4px, 4px)', boxShadow: 'none' },
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', mb: 0.5 }}>One click</Typography>
+                      <Typography sx={{ fontSize: '1.35rem', fontWeight: 900, fontStyle: 'italic' }}>Reorder last</Typography>
                     </Box>
-                  ) : (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <OrdersIcon sx={{ fontSize: 48, color: componentColors.textSecondary, mb: 2 }} />
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: componentColors.textSecondary,
-                          mb: 1
-                        }}
-                      >
-                        No orders yet
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: componentColors.textSecondary,
-                          mb: 2
-                        }}
-                      >
-                        Start your coffee journey by placing your first order!
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        onClick={() => history.push('/coffees')}
-                        sx={{
-                          backgroundColor: componentColors.accent,
-                          '&:hover': {
-                            backgroundColor: componentColors.secondary
-                          }
-                        }}
-                      >
-                        Browse Menu
-                      </Button>
+                    <ReplayIcon sx={{ fontSize: 36 }} />
+                  </Button>
+                  <Button
+                    fullWidth
+                    onClick={() => history.push('/orders')}
+                    sx={{
+                      justifyContent: 'space-between',
+                      textAlign: 'left',
+                      py: 3,
+                      px: 3,
+                      bgcolor: PULP.surfaceBright,
+                      color: textMain,
+                      border: PULP_INK_BORDER,
+                      borderRadius: 0,
+                      boxShadow: PULP_COMIC_SHADOW_LG,
+                      transform: 'rotate(-1deg)',
+                      fontFamily: PULP_GROTESK,
+                      '&:active': { transform: 'translate(4px, 4px)', boxShadow: 'none' },
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: PULP.onSurfaceVariant, mb: 0.5 }}>Live tracking</Typography>
+                      <Typography sx={{ fontSize: '1.35rem', fontWeight: 900, fontStyle: 'italic' }}>Track order</Typography>
                     </Box>
-                  )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Account Actions - Small Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            style={{
-              gridColumn: isMobile ? '1' : 'span 12',
-              gridRow: 'span 1'
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Card
-                sx={{
-                  backgroundColor: isDarkMode 
-                    ? 'rgba(42, 42, 42, 0.4)'
-                    : 'rgba(248, 249, 250, 0.6)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  borderRadius: '24px',
-                  border: isDarkMode
-                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: isDarkMode
-                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
-                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
-                  p: 2,
-                  maxWidth: 400,
-                  width: '100%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '1px',
-                    background: isDarkMode
-                      ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-                      : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                    zIndex: 1
-                  },
-                  '&:hover': {
-                    boxShadow: isDarkMode
-                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 8px 8px 16px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.03)'
-                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9)',
-                    transform: 'translateY(-4px)',
-                    borderColor: isDarkMode
-                      ? 'rgba(255, 255, 255, 0.15)'
-                      : 'rgba(255, 255, 255, 0.7)'
-                  }
-                }}
-              >
-                <Button
-                  variant="text"
-                  startIcon={isLoading ? <CircularProgress size={16} /> : <LogoutIcon />}
-                  onClick={handleLogout}
-                  disabled={isLoading}
-                  fullWidth
-                  sx={{
-                    color: componentColors.textSecondary,
-                    textTransform: 'none',
-                    '&:hover': {
-                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
-                      color: '#f44336',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {isLoading ? 'Logging out...' : 'Logout'}
-                </Button>
-              </Card>
+                    <LocationOnIcon sx={{ fontSize: 36, color: PULP.primary }} />
+                  </Button>
+                  <Box sx={{ bgcolor: PULP.onBackground, p: 4, border: PULP_INK_BORDER, boxShadow: PULP_COMIC_SHADOW_LG, transform: 'rotate(2deg)', position: 'relative', overflow: 'hidden' }}>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        opacity: 0.2,
+                        pointerEvents: 'none',
+                        color: '#fff',
+                        backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
+                        backgroundSize: '8px 8px',
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '1.75rem', fontWeight: 900, fontStyle: 'italic', color: PULP.tertiaryContainer, mb: 1 }}>BOOM!</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', mb: 3, lineHeight: 1.35 }}>
+                      You&apos;ve unlocked the &quot;Midnight Roast&quot; secret menu item.
+                    </Typography>
+                    <Button
+                      onClick={() => history.push('/orders?tab=menu')}
+                      sx={{
+                        bgcolor: PULP.tertiaryContainer,
+                        color: PULP.onTertiaryFixed,
+                        fontWeight: 900,
+                        px: 2,
+                        py: 1,
+                        textTransform: 'uppercase',
+                        fontStyle: 'italic',
+                        border: PULP_INK_BORDER_SM,
+                        borderRadius: 0,
+                      }}
+                    >
+                      Claim now
+                    </Button>
+                    <AutoAwesomeIcon sx={{ position: 'absolute', top: -12, right: -12, fontSize: 120, color: 'rgba(255,255,255,0.1)', transform: 'rotate(12deg)' }} />
+                  </Box>
+                  <Button variant="outlined" onClick={handleEditProfile} startIcon={<EditIcon />} sx={{ borderColor: PULP.ink, color: PULP.ink, borderWidth: 2, borderRadius: 0, fontWeight: 700 }}>
+                    Edit dossier
+                  </Button>
+                </Stack>
+              </Box>
             </Box>
-          </motion.div>
+          </Box>
         </Box>
-      </motion.div>
 
-
-
-      {/* Profile Editing Dialog */}
+        {/* Mobile bottom nav */}
+        <Box
+          component="nav"
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            zIndex: 50,
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            py: 1.5,
+            px: 1,
+            bgcolor: surfaceBg,
+            borderTop: '8px solid',
+            borderColor: PULP.ink,
+          }}
+        >
+          {[
+            { icon: <HomeIcon />, label: 'Home', onClick: () => history.push('/') },
+            { icon: <HistoryIcon />, label: 'Orders', onClick: () => history.push('/orders') },
+            { icon: <WorkspacePremiumIcon />, label: 'Points', onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+            { icon: <PersonIcon />, label: 'Profile', onClick: handleEditProfile, highlight: true },
+          ].map((item) => (
+            <Box
+              key={item.label}
+              onClick={item.onClick}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                p: 0.5,
+                fontSize: '12px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: item.highlight ? PULP.surface : textMain,
+                bgcolor: item.highlight ? PULP.primary : 'transparent',
+                border: item.highlight ? `2px solid ${PULP.ink}` : 'none',
+                transform: item.highlight ? 'rotate(-2deg)' : 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {item.icon}
+              <Typography sx={{ fontSize: '11px', fontWeight: 700 }}>{item.label}</Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>      {/* Profile Editing Dialog */}
       <Dialog
         open={showProfileDialog}
         onClose={handleCloseProfileDialog}
@@ -1819,7 +1432,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+    </>
   );
 };
 

@@ -1,0 +1,124 @@
+/* Scoped copy of public/codegrid-jeskojets-scroll-animation 3/styles.css – only this folder’s styles */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap");
+
+.codegrid-jesk-root {
+  --light: #fff;
+  --dark: #0f0f0f;
+  position: relative;
+  width: 100%;
+  min-height: 400vh;
+  font-family: "Instrument Serif", sans-serif;
+  background-color: var(--light);
+  color: var(--dark);
+  box-sizing: border-box;
+}
+
+.codegrid-jesk-root *,
+.codegrid-jesk-root *::before,
+.codegrid-jesk-root *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.codegrid-jesk-root img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.codegrid-jesk-root h1 {
+  font-size: clamp(5rem, 6vw, 7rem);
+  font-weight: 500;
+  line-height: 0.8;
+}
+
+.codegrid-jesk-root p {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.codegrid-jesk-root section {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.codegrid-jesk-root .hero {
+  perspective: 1000px;
+  color: var(--light);
+}
+
+.codegrid-jesk-root .outro {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.codegrid-jesk-root .sky-container,
+.codegrid-jesk-root .hero-copy,
+.codegrid-jesk-root .window-container,
+.codegrid-jesk-root .hero-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
+}
+
+.codegrid-jesk-root .sky-container {
+  height: 350svh;
+}
+
+.codegrid-jesk-root .hero-copy {
+  height: 100svh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.codegrid-jesk-root .hero-copy h1 {
+  width: 85%;
+}
+
+.codegrid-jesk-root .window-container {
+  height: 100svh;
+}
+
+.codegrid-jesk-root .hero-header {
+  height: 100svh;
+  padding: 2rem;
+  display: flex;
+  transform-style: preserve-3d;
+}
+
+.codegrid-jesk-root .hero-header .col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.codegrid-jesk-root .hero-header .col p {
+  width: 50%;
+}
+
+.codegrid-jesk-root .hero-header .col:nth-child(2) {
+  align-items: flex-end;
+  text-align: right;
+}
+
+@media (max-width: 1000px) {
+  .codegrid-jesk-root h1 {
+    font-size: 3rem;
+  }
+
+  .codegrid-jesk-root p {
+    font-size: 1.125rem;
+  }
+}
+
+

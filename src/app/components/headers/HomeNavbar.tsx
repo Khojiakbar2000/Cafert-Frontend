@@ -79,6 +79,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const history = useHistory();
   const { t } = useTranslation();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -272,7 +273,7 @@ export default function HomeNavbar(props: HomeNavbarProps) {
         {drawer}
       </Drawer>
 
-      {/* Main Navbar */}
+      {/* Main Navbar - Ultra Transparent */}
       <Box
         key={`navbar-${authMember ? 'authenticated' : 'guest'}`}
         sx={{
@@ -280,40 +281,13 @@ export default function HomeNavbar(props: HomeNavbarProps) {
           top: 0,
           left: 0,
           right: 0,
-          background: scrolled 
-            ? 'rgba(255, 255, 255, 0.1)'
-            : 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(50px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
-          borderBottom: scrolled 
-            ? '2px solid rgba(255, 255, 255, 0.4)' 
-            : '2px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: scrolled 
-            ? '0 25px 70px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-            : '0 15px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(10px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(10px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(0, 0, 0, 0.1)' : 'none',
+          boxShadow: scrolled ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
+          transition: 'all 0.3s ease',
           zIndex: 1200,
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
-            pointerEvents: 'none',
-            boxShadow: '0 2px 10px rgba(255, 255, 255, 0.4)',
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%)',
-            pointerEvents: 'none',
-          },
         }}
       >
         <Container maxWidth="xl">
@@ -332,14 +306,17 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                 <Typography
                   variant="h5"
                   sx={{
-                    color: '#8B4513',
+                    color: scrolled ? '#8B4513' : '#ffffff',
                     fontWeight: 700,
                     fontStyle: 'italic',
                     letterSpacing: '-0.02em',
+                    textShadow: scrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.2)',
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       transform: 'scale(1.05)',
-                      filter: 'drop-shadow(0 0 10px rgba(139, 69, 19, 0.3))',
+                      filter: scrolled 
+                        ? 'drop-shadow(0 0 10px rgba(139, 69, 19, 0.3))'
+                        : 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.3))',
                     }
                   }}
                 >
@@ -364,20 +341,24 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
-                        color: '#333',
+                        color: scrolled ? '#333' : '#ffffff',
                         fontWeight: isActive ? 600 : 400,
                         position: 'relative',
                         px: 3,
                         py: 1.5,
                         borderRadius: '8px',
                         backgroundColor: isActive 
-                          ? 'rgba(139, 69, 19, 0.08)'
+                          ? (scrolled ? 'rgba(139, 69, 19, 0.08)' : 'rgba(255, 255, 255, 0.1)')
                           : 'transparent',
+                        textShadow: scrolled ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.2)',
                         transition: 'all 0.2s ease',
                         cursor: 'pointer',
                         '&:hover': {
-                          color: '#8B4513',
-                          backgroundColor: 'rgba(139, 69, 19, 0.05)',
+                          color: scrolled ? '#8B4513' : '#ffffff',
+                          backgroundColor: scrolled 
+                            ? 'rgba(139, 69, 19, 0.05)' 
+                            : 'rgba(255, 255, 255, 0.1)',
+                          opacity: scrolled ? 1 : 0.8,
                         },
                         '&::after': {
                           content: '""',
@@ -412,19 +393,23 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                           display: 'flex',
                           alignItems: 'center',
                           gap: 1,
-                          color: '#333',
+                          color: scrolled ? '#333' : '#ffffff',
                           fontWeight: isActive ? 600 : 400,
                           position: 'relative',
                           px: 3,
                           py: 1.5,
                           borderRadius: '8px',
                           backgroundColor: isActive 
-                            ? 'rgba(139, 69, 19, 0.08)'
+                            ? (scrolled ? 'rgba(139, 69, 19, 0.08)' : 'rgba(255, 255, 255, 0.1)')
                             : 'transparent',
+                          textShadow: scrolled ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.2)',
                           transition: 'all 0.2s ease',
                           '&:hover': {
-                            color: '#8B4513',
-                            backgroundColor: 'rgba(139, 69, 19, 0.05)',
+                            color: scrolled ? '#8B4513' : '#ffffff',
+                            backgroundColor: scrolled 
+                              ? 'rgba(139, 69, 19, 0.05)' 
+                              : 'rgba(255, 255, 255, 0.1)',
+                            opacity: scrolled ? 1 : 0.8,
                           },
                           '&::after': {
                             content: '""',
@@ -471,10 +456,15 @@ export default function HomeNavbar(props: HomeNavbarProps) {
               {/* Search Icon */}
               <IconButton
                 sx={{
-                  color: '#666',
+                  color: scrolled ? '#666' : '#ffffff',
+                  textShadow: scrolled ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.2)',
+                  transition: 'all 0.3s ease',
                   '&:hover': { 
-                    color: '#8B4513',
-                    backgroundColor: 'rgba(139, 69, 19, 0.05)'
+                    color: scrolled ? '#8B4513' : '#ffffff',
+                    backgroundColor: scrolled 
+                      ? 'rgba(139, 69, 19, 0.05)' 
+                      : 'rgba(255, 255, 255, 0.1)',
+                    opacity: scrolled ? 1 : 0.8,
                   }
                 }}
                 aria-label="search"
@@ -491,12 +481,17 @@ export default function HomeNavbar(props: HomeNavbarProps) {
                     size="small"
                     onClick={() => setSignupOpen(true)}
                     sx={{
-                      color: '#666',
+                      color: scrolled ? '#666' : '#ffffff',
                       fontWeight: 500,
                       px: 2,
+                      textShadow: scrolled ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.2)',
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        color: '#8B4513',
-                        backgroundColor: 'rgba(139, 69, 19, 0.05)',
+                        color: scrolled ? '#8B4513' : '#ffffff',
+                        backgroundColor: scrolled 
+                          ? 'rgba(139, 69, 19, 0.05)' 
+                          : 'rgba(255, 255, 255, 0.1)',
+                        opacity: scrolled ? 1 : 0.8,
                       }
                     }}
                   >

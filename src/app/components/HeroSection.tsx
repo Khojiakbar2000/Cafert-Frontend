@@ -1,396 +1,297 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Grid
-} from '@mui/material';
+import React from 'react';
+import { Box, Button, Container } from '@mui/material';
 import { motion } from 'framer-motion';
-import { useTheme } from '../../mui-coffee/context/ThemeContext';
 import { useHistory } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../mui-coffee/context/ThemeContext';
+import { STITCH_THEME } from '../../components/stitchUi';
+
+const INK = STITCH_THEME.ink;
+const SURFACE = STITCH_THEME.surface;
+/** Darkened body ink for stronger hierarchy (light mode). */
+const HEADLINE_INK = '#1a1714';
+/** Burnt orange — richer, less neon than flat brand hex. */
+const HERO_ACCENT = '#c94a18';
+const ON_PRIMARY = STITCH_THEME.onPrimary;
+const TERTIARY_BADGE_BG = STITCH_THEME.tertiaryContainer;
+const TERTIARY_BADGE_FG = STITCH_THEME.onTertiary;
+const SURFACE_CONTAINER_HIGH = STITCH_THEME.surfaceContainer;
+
+const COMIC_FRAME_PX = 8;
+const easeSpring = [0.34, 1.56, 0.64, 1] as const;
 
 interface HeroSectionProps {
   onReservationClick?: () => void;
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
-  const { t } = useTranslation();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { isDarkMode } = useTheme();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const history = useHistory();
+  const { isDarkMode } = useTheme();
 
-  // Use the original coffee placeholder image
-  const heroImages = [
-    '/img/coffee/coffee-placeholder.jpg',    // Original hero image
-  ];
+  const bg = isDarkMode ? INK : SURFACE;
+  const headlineMain = isDarkMode ? SURFACE : HEADLINE_INK;
+  const inkBorder = isDarkMode ? SURFACE : INK;
+  const subtitleBg = isDarkMode ? 'rgba(252,246,232,0.12)' : SURFACE_CONTAINER_HIGH;
+  const dotsOpacity = isDarkMode ? 0.085 : 0.055;
+  const halftoneFineOpacity = isDarkMode ? 0.04 : 0.032;
 
-
-
-  const handleExploreMenu = () => {
+  const handleInitiateBrew = () => {
+    if (onReservationClick) {
+      onReservationClick();
+      return;
+    }
     history.push('/coffees');
   };
 
-  // No auto-rotation needed for single image
-  useEffect(() => {
-    // Keep the single image static
-  }, []);
+  const headlineShadow = isDarkMode
+    ? `8px 8px 0 rgba(252, 246, 232, 0.12), 10px 10px 0 rgba(252, 246, 232, 0.06)`
+    : `8px 8px 0 ${INK}, 10px 10px 0 rgba(26, 15, 13, 0.18)`;
 
-  // Ensure video is muted on mount
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.volume = 0;
-    }
-  }, []);
-
+  const accentShadow = isDarkMode
+    ? `4px 4px 0 rgba(252, 246, 232, 0.2)`
+    : `5px 5px 0 rgba(26, 15, 13, 0.35)`;
 
   return (
     <Box
-      className="hero-section"
+      id="hero"
       sx={{
         position: 'relative',
-        height: 'calc(var(--vh, 1vh) * 100)',
-        minHeight: 'calc(var(--vh, 1vh) * 100)',
-        maxHeight: 'calc(var(--vh, 1vh) * 100)',
         width: '100%',
         maxWidth: '100%',
+        flex: 1,
+        minHeight: '100%',
+        alignSelf: 'stretch',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
         overflow: 'hidden',
-        backgroundImage: `url('${heroImages[currentImageIndex]}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: '50% 50%',
-        backgroundRepeat: 'no-repeat',
-        transition: 'all 1.5s ease-in-out',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: isDarkMode 
-            ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.3) 100%)'
-            : 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.2) 100%)',
-          zIndex: 1,
-          pointerEvents: 'none'
-        }
+        py: { xs: '5.75rem', md: `clamp(5.5rem, 11vw, 8.75rem)` },
+        px: { xs: '1.25rem', md: 'clamp(1.35rem, 4vw, 2.25rem)' },
+        bgcolor: bg,
+        color: headlineMain,
+        fontFamily: '"Space Grotesk", sans-serif',
       }}
     >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700;1,800;1,900&display=swap');
+      `}</style>
 
-
-      {/* Decorative SVG Elements */}
+      {/* Halftone — coarse */}
       <Box
         sx={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.1,
-          zIndex: 1
+          inset: 0,
+          pointerEvents: 'none',
+          backgroundImage: `radial-gradient(${inkBorder} 1px, transparent 1px)`,
+          backgroundSize: '12px 12px',
+          opacity: dotsOpacity,
         }}
-      >
-        <svg width="100%" height="100%" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0L1200 800" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
-          <path d="M1200 0L0 800" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
-          <circle cx="300" cy="200" r="50" fill="currentColor" opacity="0.1"/>
-          <circle cx="900" cy="600" r="30" fill="currentColor" opacity="0.1"/>
-          <circle cx="1000" cy="150" r="25" fill="currentColor" opacity="0.1"/>
-        </svg>
-      </Box>
-
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center' }}>
-        <Grid container spacing={4} alignItems="center" sx={{ height: '100%', minHeight: '100%' }}>
-          {/* Main Content */}
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Box sx={{ color: 'white', mb: 4 }}>
-                <Typography
-                  variant="overline"
-                  sx={{
-                    fontSize: { xs: '0.875rem', md: '1rem' },
-                    fontWeight: 500,
-                    color: isDarkMode ? '#ffd700' : '#d4af37',
-                    letterSpacing: '0.2em',
-                    mb: 2,
-                    display: 'block',
-                    textShadow: isDarkMode ? '0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)' : 'none',
-                    animation: isDarkMode ? 'glowPulse 2s ease-in-out infinite alternate' : 'none',
-                    '@keyframes glowPulse': {
-                      '0%': {
-                        textShadow: '0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)',
-                      },
-                      '100%': {
-                        textShadow: '0 0 15px rgba(255, 215, 0, 1), 0 0 25px rgba(255, 215, 0, 0.6), 0 0 35px rgba(255, 215, 0, 0.3)',
-                      },
-                    },
-                  }}
-                >
-                  {t('hero.welcome')}
-                </Typography>
-        
-                <Typography
-                  variant="h1"
-                  sx={{
-                    fontSize: 'clamp(2.5rem, 4vw, 4.5rem)',
-                    fontWeight: 400,
-                    fontFamily: '"Playfair Display", serif',
-                    color: isDarkMode ? '#ffffff' : 'white',
-                    mb: 3,
-                    lineHeight: 1.1,
-                    textShadow: isDarkMode 
-                      ? '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4), 2px 2px 4px rgba(0,0,0,0.5)'
-                      : '2px 2px 4px rgba(0,0,0,0.5)',
-                    animation: isDarkMode ? 'titleGlow 3s ease-in-out infinite alternate' : 'none',
-                    '@keyframes titleGlow': {
-                      '0%': {
-                        textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4), 2px 2px 4px rgba(0,0,0,0.5)',
-                      },
-                      '100%': {
-                        textShadow: '0 0 30px rgba(255, 255, 255, 1), 0 0 50px rgba(255, 255, 255, 0.6), 0 0 70px rgba(255, 255, 255, 0.3), 2px 2px 4px rgba(0,0,0,0.5)',
-                      },
-                    },
-                  }}
-                >
-                  Cafert
-                </Typography>
-        
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: 'clamp(1rem, 2vw, 1.375rem)',
-                    color: isDarkMode ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.9)',
-                    mb: 4,
-                    lineHeight: 1.6,
-                    maxWidth: '500px',
-                    textShadow: isDarkMode 
-                      ? '0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.3), 1px 1px 2px rgba(0,0,0,0.5)'
-                      : '1px 1px 2px rgba(0,0,0,0.5)',
-                    animation: isDarkMode ? 'textGlow 4s ease-in-out infinite alternate' : 'none',
-                    '@keyframes textGlow': {
-                      '0%': {
-                        textShadow: '0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.3), 1px 1px 2px rgba(0,0,0,0.5)',
-                      },
-                      '100%': {
-                        textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 35px rgba(255, 255, 255, 0.4), 0 0 50px rgba(255, 255, 255, 0.2), 1px 1px 2px rgba(0,0,0,0.5)',
-                      },
-                    },
-                  }}
-                >
-                  {t('hero.description')}
-                </Typography>
-
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="contained"
-                      size="large"
-                      onClick={handleExploreMenu}
-                      sx={{
-                        backgroundColor: isDarkMode ? '#ffd700' : '#1a1a1a',
-                        color: isDarkMode ? '#000' : 'white',
-                        px: 4,
-                        py: 1.5,
-                        fontSize: 'clamp(0.95rem, 1.5vw, 1.1rem)',
-                        fontWeight: 600,
-                        '&:hover': {
-                          backgroundColor: '#b8941f'
-                        }
-                      }}
-                    >
-                      {t('hero.cta')}
-                    </Button>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      onClick={onReservationClick}
-                      sx={{
-                        borderColor: 'rgba(255,255,255,0.8)',
-                        color: 'white',
-                        px: 4,
-                        py: 1.5,
-                        fontSize: 'clamp(0.95rem, 1.5vw, 1.1rem)',
-                        fontWeight: 600,
-                        '&:hover': {
-                          borderColor: 'white',
-                          backgroundColor: 'rgba(255,255,255,0.1)'
-                        }
-                      }}
-                    >
-                      {t('hero.reservation')}
-                    </Button>
-                  </motion.div>
-                </Box>
-              </Box>
-            </motion.div>
-          </Grid>
-
-          {/* Video Frame */}
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <Box
-                sx={{
-                  position: 'relative',
-                  height: { xs: '360px', md: '520px' },
-                  maxHeight: '70vh',
-                  borderRadius: '20px',
-                  overflow: 'hidden',
-                  boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
-                  border: '3px solid rgba(255,255,255,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  maxWidth: { xs: '100%', md: '95%' }
-                }}
-              >
-                {/* Video Player */}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onLoadedData={() => {
-                    if (videoRef.current) {
-                      videoRef.current.muted = true;
-                      videoRef.current.volume = 0;
-                    }
-                  }}
-                  onCanPlay={() => {
-                    if (videoRef.current) {
-                      videoRef.current.muted = true;
-                      videoRef.current.volume = 0;
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    aspectRatio: '16 / 9',
-                    borderRadius: '17px'
-                  }}
-                >
-                  <source src="/videos/mixkit-coffee-maker-making-coffee-3578-full-hd.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-
-                {/* Video Overlay */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 100%)',
-                    borderRadius: '17px'
-                  }}
-                />
-
-
-
-
-
-                {/* Decorative Elements */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    zIndex: 2
-                  }}
-                >
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Box
-                      sx={{
-                        width: 35,
-                        height: 35,
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(212, 175, 55, 0.3)',
-                        border: '2px solid rgba(212, 175, 55, 0.6)'
-                      }}
-                    />
-                  </motion.div>
-                </Box>
-
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 20,
-                    right: 20,
-                    zIndex: 2
-                  }}
-                >
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    <Box
-                      sx={{
-                        width: 25,
-                        height: 25,
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        border: '2px solid rgba(255, 255, 255, 0.4)'
-                      }}
-                    />
-                  </motion.div>
-                </Box>
-              </Box>
-            </motion.div>
-          </Grid>
-        </Grid>
-      </Container>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        style={{
+      />
+      {/* Halftone — fine (subtle comic print) */}
+      <Box
+        sx={{
           position: 'absolute',
-          bottom: 30,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 3
+          inset: 0,
+          pointerEvents: 'none',
+          backgroundImage: `radial-gradient(${inkBorder} 0.5px, transparent 0.5px)`,
+          backgroundSize: '5px 5px',
+          opacity: halftoneFineOpacity,
+          mixBlendMode: isDarkMode ? 'soft-light' : 'multiply',
+        }}
+      />
+
+      <Container
+        maxWidth="lg"
+        sx={{
+          position: 'relative',
+          zIndex: 1,
+          mx: 'auto',
+          width: '100%',
         }}
       >
         <Box
           sx={{
-            width: 2,
-            height: 40,
-            backgroundColor: 'rgba(255,255,255,0.5)',
-            borderRadius: 1
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: { xs: '2.75rem', md: `clamp(3.25rem, 5.5vw, 4.75rem)` },
+            alignItems: 'center',
+            columnGap: { md: `clamp(2rem, 4vw, 3.5rem)` },
           }}
-        />
-      </motion.div>
+        >
+          {/* Left column — slant-1 */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+            style={{ transform: 'rotate(-1deg)' }}
+          >
+            <Box
+              component="h1"
+              sx={{
+                m: 0,
+                mb: '1.35rem',
+                fontSize: { xs: 'clamp(3.05rem, 12.5vw, 4.35rem)', md: 'clamp(4.5rem, 7.5vw, 7.35rem)' },
+                lineHeight: 0.88,
+                fontWeight: 900,
+                fontStyle: 'italic',
+                textTransform: 'uppercase',
+                letterSpacing: '-0.038em',
+                color: headlineMain,
+                textShadow: headlineShadow,
+              }}
+            >
+              <Box component="span" sx={{ display: 'block' }}>
+                WAKE UP
+              </Box>
+              <Box
+                component="span"
+                sx={{
+                  display: 'block',
+                  mt: '-0.04em',
+                  color: HERO_ACCENT,
+                  textShadow: accentShadow,
+                }}
+              >
+                OR ELSE!
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                maxWidth: '30rem',
+                mb: '2.25rem',
+                p: { xs: '1.35rem', md: '1.85rem' },
+                bgcolor: subtitleBg,
+                color: isDarkMode ? SURFACE : HEADLINE_INK,
+                border: `${COMIC_FRAME_PX}px solid ${inkBorder}`,
+                boxShadow: `12px 12px 0 0 ${inkBorder}`,
+                fontSize: { xs: '1.125rem', md: '1.4rem' },
+                fontWeight: 700,
+                lineHeight: 1.45,
+                transition: `transform 0.3s cubic-bezier(${easeSpring.join(',')}), box-shadow 0.3s cubic-bezier(${easeSpring.join(',')})`,
+                '@media (hover: hover) and (min-width: 900px)': {
+                  '&:hover': {
+                    transform: 'scale(1.015) translateY(-3px)',
+                    boxShadow: `16px 16px 0 0 ${inkBorder}`,
+                  },
+                },
+              }}
+            >
+              Hyper-concentrated alchemy for the restless mind. We don&apos;t just brew
+              coffee; we initiate nuclear reactions in porcelain.
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Button
+                onClick={handleInitiateBrew}
+                sx={{
+                  bgcolor: HERO_ACCENT,
+                  color: ON_PRIMARY,
+                  fontSize: { xs: '1.05rem', md: '1.3rem' },
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  textTransform: 'uppercase',
+                  px: { xs: '2.1rem', md: '3.1rem' },
+                  py: { xs: '1.1rem', md: '1.4rem' },
+                  border: `${COMIC_FRAME_PX}px solid ${inkBorder}`,
+                  boxShadow: `10px 10px 0 0 ${inkBorder}`,
+                  borderRadius: 0,
+                  fontFamily: '"Space Grotesk", sans-serif',
+                  transition: 'transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease',
+                  '&:hover': {
+                    bgcolor: '#b44115',
+                    transform: 'translateY(-5px)',
+                    boxShadow: `14px 14px 0 0 ${inkBorder}`,
+                  },
+                  '&:active': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: `6px 6px 0 0 ${inkBorder}`,
+                  },
+                }}
+              >
+                Initiate Brew
+              </Button>
+            </Box>
+          </motion.div>
+
+          {/* Right column — comic tilt */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+            style={{ transform: 'rotate(1.35deg)', position: 'relative' }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.3, rotate: 12 }}
+              animate={{ opacity: 1, scale: 1, rotate: 10 }}
+              transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1], delay: 0.35 }}
+              style={{
+                position: 'absolute',
+                top: '-1.35rem',
+                right: '-1rem',
+                zIndex: 20,
+              }}
+            >
+              <Box
+                sx={{
+                  bgcolor: TERTIARY_BADGE_BG,
+                  color: TERTIARY_BADGE_FG,
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  textTransform: 'uppercase',
+                  p: { xs: '1.1rem', md: '1.35rem' },
+                  border: `${COMIC_FRAME_PX}px solid ${inkBorder}`,
+                  boxShadow: `10px 10px 0 0 ${inkBorder}`,
+                  fontSize: { xs: '1.25rem', md: '1.55rem' },
+                  fontFamily: '"Space Grotesk", sans-serif',
+                  transform: 'rotate(-18deg)',
+                }}
+              >
+                BOOM!
+              </Box>
+            </motion.div>
+
+            <Box
+              sx={{
+                border: `${COMIC_FRAME_PX}px solid ${inkBorder}`,
+                boxShadow: `14px 14px 0 0 ${inkBorder}`,
+                bgcolor: isDarkMode ? 'rgba(252,246,232,0.08)' : '#eee8d8',
+                overflow: 'hidden',
+                transition: `transform 0.3s cubic-bezier(${easeSpring.join(',')}), box-shadow 0.3s cubic-bezier(${easeSpring.join(',')})`,
+                '@media (hover: hover) and (min-width: 900px)': {
+                  '&:hover': {
+                    transform: 'scale(1.02) translateY(-5px)',
+                    boxShadow: `18px 18px 0 0 ${inkBorder}`,
+                  },
+                  '&:hover .hero-stitch-main-img': {
+                    transform: 'scale(1.08)',
+                  },
+                },
+              }}
+            >
+              <Box
+                component="img"
+                className="hero-stitch-main-img"
+                src="/coffeemaker.png"
+                alt="Coffee maker"
+                sx={{
+                  width: '100%',
+                  height: {
+                    xs: 'min(46svh, 420px)',
+                    md: 'min(58svh, 620px)',
+                  },
+                  minHeight: { xs: 300, md: 400 },
+                  objectFit: 'cover',
+                  display: 'block',
+                  mixBlendMode: isDarkMode ? 'normal' : 'multiply',
+                  opacity: 0.92,
+                  transition: 'transform 700ms ease',
+                }}
+              />
+            </Box>
+          </motion.div>
+        </Box>
+      </Container>
     </Box>
   );
 };
 
-export default HeroSection; 
+export default HeroSection;

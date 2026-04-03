@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Pulp Alchemist | Checkout Mission</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#FF4E00",
+              "background-light": "#fdf9f3",
+              "background-dark": "#23150f",
+              "surface": "#fdf9f3",
+              "on-surface": "#1A0F0D",
+              "outline": "#1A0F0D"
+            },
+            fontFamily: {
+              "display": ["Space Grotesk"],
+              "headline": ["Space Grotesk"],
+              "body": ["Space Grotesk"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>body {
+    background-color: #fdf9f3;
+    color: #1A0F0D;
+    }
+.halftone-bg {
+    background-image: radial-gradient(#1A0F0D 1px, transparent 0);
+    background-size: 8px 8px;
+    opacity: 0.05
+    }
+.comic-shadow {
+    box-shadow: 8px 8px 0 0 #1A0F0D
+    }
+.ink-border {
+    border: 4px solid #1A0F0D
+    }
+.ink-border-heavy {
+    border: 6px solid #1A0F0D
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }</style>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+<nav class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-[#fdf9f3] border-b-[6px] border-[#1A0F0D] shadow-[6px_6px_0px_0px_rgba(26,15,13,1)]">
+<div class="text-3xl font-black italic uppercase text-[#1A0F0D] drop-shadow-[4px_4px_0px_rgba(26,15,13,1)] font-headline tracking-tighter">
+            The Pulp Alchemist
+        </div>
+<div class="hidden md:flex gap-8 font-['Space_Grotesk'] italic font-bold uppercase tracking-tighter">
+<a class="text-[#1A0F0D] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150" href="#">Menu</a>
+<a class="text-[#1A0F0D] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150" href="#">Subscriptions</a>
+<a class="text-[#1A0F0D] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150" href="#">Merch</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined active:scale-95 transition-transform text-[#FF4E00]" data-icon="shopping_cart">shopping_cart</button>
+<button class="material-symbols-outlined active:scale-95 transition-transform text-[#FF4E00]" data-icon="person">person</button>
+</div>
+</nav>
+<main class="max-w-6xl mx-auto px-6 py-12 relative">
+<header class="mb-12 relative">
+<div class="absolute -top-4 -left-4 w-24 h-24 halftone-bg -z-10"></div>
+<h1 class="text-7xl md:text-9xl font-black italic uppercase tracking-tighter text-[#1A0F0D] transform -rotate-1 drop-shadow-[6px_6px_0px_#FF4E00]">
+                CHECKOUT
+            </h1>
+</header>
+<div class="mb-16 ink-border p-6 bg-white relative overflow-hidden">
+<div class="absolute inset-0 halftone-bg pointer-events-none"></div>
+<div class="relative flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-3">
+<span class="w-10 h-10 text-white flex items-center justify-center font-black rounded-none ink-border transform rotate-3 bg-[#FF4E00]">1</span>
+<span class="font-bold uppercase tracking-widest text-sm">PLACED</span>
+</div>
+<div class="h-1 md:w-full bg-[#1A0F0D] opacity-20 mx-4"></div>
+<div class="flex items-center gap-3 opacity-40">
+<span class="w-10 h-10 bg-white text-[#1A0F0D] flex items-center justify-center font-black rounded-none ink-border transform -rotate-2">2</span>
+<span class="font-bold uppercase tracking-widest text-sm text-surface-dim">PREPARING</span>
+</div>
+<div class="h-1 md:w-full bg-[#1A0F0D] opacity-20 mx-4"></div>
+<div class="flex items-center gap-3 opacity-40">
+<span class="w-10 h-10 bg-white text-[#1A0F0D] flex items-center justify-center font-black rounded-none ink-border transform rotate-6">3</span>
+<span class="font-bold uppercase tracking-widest text-sm text-surface-dim">READY</span>
+</div>
+<div class="h-1 md:w-full bg-[#1A0F0D] opacity-20 mx-4"></div>
+<div class="flex items-center gap-3 opacity-40">
+<span class="w-10 h-10 bg-white text-[#1A0F0D] flex items-center justify-center font-black rounded-none ink-border transform -rotate-3">4</span>
+<span class="font-bold uppercase tracking-widest text-sm text-surface-dim">COMPLETED</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+<section class="space-y-8">
+<div class="ink-border-heavy p-8 bg-surface-container-low comic-shadow relative transform rotate-1">
+<div class="flex justify-between items-end mb-6">
+<h2 class="text-3xl font-black italic uppercase tracking-tight">YOUR ORDER</h2>
+<span class="bg-tertiary-container text-on-tertiary-container px-4 py-1 font-bold uppercase text-xs ink-border transform -rotate-3">2 ITEMS</span>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4 items-start py-4 border-b-4 border-[#1A0F0D] border-dotted">
+<div class="w-20 h-20 bg-white ink-border overflow-hidden shrink-0 transform -rotate-2">
+<img alt="Espresso" class="w-full h-full object-cover grayscale contrast-125" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="text-xl font-bold uppercase">THE ALCHEMIST CAPP</h3>
+<span class="font-black text-xl">$5.50</span>
+</div>
+<p class="text-sm opacity-80 leading-tight mt-1">Oat milk, double shot, touch of cinnamon alchemy.</p>
+</div>
+</div>
+<div class="flex gap-4 items-start py-4">
+<div class="w-20 h-20 bg-white ink-border overflow-hidden shrink-0 transform rotate-3">
+<img alt="Croissant" class="w-full h-full object-cover grayscale contrast-125" src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=200"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="text-xl font-bold uppercase">BURNT BUTTER CROISSANT</h3>
+<span class="font-black text-xl">$4.75</span>
+</div>
+<p class="text-sm opacity-80 leading-tight mt-1">Hand-laminated 48-hour dough, sea salt finish.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="ink-border p-6 bg-white comic-shadow relative transform -rotate-1">
+<h2 class="text-2xl font-black uppercase mb-4 tracking-tight">MISSION LOGISTICS</h2>
+<div class="flex items-center gap-4 p-4 ink-border-heavy bg-surface-container-high">
+<div class="w-12 h-12 flex items-center justify-center text-white ink-border bg-[#FF4E00]">
+<span class="material-symbols-outlined" data-icon="store">store</span>
+</div>
+<div>
+<p class="font-black uppercase text-sm">PICKUP AT ARCHIVE 01</p>
+<p class="text-xs opacity-70">124 Ink Street, Downtown Terminal</p>
+</div>
+<div class="ml-auto">
+<span class="material-symbols-outlined text-[#FF4E00]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-8">
+<div class="ink-border-heavy p-8 bg-white comic-shadow relative">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-8xl" data-icon="contactless">contactless</span>
+</div>
+<h2 class="text-3xl font-black italic uppercase mb-8 tracking-tight transform rotate-1">PAYMENT TERMINAL</h2>
+<form class="space-y-6 relative z-10">
+<div class="space-y-2">
+<label class="block text-xs font-black uppercase tracking-widest text-[#1A0F0D]">CARDHOLDER NAME</label>
+<input class="w-full ink-border bg-surface px-4 py-3 font-bold placeholder:opacity-30 focus:ring-0 focus:bg-primary-container/20 transition-all uppercase" placeholder="THE AGENT" type="text"/>
+</div>
+<div class="pt-6 mt-8 border-t-4 border-[#1A0F0D] border-dashed space-y-2">
+<div class="flex justify-between font-bold uppercase text-sm">
+<span>Subtotal</span>
+<span>$10.25</span>
+</div>
+<div class="flex justify-between items-end pt-4">
+<span class="text-2xl font-black uppercase italic tracking-tighter">TOTAL MISSION COST</span>
+<span class="text-4xl font-black text-[#FF4E00]">$11.07</span>
+</div>
+</div>
+<button class="w-full text-white py-6 font-black text-3xl uppercase italic tracking-tighter ink-border comic-shadow active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 transform hover:-rotate-1 group bg-[#FF4E00]" type="submit">
+                            PAY NOW <span class="group-hover:translate-x-2 inline-block transition-transform">→</span>
+</button>
+<p class="text-center text-[10px] font-bold uppercase tracking-widest opacity-50 px-8">
+                            BY TRANSMITTING, YOU AGREE TO OUR TERMS OF ENGAGEMENT AND DATA RETENTION POLICIES.
+                        </p>
+</form>
+</div>
+</section>
+</div>
+</main>
+<footer class="w-full border-t-[6px] border-[#1A0F0D] bg-[#fdf9f3] mt-20 px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-lg font-black italic text-[#1A0F0D] uppercase font-headline">The Pulp Alchemist</div>
+<div class="flex flex-wrap justify-center gap-8 font-['Space_Grotesk'] font-medium text-xs tracking-widest uppercase">
+<a class="text-[#1A0F0D] opacity-80 hover:text-[#ff784d] transition-colors" href="#">The Manifesto</a>
+<a class="text-[#1A0F0D] opacity-80 hover:text-[#ff784d] transition-colors" href="#">Locations</a>
+<a class="text-[#1A0F0D] opacity-80 hover:text-[#ff784d] transition-colors" href="#">Privacy</a>
+</div>
+<div class="text-[10px] font-bold tracking-widest text-[#1A0F0D] opacity-60 text-center md:text-right max-w-xs">
+            © THE PULP ALCHEMIST. DESIGN REFERENCE — LIVE CHECKOUT: /orders
+        </div>
+</footer>
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+</body></html>

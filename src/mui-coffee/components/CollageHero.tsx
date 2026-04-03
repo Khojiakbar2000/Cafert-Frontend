@@ -1,62 +1,32 @@
 import React, { useRef } from 'react';
-import { Box, Container, Typography, Button } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useHistory } from 'react-router-dom';
-import { useTheme as useThemeContext } from '../context/ThemeContext';
+
+/** Pulp Alchemist / StitchEvents comic tokens */
+const INK = '#1A0F0D';
+const PRIMARY = '#a83100';
+const TERTIARY_CONTAINER = '#fecc00';
+const ON_TERTIARY_CONTAINER = '#584500';
+const BODY_MUTED = '#312f26';
+const ALCHEMIST_ORANGE = '#FF4E00';
 
 // Register ScrollTrigger
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-type Card = {
-  src: string;
-  alt: string;
-  top: string;
-  left: string;
-  rotation: number;
-  className: string;
-};
-
-const cards: Card[] = [
-  {
-    src: '/img/coffee/coffee-latte.jpg',
-    alt: 'Latte Art',
-    top: '0',
-    left: '0',
-    rotation: -6,
-    className: 'one',
-  },
-  {
-    src: '/img/coffee/coffee-2.webp',
-    alt: 'Cappuccino',
-    top: '40px',
-    left: '180px',
-    rotation: 3,
-    className: 'two',
-  },
-  {
-    src: '/img/coffee/coffee-beans.jpg',
-    alt: 'Coffee Beans',
-    top: '120px',
-    left: '60px',
-    rotation: -2,
-    className: 'three',
-  },
-  {
-    src: '/img/coffee/coffee-espresso.jpg',
-    alt: 'Espresso',
-    top: '80px',
-    left: '320px',
-    rotation: 6,
-    className: 'four',
-  },
-];
+function CollageComicFonts() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:ital,wght@0,300..700;1,300..700&family=Bangers&display=swap');
+    `}</style>
+  );
+}
 
 const CollageHero: React.FC = () => {
-  const { colors } = useThemeContext();
   const history = useHistory();
   const sectionRef = useRef<HTMLElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -71,7 +41,9 @@ const CollageHero: React.FC = () => {
 
     // Text animation - slide in from left
     if (textRef.current) {
-      const textElements = textRef.current.querySelectorAll('.season-text > *');
+      const textElements = textRef.current.querySelectorAll(
+        '.season-text .comic-animate-in > *',
+      );
       gsap.from(textElements, {
         x: -80,
         opacity: 0,
@@ -85,21 +57,6 @@ const CollageHero: React.FC = () => {
         },
       });
     }
-
-    // Card animation - soft entrance
-    const polaroids = sectionRef.current.querySelectorAll('.polaroid');
-    gsap.from(polaroids, {
-      y: 40,
-      opacity: 0,
-      duration: 1,
-      stagger: 0.12,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: 'top 70%',
-        toggleActions: 'play none none none',
-      },
-    });
   }, { scope: sectionRef });
 
   return (
@@ -109,146 +66,167 @@ const CollageHero: React.FC = () => {
       className="season-picks"
       sx={{
         position: 'relative',
-        height: { xs: '75vh', md: '80vh' },
-        minHeight: { xs: '500px', md: '600px' },
+        minHeight: { xs: 'min(1280px, 120vh)', md: 'min(1680px, 118vh)' },
+        py: { xs: '3rem', md: '5rem' },
         // Fixed background with lighter overlay
         backgroundImage: {
-          xs: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/picture.png)',
-          md: 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), url(/picture.png)',
+          xs: 'linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.28)), url(/codegrid-3d-crt-display/coffeesunset.png)',
+          md: 'linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.28)), url(/codegrid-3d-crt-display/coffeesunset.png)',
         },
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: { xs: 'scroll', md: 'fixed' },
         overflow: 'hidden',
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', md: '45% 55%' },
+        display: 'flex',
         alignItems: 'center',
-        padding: { xs: '2rem', md: '4rem' },
+        px: { xs: '1.25rem', md: '2.5rem' },
       }}
     >
+      <CollageComicFonts />
 
-      {/* Text block - Left column */}
+      {/* Comic panel on parallax background */}
       <Box
         ref={textRef}
         className="season-text"
         sx={{
           position: 'relative',
           zIndex: 2,
-          color: '#fff',
-          padding: { xs: '2rem', md: '0 2rem' },
+          width: '100%',
+          maxWidth: '56rem',
+          mx: { xs: 0, md: '8%' },
         }}
       >
-        <Typography
-          className="season-title"
-          variant="h1"
+        <Box
+          className="comic-animate-in"
           sx={{
-            fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
-            fontWeight: 700,
-            mb: 2,
-            fontFamily: 'Playfair Display, serif',
-            lineHeight: 1.1,
-            color: '#fff',
+            position: 'relative',
+            bgcolor: 'rgba(252, 246, 232, 0.94)',
+            border: `6px solid ${INK}`,
+            boxShadow: `14px 14px 0 0 ${INK}`,
+            p: { xs: '2.25rem', md: '3.25rem', lg: '4rem' },
+            transform: 'rotate(-0.75deg)',
+            overflow: 'hidden',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              backgroundImage:
+                'radial-gradient(circle, currentColor 1px, transparent 1px)',
+              backgroundSize: '12px 12px',
+              color: INK,
+              opacity: 0.08,
+              pointerEvents: 'none',
+            },
           }}
         >
-          Season Picks
-        </Typography>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: { xs: -8, md: -18 },
+              right: { xs: 8, md: -12 },
+              bgcolor: TERTIARY_CONTAINER,
+              color: ON_TERTIARY_CONTAINER,
+              fontWeight: 900,
+              py: '0.35rem',
+              px: { xs: '0.75rem', md: '1rem' },
+              border: `5px solid ${INK}`,
+              boxShadow: `6px 6px 0 0 ${INK}`,
+              transform: 'rotate(11deg)',
+              zIndex: 2,
+              fontSize: { xs: '0.95rem', md: '1.15rem' },
+              fontFamily: '"Space Grotesk", system-ui, sans-serif',
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            Fresh drop!
+          </Box>
+
+          <Typography
+            className="season-title"
+            component="h2"
+            variant="h1"
+            sx={{
+              position: 'relative',
+              zIndex: 1,
+              m: 0,
+              mb: { xs: 2, md: 2.5 },
+              fontSize: {
+                xs: 'clamp(2.75rem, 10vw, 3.75rem)',
+                md: 'clamp(3.5rem, 5vw, 4.75rem)',
+              },
+              fontWeight: 900,
+              fontFamily: '"Bangers", "Space Grotesk", system-ui, sans-serif',
+              fontStyle: 'normal',
+              letterSpacing: '0.02em',
+              lineHeight: 1.05,
+              textTransform: 'uppercase',
+              color: INK,
+              textShadow: `4px 4px 0 ${ALCHEMIST_ORANGE}`,
+            }}
+          >
+            Season Picks
+          </Typography>
           <Typography
             className="season-description"
-            variant="h5"
             sx={{
-              fontSize: { xs: '1.1rem', md: '1.25rem' },
-              fontWeight: 400,
-              mb: 4,
-              color: 'rgba(255,255,255,0.9)',
-              lineHeight: 1.6,
+              position: 'relative',
+              zIndex: 1,
+              m: 0,
+              mb: { xs: 3, md: 4 },
+              fontSize: { xs: '1.125rem', md: '1.35rem' },
+              fontWeight: 700,
+              fontFamily: '"Space Grotesk", system-ui, sans-serif',
+              fontStyle: 'italic',
+              color: BODY_MUTED,
+              lineHeight: 1.55,
+              maxWidth: '36rem',
             }}
           >
             Discover seasonal favorites through texture, aroma, and craft.
           </Typography>
-        <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-start' } }}>
-          <Button
-            className="season-button"
-            variant="contained"
-            onClick={handleExploreMenu}
-            sx={{
-              padding: '12px 32px',
-              borderRadius: '12px',
-              background: '#fff',
-              color: '#111',
-              fontWeight: 600,
-              fontSize: '1rem',
-              textTransform: 'none',
-              boxShadow: '0 4px 14px rgba(255,255,255,0.2)',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.95)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(255,255,255,0.3)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-            Explore Menu
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Polaroid Collage - Right column, NO overlap */}
-      <Box
-        className="polaroid-collage"
-        sx={{
-          position: 'relative',
-          width: '100%',
-          height: { xs: '300px', sm: '350px', md: '380px' },
-          zIndex: 2,
-          padding: { xs: '2rem', md: '0 2rem' },
-        }}
-      >
-        {cards.map((card, idx) => (
           <Box
-            key={idx}
-            className={`polaroid ${card.className}`}
-            component="figure"
             sx={{
-              position: 'absolute',
-              width: { xs: '200px', sm: '260px', md: '300px' },
-              padding: '12px',
-              background: '#fff',
-              borderRadius: '14px',
-              boxShadow: '0 18px 40px rgba(0,0,0,0.2)',
-              transform: `rotate(${card.rotation}deg)`,
-              transformOrigin: 'center',
-              top: card.top,
-              left: card.left,
-              transition: 'transform 0.4s ease',
+              position: 'relative',
               zIndex: 1,
-              '&:hover': {
-                transform: `translateY(-8px) scale(1.03) rotate(${card.rotation}deg)`,
-                zIndex: 10,
-              },
-              '& img': {
-                display: 'block',
-                width: '100%',
-                height: 'auto',
-                borderRadius: '10px',
-                objectFit: 'cover',
-              },
+              display: 'flex',
+              justifyContent: 'flex-start',
             }}
           >
-            <Box
-              component="img"
-              src={card.src}
-              alt={card.alt}
+            <Button
+              className="season-button"
+              variant="contained"
+              onClick={handleExploreMenu}
+              disableElevation
               sx={{
-                display: 'block',
-                width: '100%',
-                height: 'auto',
-                borderRadius: '10px',
-                objectFit: 'cover',
+                py: 1.35,
+                px: { xs: 3, md: 4 },
+                borderRadius: 0,
+                bgcolor: PRIMARY,
+                color: '#ffefeb',
+                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontWeight: 900,
+                fontSize: { xs: '0.95rem', md: '1.05rem' },
+                fontStyle: 'italic',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                border: `4px solid ${INK}`,
+                boxShadow: `5px 5px 0 0 ${INK}`,
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
+                '&:hover': {
+                  bgcolor: ALCHEMIST_ORANGE,
+                  color: INK,
+                  transform: 'translate(3px, 3px)',
+                  boxShadow: `2px 2px 0 0 ${INK}`,
+                },
               }}
-            />
+            >
+              Explore Menu
+            </Button>
           </Box>
-        ))}
+        </Box>
       </Box>
     </Box>
   );

@@ -1,6 +1,5 @@
 import { useState, SyntheticEvent, useEffect, useRef, useCallback } from "react";
 import {
-  Container,
   Stack,
   Box,
   Button,
@@ -19,9 +18,6 @@ import {
   TextField,
   Chip,
   Avatar,
-  Stepper,
-  Step,
-  StepLabel,
   Badge,
   InputAdornment,
   CircularProgress,
@@ -51,6 +47,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import ContactlessIcon from "@mui/icons-material/Contactless";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PausedOrders from "./PausedOrders";
 import ProcessOrders from "./ProcessOrders";
@@ -65,10 +62,39 @@ import { OrderStatus } from "../../../lib/enums/order.enum";
 import { ProductStatus, ProductCollection, ProductSize } from "../../../lib/enums/product.enum";
 import OrderService from "../../services/OrderService";
 import { useGlobals } from "../../hooks/useGlobals";
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory, useLocation, Link } from "react-router-dom";
 import { serverApi } from "../../../lib/config";
 import { CartItem } from "../../../lib/types/search";
 import ProductService from "../../services/ProductService";
+
+/**
+ * Pulp Alchemist checkout — same structure/tokens as `public/stitch-checkout-reference.html` + `src/components/stitch.tsx` notes.
+ */
+const PULP_INK = '#1A0F0D';
+const PULP_BG = '#fdf9f3';
+const PULP_PRIMARY = '#FF4E00';
+const PULP_GROTESK = '"Space Grotesk", system-ui, sans-serif';
+/** Match `public/stitch-checkout-reference.html` main: Tailwind `max-w-6xl` → 72rem / 1152px. */
+const PULP_MAIN_MAX = 'min(100%, 72rem)';
+const PULP_COMIC_SHADOW = '6px 6px 0 0 #1A0F0D';
+const PULP_COMIC_SHADOW_8 = '8px 8px 0 0 #1A0F0D';
+const PULP_INK_BORDER = `4px solid ${PULP_INK}`;
+const PULP_INK_BORDER_HEAVY = `6px solid ${PULP_INK}`;
+const MISSION_STEP_LABELS = ['PLACED', 'PREPARING', 'READY', 'COMPLETED'] as const;
+const MISSION_STEP_ROT = [3, -2, 6, -3];
+
+/** `src/components/stitch.md` — menu tab palette & borders */
+const MENU_SURFACE = '#fcf6e8';
+const MENU_ON_SURFACE = '#312f26';
+const MENU_ON_SURFACE_VARIANT = '#5f5b51';
+const MENU_PRIMARY = '#a83100';
+const MENU_PRIMARY_CONTAINER = '#ff784d';
+const MENU_SURFACE_CONTAINER = '#eee8d8';
+const MENU_SURFACE_CONTAINER_LOW = '#f6f0e1';
+const MENU_SURFACE_BRIGHT = '#fcf6e8';
+const MENU_WHITE = '#ffffff';
+const MENU_BORDER_HEAVY = `6px solid ${PULP_INK}`;
+const MENU_BORDER_SM = `3px solid ${PULP_INK}`;
 
 /** REDUX SLICE & SELECTOR */
 const actionDispatch = (dispatch: Dispatch) => ({
@@ -536,7 +562,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
     categoryRefs.current[category] = el;
   };
 
-  const parchmentText = '#3a3429';
+  const parchmentText = PULP_INK;
 
   // Card brand detection
   const detectCardBrand = (number: string): string => {
@@ -606,56 +632,124 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
     }, 2500);
   };
 
-  // Calculate totals from cart items (for checkout view)
+  // Calculate totals: prefer non-empty cart; otherwise use the order on screen (empty [] was still "truthy" → $0 bug)
   const calculateSubtotal = () => {
-    if (mainView === 'checkout' && cartItems) {
+    if (mainView === 'checkout' && cartItems && cartItems.length > 0) {
       return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     }
-    // Fallback to order items if no cart (for backward compatibility)
     if (!currentOrder) return 0;
     return currentOrder.orderItems?.reduce((sum, item) => sum + item.itemPrice * item.itemQuantity, 0) || 0;
   };
 
   const subtotal = calculateSubtotal();
-  const delivery = (fulfillmentType === "delivery" ? 5.0 : 0);
+  const delivery =
+    mainView === 'checkout' &&
+    (!cartItems || cartItems.length === 0) &&
+    currentOrder &&
+    typeof currentOrder.orderDelivery === 'number'
+      ? currentOrder.orderDelivery
+      : fulfillmentType === 'delivery'
+        ? 5.0
+        : 0;
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + delivery + tax;
 
   if (!authMember) history.push("/");
 
-  // Status stepper
-  const getActiveStep = () => {
-    switch (value) {
-      case "1":
-        return 0; // Paused
-      case "2":
-        return 1; // Processing
-      case "3":
-        return 3; // Completed
-      default:
-        return 0;
-    }
-  };
+  /** 0 = pending tab, 1 = processing, 3 = completed (matches stitch.html 4-step rail; READY shares processing). */
+  const missionProgressIdx = value === '1' ? 0 : value === '2' ? 1 : 3;
+  const orderListCount =
+    value === '1'
+      ? (pausedOrders?.length || 0)
+      : value === '2'
+        ? (processOrders?.length || 0)
+        : (finishedOrders?.length || 0);
+
+  const pulpFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      fontFamily: PULP_GROTESK,
+      fontSize: { xs: '1rem', md: '1.0625rem' },
+      backgroundColor: PULP_BG,
+      borderRadius: 0,
+      py: 0.25,
+      '& fieldset': { borderWidth: 3, borderColor: PULP_INK },
+      '&:hover fieldset': { borderColor: PULP_INK },
+      '&.Mui-focused fieldset': { borderColor: PULP_PRIMARY },
+    },
+    '& .MuiOutlinedInput-input': {
+      py: { xs: 1.5, md: 1.75 },
+    },
+  } as const;
+
+  const menuFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      fontFamily: PULP_GROTESK,
+      borderRadius: 0,
+      backgroundColor: MENU_WHITE,
+      '& fieldset': { borderWidth: 3, borderColor: PULP_INK },
+      '&:hover fieldset': { borderColor: PULP_INK },
+      '&.Mui-focused fieldset': { borderColor: MENU_PRIMARY },
+    },
+    '& .MuiInputLabel-root': {
+      fontFamily: PULP_GROTESK,
+      color: MENU_ON_SURFACE_VARIANT,
+    },
+    '& .MuiOutlinedInput-input': { py: 1.5 },
+  } as const;
 
   return (
+    <>
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap');`}
+      </style>
     <Box
       sx={{
         width: "100%",
         minHeight: "100vh",
-        background: "#fbfbf8",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: PULP_BG,
+        color: PULP_INK,
         pt: 15,
-        pb: mainView === 'menu' && showCartSummary ? { xs: 20, md: 16 } : 6,
+        pb: mainView === 'menu' && showCartSummary ? { xs: 20, md: 16 } : { xs: 4, md: 6 },
+        fontFamily: PULP_GROTESK,
+        position: 'relative',
+        '&::after': {
+          content: '""',
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.03,
+          backgroundImage:
+            "url(https://www.transparenttextures.com/patterns/stardust.png)",
+        },
       }}
     >
-      <Container maxWidth="xl">
-        {/* Main Tabs: Checkout / Menu */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          maxWidth: PULP_MAIN_MAX,
+          width: "100%",
+          mx: "auto",
+          px: { xs: 2.5, sm: 3, md: 4, lg: 5 },
+          boxSizing: "border-box",
+          position: 'relative',
+          zIndex: 1,
+          minHeight: 0,
+        }}
+      >
+        {/* Main Tabs: Checkout / Menu — stitch-style top bar */}
         <Paper
           elevation={0}
           sx={{
-            mb: 4,
-            backgroundColor: "#ffffff",
-            borderRadius: "16px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+            mb: { xs: 3, md: 5 },
+            backgroundColor: PULP_BG,
+            borderRadius: 0,
+            borderBottom: `6px solid ${PULP_INK}`,
+            boxShadow: PULP_COMIC_SHADOW,
             overflow: "hidden",
           }}
         >
@@ -663,9 +757,10 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
             value={mainView}
             onChange={handleMainTabChange}
             sx={{
+              minHeight: { xs: 52, md: 60 },
               "& .MuiTabs-indicator": {
-                backgroundColor: "#8B4513",
-                height: 3,
+                backgroundColor: PULP_PRIMARY,
+                height: 5,
               },
             }}
           >
@@ -673,72 +768,199 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               label="Checkout"
               value="checkout"
               sx={{
-                fontFamily: '"EB Garamond", serif',
-                fontSize: "1.1rem",
-                textTransform: "none",
-                fontWeight: mainView === "checkout" ? 600 : 400,
-                color: mainView === "checkout" ? "#8B4513" : "#3a3429",
+                fontFamily: PULP_GROTESK,
+                fontSize: { xs: "1.05rem", md: "1.25rem" },
+                py: 2,
+                textTransform: "uppercase",
+                fontStyle: "italic",
+                fontWeight: mainView === "checkout" ? 800 : 600,
+                color: mainView === "checkout" ? PULP_PRIMARY : PULP_INK,
+                letterSpacing: "-0.02em",
               }}
             />
             <Tab
               label="Menu"
               value="menu"
               sx={{
-                fontFamily: '"EB Garamond", serif',
-                fontSize: "1.1rem",
-                textTransform: "none",
-                fontWeight: mainView === "menu" ? 600 : 400,
-                color: mainView === "menu" ? "#8B4513" : "#3a3429",
+                fontFamily: PULP_GROTESK,
+                fontSize: { xs: "1.05rem", md: "1.25rem" },
+                py: 2,
+                textTransform: "uppercase",
+                fontStyle: "italic",
+                fontWeight: mainView === "menu" ? 800 : 600,
+                color: mainView === "menu" ? PULP_PRIMARY : PULP_INK,
+                letterSpacing: "-0.02em",
               }}
             />
           </Tabs>
         </Paper>
 
-        {/* Conditional Rendering: Checkout View */}
+        {/* Conditional Rendering: Checkout View — flex column so footer can sit at bottom of viewport */}
         {mainView === 'checkout' && (
-          <>
-        {/* Page Title */}
-        <Box sx={{ textAlign: "center", mb: 5 }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', gap: { xs: 0, md: 1 } }}>
+        {/* Page title — CHECKOUT kinetic type (stitch reference) */}
+        <Box sx={{ textAlign: "center", mb: { xs: 5, md: 7 }, mt: { md: 1 }, position: "relative" }}>
+          <Box
+            aria-hidden
+            sx={{
+              position: "absolute",
+              top: { xs: -24, md: -32 },
+              left: { xs: -8, md: -16 },
+              width: 96,
+              height: 96,
+              backgroundImage: `radial-gradient(circle, ${PULP_INK} 1px, transparent 1px)`,
+              backgroundSize: "8px 8px",
+              opacity: 0.06,
+              pointerEvents: "none",
+            }}
+          />
           <Typography
+            component="h1"
             variant="h3"
             sx={{
-              fontFamily: '"Cinzel", "Cormorant Garamond", serif',
-              fontWeight: 600,
-              color: "#3a3429",
-              mb: 1,
-              letterSpacing: "0.02em",
+              position: "relative",
+              fontFamily: PULP_GROTESK,
+              fontWeight: 900,
+              fontStyle: "italic",
+              textTransform: "uppercase",
+              color: PULP_INK,
+              mb: 2,
+              letterSpacing: "-0.04em",
+              fontSize: { xs: "3.25rem", sm: "5rem", md: "6.25rem", lg: "7rem" },
+              lineHeight: 0.95,
+              transform: "rotate(-1deg)",
+              textShadow: `6px 6px 0 ${PULP_PRIMARY}`,
             }}
           >
             Checkout
           </Typography>
           <Typography
             sx={{
-              fontFamily: '"EB Garamond", serif',
-              fontSize: "1rem",
-              color: "#3a3429",
-              opacity: 0.6,
+              fontFamily: PULP_GROTESK,
+              fontSize: { xs: "1.05rem", md: "1.2rem" },
+              fontWeight: 700,
+              lineHeight: 1.45,
+              color: PULP_INK,
+              opacity: 0.88,
+              maxWidth: "48rem",
+              mx: "auto",
+              px: { xs: 1, sm: 0 },
             }}
           >
-            Review and complete your order
+            Review and complete your order — direct from the board to your tray.
           </Typography>
         </Box>
 
-        {/* 2-Column Layout */}
-        <Grid container spacing={4}>
-          {/* Left Column: Order Details (60-65%) */}
-          <Grid item xs={12} lg={8}>
+        {/* Progress tracker — stitch-checkout-reference.html */}
+        <Box
+          sx={{
+            mb: { xs: 4, md: 6 },
+            border: PULP_INK_BORDER,
+            p: { xs: 3, md: 4, lg: 5 },
+            bgcolor: '#fff',
+            position: 'relative',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+          }}
+        >
+          <Box
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `radial-gradient(circle, ${PULP_INK} 1px, transparent 1px)`,
+              backgroundSize: '8px 8px',
+              opacity: 0.05,
+              pointerEvents: 'none',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: { xs: 2.5, md: 3 },
+            }}
+          >
+            {MISSION_STEP_LABELS.map((label, i) => {
+              const isActive = i === missionProgressIdx;
+              const isPast = i < missionProgressIdx || (missionProgressIdx === 3 && i < 3);
+              const dim = i > missionProgressIdx && missionProgressIdx !== 3;
+              return (
+                <Box key={label} sx={{ display: 'flex', alignItems: 'center', width: { xs: '100%', md: 'auto' }, flex: { md: i < 3 ? 1 : 0 } }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      opacity: dim ? 0.4 : 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: { xs: 44, md: 52 },
+                        height: { xs: 44, md: 52 },
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: { xs: '1.05rem', md: '1.15rem' },
+                        border: PULP_INK_BORDER,
+                        bgcolor: isActive ? PULP_PRIMARY : '#fff',
+                        color: isActive ? '#fff' : PULP_INK,
+                        transform: `rotate(${MISSION_STEP_ROT[i]}deg)`,
+                      }}
+                    >
+                      {i + 1}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: { xs: '0.78rem', md: '0.82rem' },
+                        letterSpacing: '0.16em',
+                        color: isPast && !isActive ? PULP_INK : 'inherit',
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                  </Box>
+                  {i < 3 && (
+                    <Box
+                      sx={{
+                        display: { xs: 'none', md: 'block' },
+                        flex: 1,
+                        height: 4,
+                        bgcolor: PULP_INK,
+                        opacity: 0.2,
+                        mx: { md: 1 },
+                        minWidth: { md: 24 },
+                      }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+
+        {/* 2-Column Layout — same as reference `lg:grid-cols-2` (50 / 50) */}
+        <Grid container spacing={{ xs: 4, md: 5, lg: 6 }} sx={{ flex: 1, alignContent: 'flex-start' }}>
+          <Grid item xs={12} lg={6}>
             <Stack spacing={3}>
               {/* Order Status Tabs */}
               <Paper
                 elevation={0}
                 sx={{
-                  borderRadius: "24px",
+                  borderRadius: 0,
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                  border: PULP_INK_BORDER,
+                  boxShadow: PULP_COMIC_SHADOW_8,
                   overflow: "hidden",
                 }}
               >
-                <Box sx={{ borderBottom: "1px solid rgba(58, 52, 41, 0.08)" }}>
+                <Box sx={{ borderBottom: `4px solid ${PULP_INK}` }}>
                   <Tabs
                     value={value}
                     onChange={handleChange}
@@ -746,7 +968,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     sx={{
                       px: 3,
                       "& .MuiTabs-indicator": {
-                        backgroundColor: "#8B4513",
+                        backgroundColor: "#FF4E00",
                         height: 3,
                       },
                     }}
@@ -755,8 +977,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       label="Pending"
                       value={"1"}
                       sx={{
-                        fontFamily: '"EB Garamond", serif',
-                        fontSize: "1rem",
+                        fontFamily: PULP_GROTESK,
+                        fontSize: { xs: '0.95rem', md: '1.05rem' },
+                        py: 1.5,
                         textTransform: "none",
                         fontWeight: value === "1" ? 600 : 400,
                       }}
@@ -765,8 +988,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       label="Processing"
                       value={"2"}
                       sx={{
-                        fontFamily: '"EB Garamond", serif',
-                        fontSize: "1rem",
+                        fontFamily: PULP_GROTESK,
+                        fontSize: { xs: '0.95rem', md: '1.05rem' },
+                        py: 1.5,
                         textTransform: "none",
                         fontWeight: value === "2" ? 600 : 400,
                       }}
@@ -775,8 +999,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       label="Completed"
                       value={"3"}
                       sx={{
-                        fontFamily: '"EB Garamond", serif',
-                        fontSize: "1rem",
+                        fontFamily: PULP_GROTESK,
+                        fontSize: { xs: '0.95rem', md: '1.05rem' },
+                        py: 1.5,
                         textTransform: "none",
                         fontWeight: value === "3" ? 600 : 400,
                       }}
@@ -784,83 +1009,48 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                   </Tabs>
                 </Box>
 
-                {/* Status Stepper */}
-                <Box sx={{ p: 4, pb: 3 }}>
-                  <Stepper activeStep={getActiveStep()} alternativeLabel>
-                    <Step>
-                      <StepLabel
-                        sx={{
-                          "& .MuiStepLabel-label": {
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.95rem",
-                          },
-                        }}
-                      >
-                        Placed
-                      </StepLabel>
-                    </Step>
-                    <Step>
-                      <StepLabel
-                        sx={{
-                          "& .MuiStepLabel-label": {
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.95rem",
-                          },
-                        }}
-                      >
-                        Preparing
-                      </StepLabel>
-                    </Step>
-                    <Step>
-                      <StepLabel
-                        sx={{
-                          "& .MuiStepLabel-label": {
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.95rem",
-                          },
-                        }}
-                      >
-                        Ready
-                      </StepLabel>
-                    </Step>
-                    <Step>
-                      <StepLabel
-                        sx={{
-                          "& .MuiStepLabel-label": {
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.95rem",
-                          },
-                        }}
-                      >
-                        Completed
-                      </StepLabel>
-                    </Step>
-                  </Stepper>
-                </Box>
               </Paper>
 
               {/* Orders List - Pending, Processing, Completed */}
               <Paper
                 elevation={0}
                 sx={{
-                  borderRadius: "24px",
+                  borderRadius: 0,
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                  p: { xs: 3, md: 4 },
+                  border: PULP_INK_BORDER_HEAVY,
+                  boxShadow: PULP_COMIC_SHADOW_8,
+                  p: { xs: 3.5, md: 5, lg: 6 },
+                  transform: 'rotate(0.5deg)',
                 }}
               >
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
                   <Typography
                     variant="h5"
                     sx={{
-                      fontFamily: '"Cinzel", serif',
-                      fontWeight: 600,
-                      color: "#3a3429",
-                      letterSpacing: "0.01em",
+                      fontFamily: PULP_GROTESK,
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      textTransform: 'uppercase',
+                      color: "#1A0F0D",
+                      letterSpacing: '-0.02em',
+                      fontSize: { xs: '1.45rem', md: '1.9rem', lg: '2.1rem' },
                     }}
                   >
-                    Orders
+                    Your order
                   </Typography>
+                  <Chip
+                    label={`${orderListCount} ${orderListCount === 1 ? 'LIST' : 'LISTS'}`}
+                    sx={{
+                      fontFamily: PULP_GROTESK,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      borderRadius: 0,
+                      border: PULP_INK_BORDER,
+                      bgcolor: '#fecc00',
+                      color: PULP_INK,
+                      transform: 'rotate(-3deg)',
+                    }}
+                  />
                 </Box>
                 <Box sx={{ mt: 2 }}>
                   {value === "1" && <PausedOrders setValue={setValue} />}
@@ -873,23 +1063,27 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               <Paper
                 elevation={0}
                 sx={{
-                  borderRadius: "24px",
+                  borderRadius: 0,
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                  p: { xs: 3, md: 4 },
+                  border: PULP_INK_BORDER,
+                  boxShadow: PULP_COMIC_SHADOW_8,
+                  p: { xs: 3.5, md: 5, lg: 6 },
+                  transform: 'rotate(-0.5deg)',
                 }}
               >
                 <Typography
                   variant="h5"
                   sx={{
-                    fontFamily: '"Cinzel", serif',
-                    fontWeight: 600,
-                    color: "#3a3429",
-                    mb: 3,
-                    letterSpacing: "0.01em",
+                    fontFamily: PULP_GROTESK,
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    color: "#1A0F0D",
+                    mb: { xs: 3, md: 4 },
+                    letterSpacing: "0.04em",
+                    fontSize: { xs: '1.2rem', md: '1.45rem', lg: '1.55rem' },
                   }}
                 >
-                  Fulfillment
+                  Mission logistics
                 </Typography>
 
                 <Box
@@ -897,21 +1091,21 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     display: "flex",
                     alignItems: "center",
                     gap: 2,
-                    p: 3,
-                    borderRadius: "16px",
-                    backgroundColor: "rgba(139, 69, 19, 0.04)",
-                    border: "1px solid rgba(139, 69, 19, 0.1)",
+                    p: { xs: 3, md: 4 },
+                    borderRadius: 0,
+                    backgroundColor: 'rgba(253,249,243,0.95)',
+                    border: PULP_INK_BORDER_HEAVY,
                   }}
                 >
-                  {fulfillmentType === "pickup" ? <StorefrontIcon sx={{ fontSize: "2rem", color: "#8B4513" }} /> : <LocalShippingIcon sx={{ fontSize: "2rem", color: "#8B4513" }} />}
+                  {fulfillmentType === "pickup" ? <StorefrontIcon sx={{ fontSize: "2rem", color: "#FF4E00" }} /> : <LocalShippingIcon sx={{ fontSize: "2rem", color: "#FF4E00" }} />}
 
                   <Box sx={{ flex: 1 }}>
                     <Typography
                       sx={{
-                        fontFamily: '"Cinzel", serif',
+                        fontFamily: PULP_GROTESK,
                         fontSize: "1.1rem",
                         fontWeight: 600,
-                        color: "#3a3429",
+                        color: "#1A0F0D",
                         mb: 0.5,
                         textTransform: "capitalize",
                       }}
@@ -922,9 +1116,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     {fulfillmentType === "pickup" ? (
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "0.95rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           opacity: 0.7,
                         }}
                       >
@@ -935,9 +1129,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         {deliveryAddress ? (
                           <Typography
                             sx={{
-                              fontFamily: '"EB Garamond", serif',
+                              fontFamily: PULP_GROTESK,
                               fontSize: "0.95rem",
-                              color: "#3a3429",
+                              color: "#1A0F0D",
                               opacity: 0.7,
                             }}
                           >
@@ -954,9 +1148,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                                 history.push("/orders?tab=menu");
                               }}
                               sx={{
-                                fontFamily: '"EB Garamond", serif',
+                                fontFamily: PULP_GROTESK,
                                 textTransform: "none",
-                                color: "#8B4513",
+                                color: "#FF4E00",
                               }}
                             >
                               Add address
@@ -971,12 +1165,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
             </Stack>
           </Grid>
 
-          {/* Right Column: Payment (35-40%, sticky) */}
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} lg={6}>
             <Box
               sx={{
                 position: { lg: "sticky" },
-                top: { lg: 100 },
+                top: { lg: 88 },
               }}
             >
               <Stack spacing={3}>
@@ -984,12 +1177,26 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 <Paper
                   elevation={0}
                   sx={{
-                    borderRadius: "24px",
+                    borderRadius: 0,
+                    border: PULP_INK_BORDER_HEAVY,
+                    boxShadow: PULP_COMIC_SHADOW_8,
                     backgroundColor: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                    p: { xs: 3, md: 4 },
+                    p: { xs: 3.5, md: 5, lg: 6 },
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
+                  <ContactlessIcon
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      fontSize: 120,
+                      opacity: 0.08,
+                      color: PULP_INK,
+                      pointerEvents: 'none',
+                    }}
+                  />
                   {/* Test Mode Badge */}
                   <Box
                     sx={{
@@ -997,18 +1204,24 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       alignItems: "center",
                       justifyContent: "space-between",
                       mb: 3,
+                      position: 'relative',
+                      zIndex: 1,
                     }}
                   >
                     <Typography
                       variant="h5"
                       sx={{
-                        fontFamily: '"Cinzel", serif',
-                        fontWeight: 600,
-                        color: "#3a3429",
-                        letterSpacing: "0.01em",
+                        fontFamily: PULP_GROTESK,
+                        fontWeight: 900,
+                        fontStyle: 'italic',
+                        textTransform: 'uppercase',
+                        color: "#1A0F0D",
+                        letterSpacing: "-0.02em",
+                        fontSize: { xs: '1.35rem', md: '1.85rem', lg: '2rem' },
+                        transform: 'rotate(0.5deg)',
                       }}
                     >
-                      Payment
+                      Payment terminal
                     </Typography>
                     <Chip
                       label="Demo Mode"
@@ -1016,7 +1229,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       sx={{
                         backgroundColor: "rgba(255, 152, 0, 0.1)",
                         color: "#f57c00",
-                        fontFamily: '"EB Garamond", serif',
+                        fontFamily: PULP_GROTESK,
                         fontWeight: 500,
                       }}
                     />
@@ -1037,7 +1250,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <LockIcon sx={{ fontSize: "1.2rem", color: "#4caf50" }} />
                     <Typography
                       sx={{
-                        fontFamily: '"EB Garamond", serif',
+                        fontFamily: PULP_GROTESK,
                         fontSize: "0.9rem",
                         color: "#2e7d32",
                         fontWeight: 500,
@@ -1053,12 +1266,13 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
-                          fontSize: "0.9rem",
-                          color: "#3a3429",
-                          opacity: 0.7,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '0.72rem', md: '0.78rem' },
+                          color: "#1A0F0D",
                           mb: 0.75,
-                          fontWeight: 500,
+                          fontWeight: 900,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
                         }}
                       >
                         Card number
@@ -1072,31 +1286,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <CreditCardIcon sx={{ color: "#8B4513", opacity: 0.5 }} />
+                              <CreditCardIcon sx={{ color: "#FF4E00", opacity: 0.5 }} />
                             </InputAdornment>
                           ),
                           endAdornment: cardBrand && (
                             <InputAdornment position="end">
-                              <Chip label={cardBrand} size="small" sx={{ fontFamily: '"EB Garamond", serif', fontSize: "0.75rem" }} />
+                              <Chip label={cardBrand} size="small" sx={{ fontFamily: PULP_GROTESK, fontSize: "0.75rem" }} />
                             </InputAdornment>
                           ),
                         }}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            fontFamily: '"EB Garamond", serif',
-                            backgroundColor: "#fafafa",
-                            borderRadius: "12px",
-                            "& fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.15)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.3)",
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#8B4513",
-                            },
-                          },
-                        }}
+                        sx={pulpFieldSx}
                       />
                     </Box>
 
@@ -1105,15 +1304,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       <Box sx={{ flex: 1 }}>
                         <Typography
                           sx={{
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.9rem",
-                            color: "#3a3429",
-                            opacity: 0.7,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: { xs: '0.72rem', md: '0.78rem' },
+                            color: "#1A0F0D",
                             mb: 0.75,
-                            fontWeight: 500,
+                            fontWeight: 900,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
                           }}
                         >
-                          Expiration
+                          Expiry
                         </Typography>
                         <TextField
                           fullWidth
@@ -1121,33 +1321,19 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
                           placeholder="MM/YY"
                           disabled={paymentProcessing || paymentSuccess}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              fontFamily: '"EB Garamond", serif',
-                              backgroundColor: "#fafafa",
-                              borderRadius: "12px",
-                              "& fieldset": {
-                                borderColor: "rgba(58, 52, 41, 0.15)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(58, 52, 41, 0.3)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#8B4513",
-                              },
-                            },
-                          }}
+                          sx={pulpFieldSx}
                         />
                       </Box>
                       <Box sx={{ flex: 1 }}>
                         <Typography
                           sx={{
-                            fontFamily: '"EB Garamond", serif',
-                            fontSize: "0.9rem",
-                            color: "#3a3429",
-                            opacity: 0.7,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: { xs: '0.72rem', md: '0.78rem' },
+                            color: "#1A0F0D",
                             mb: 0.75,
-                            fontWeight: 500,
+                            fontWeight: 900,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
                           }}
                         >
                           CVV
@@ -1159,22 +1345,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           onChange={(e) => setCardCVV(e.target.value.replace(/\D/g, "").substring(0, 4))}
                           placeholder="123"
                           disabled={paymentProcessing || paymentSuccess}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              fontFamily: '"EB Garamond", serif',
-                              backgroundColor: "#fafafa",
-                              borderRadius: "12px",
-                              "& fieldset": {
-                                borderColor: "rgba(58, 52, 41, 0.15)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(58, 52, 41, 0.3)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#8B4513",
-                              },
-                            },
-                          }}
+                          sx={pulpFieldSx}
                         />
                       </Box>
                     </Box>
@@ -1183,38 +1354,24 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
-                          fontSize: "0.9rem",
-                          color: "#3a3429",
-                          opacity: 0.7,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '0.72rem', md: '0.78rem' },
+                          color: "#1A0F0D",
                           mb: 0.75,
-                          fontWeight: 500,
+                          fontWeight: 900,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
                         }}
                       >
-                        Name on card
+                        Cardholder name
                       </Typography>
                       <TextField
                         fullWidth
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value)}
-                        placeholder="John Doe"
+                        placeholder="THE AGENT"
                         disabled={paymentProcessing || paymentSuccess}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            fontFamily: '"EB Garamond", serif',
-                            backgroundColor: "#fafafa",
-                            borderRadius: "12px",
-                            "& fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.15)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.3)",
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#8B4513",
-                            },
-                          },
-                        }}
+                        sx={pulpFieldSx}
                       />
                     </Box>
 
@@ -1222,38 +1379,24 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
-                          fontSize: "0.9rem",
-                          color: "#3a3429",
-                          opacity: 0.7,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '0.72rem', md: '0.78rem' },
+                          color: "#1A0F0D",
                           mb: 0.75,
-                          fontWeight: 500,
+                          fontWeight: 900,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
                         }}
                       >
-                        Billing ZIP code
+                        ZIP
                       </Typography>
                       <TextField
                         fullWidth
                         value={billingZip}
                         onChange={(e) => setBillingZip(e.target.value.substring(0, 10))}
-                        placeholder="12345"
+                        placeholder="10001"
                         disabled={paymentProcessing || paymentSuccess}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            fontFamily: '"EB Garamond", serif',
-                            backgroundColor: "#fafafa",
-                            borderRadius: "12px",
-                            "& fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.15)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(58, 52, 41, 0.3)",
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#8B4513",
-                            },
-                          },
-                        }}
+                        sx={pulpFieldSx}
                       />
                     </Box>
                   </Stack>
@@ -1263,20 +1406,21 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 <Paper
                   elevation={0}
                   sx={{
-                    borderRadius: "24px",
+                    borderRadius: 0,
+                    border: PULP_INK_BORDER,
+                    boxShadow: PULP_COMIC_SHADOW_8,
                     backgroundColor: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-                    p: { xs: 3, md: 4 },
+                    p: { xs: 3.5, md: 5, lg: 6 },
                   }}
                 >
-                  <Stack spacing={2}>
+                  <Stack spacing={{ xs: 2.25, md: 2.75 }}>
                     {/* Subtotal */}
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           opacity: 0.7,
                         }}
                       >
@@ -1284,9 +1428,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           fontWeight: 500,
                         }}
                       >
@@ -1298,9 +1442,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           opacity: 0.7,
                         }}
                       >
@@ -1308,9 +1452,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           fontWeight: 500,
                         }}
                       >
@@ -1322,9 +1466,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           opacity: 0.7,
                         }}
                       >
@@ -1332,9 +1476,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
+                          fontFamily: PULP_GROTESK,
                           fontSize: "1rem",
-                          color: "#3a3429",
+                          color: "#1A0F0D",
                           fontWeight: 500,
                         }}
                       >
@@ -1342,34 +1486,36 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       </Typography>
                     </Box>
 
-                    <Divider sx={{ borderColor: "rgba(58, 52, 41, 0.15)" }} />
+                    <Divider sx={{ borderColor: PULP_INK, borderWidth: 2, borderStyle: 'dashed' }} />
 
-                    {/* Total */}
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    {/* Total — stitch "TOTAL MISSION COST" */}
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", pt: 1 }}>
                       <Typography
                         sx={{
-                          fontFamily: '"Cinzel", serif',
-                          fontSize: "1.3rem",
-                          color: "#3a3429",
-                          fontWeight: 600,
-                          letterSpacing: "0.01em",
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '1.1rem', sm: '1.35rem' },
+                          color: "#1A0F0D",
+                          fontWeight: 900,
+                          fontStyle: 'italic',
+                          textTransform: 'uppercase',
+                          letterSpacing: '-0.03em',
                         }}
                       >
-                        Total
+                        Total mission cost
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: '"Cinzel", serif',
-                          fontSize: "1.5rem",
-                          color: "#8B4513",
-                          fontWeight: 700,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '2rem', sm: '2.35rem' },
+                          color: "#FF4E00",
+                          fontWeight: 900,
                         }}
                       >
                         ${total.toFixed(2)}
                       </Typography>
                     </Box>
 
-                    {/* Primary CTA */}
+                    {/* Primary CTA — comic PAY NOW */}
                     <Button
                       fullWidth
                       variant="contained"
@@ -1386,30 +1532,51 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       }
                       sx={{
                         mt: 2,
-                        py: 2,
-                        height: 56,
-                        backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#8B4513",
+                        py: 2.5,
+                        backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#FF4E00",
                         color: "#ffffff",
-                        fontFamily: '"EB Garamond", serif',
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        borderRadius: "16px",
-                        textTransform: "none",
-                        boxShadow: paymentSuccess || paymentProcessing ? "none" : "0 4px 12px rgba(139, 69, 19, 0.3)",
-                        "&:hover": {
-                          backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#A0522D",
-                          transform: paymentSuccess || paymentProcessing ? "none" : "translateY(-2px)",
-                          boxShadow: paymentSuccess || paymentProcessing ? "none" : "0 6px 20px rgba(139, 69, 19, 0.4)",
+                        fontFamily: PULP_GROTESK,
+                        fontWeight: 900,
+                        fontSize: { xs: '1.25rem', sm: '1.65rem' },
+                        fontStyle: 'italic',
+                        borderRadius: 0,
+                        textTransform: "uppercase",
+                        letterSpacing: '-0.02em',
+                        border: PULP_INK_BORDER,
+                        boxShadow: paymentSuccess || paymentProcessing ? 'none' : PULP_COMIC_SHADOW_8,
+                        '&:hover': {
+                          backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#E04300",
+                          transform: paymentSuccess || paymentProcessing ? 'none' : 'rotate(-1deg)',
+                          boxShadow: paymentSuccess || paymentProcessing ? 'none' : PULP_COMIC_SHADOW_8,
+                        },
+                        '&:active': {
+                          transform: 'translate(4px, 4px)',
+                          boxShadow: 'none',
                         },
                         "&:disabled": {
                           backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#d0d0d0",
                           color: "#ffffff",
                           opacity: paymentProcessing ? 1 : 0.7,
+                          boxShadow: 'none',
                         },
                       }}
                     >
-                      {paymentProcessing ? "Processing payment..." : paymentSuccess ? "Payment Successful" : `Pay $${total.toFixed(2)}`}
+                      {paymentProcessing ? "Processing…" : paymentSuccess ? "Payment successful" : `Pay now — $${total.toFixed(2)}`}
                     </Button>
+                    <Typography
+                      sx={{
+                        textAlign: 'center',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        opacity: 0.5,
+                        px: 2,
+                        fontFamily: PULP_GROTESK,
+                      }}
+                    >
+                      By transmitting, you agree to our terms of engagement and data retention policies.
+                    </Typography>
 
                     {/* Secondary Button */}
                     <Button
@@ -1418,13 +1585,13 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       onClick={() => history.push("/")}
                       sx={{
                         py: 1.5,
-                        color: "#3a3429",
-                        fontFamily: '"EB Garamond", serif',
+                        color: "#1A0F0D",
+                        fontFamily: PULP_GROTESK,
                         fontSize: "0.95rem",
                         textTransform: "none",
                         opacity: 0.7,
                         "&:hover": {
-                          backgroundColor: "rgba(58, 52, 41, 0.05)",
+                          backgroundColor: "rgba(26, 15, 13, 0.05)",
                           opacity: 1,
                         },
                       }}
@@ -1437,37 +1604,79 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
             </Box>
           </Grid>
         </Grid>
-          </>
+          </Box>
         )}
 
-        {/* Conditional Rendering: Menu View */}
+        {/* Conditional Rendering: Menu View — stitch.md pulp / catalog */}
         {mainView === 'menu' && (
-          <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-            {/* Compact Order Type Controls at Top */}
+          <Box
+            sx={{
+              position: 'relative',
+              zIndex: 1,
+              width: '100%',
+              maxWidth: 'min(100%, 80rem)',
+              mx: 'auto',
+              px: { xs: 0, sm: 0.5 },
+              py: { xs: 2, md: 3 },
+            }}
+          >
+            <Typography
+              component="h2"
+              sx={{
+                fontFamily: PULP_GROTESK,
+                fontWeight: 900,
+                fontStyle: 'italic',
+                textTransform: 'uppercase',
+                fontSize: { xs: '2rem', md: '3.25rem' },
+                color: MENU_ON_SURFACE,
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
+                textShadow: `6px 6px 0 ${MENU_PRIMARY}`,
+                mb: { xs: 2, md: 3 },
+              }}
+            >
+              Mission menu
+            </Typography>
             <Paper
               elevation={0}
               sx={{
                 mb: 4,
-                p: { xs: 2, md: 3 },
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                p: { xs: 2, md: 4 },
+                backgroundColor: MENU_WHITE,
+                borderRadius: 0,
+                border: MENU_BORDER_HEAVY,
+                boxShadow: PULP_COMIC_SHADOW_8,
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              <Stack spacing={3}>
+              <Box
+                aria-hidden
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: 0.05,
+                  pointerEvents: 'none',
+                  backgroundImage: `radial-gradient(circle, ${PULP_INK} 1px, transparent 1px)`,
+                  backgroundSize: '8px 8px',
+                }}
+              />
+              <Stack spacing={3} sx={{ position: 'relative' }}>
                 {/* Order Type Selection */}
                 <Box>
                   <Typography
                     variant="h6"
                     sx={{
-                      fontFamily: '"Cinzel", serif',
-                      color: parchmentText,
+                      fontFamily: PULP_GROTESK,
+                      color: MENU_ON_SURFACE,
                       mb: 2,
-                      fontSize: { xs: '1.1rem', md: '1.2rem' },
-                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      fontWeight: 900,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
                     }}
                   >
-                    Order Type
+                    Order type
                   </Typography>
                   <RadioGroup
                     row
@@ -1480,19 +1689,19 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       control={
                         <Radio
                           sx={{
-                            color: parchmentText,
-                            '&.Mui-checked': { color: '#8B4513' },
+                            color: PULP_INK,
+                            '&.Mui-checked': { color: MENU_PRIMARY },
                           }}
                         />
                       }
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LocationOnIcon sx={{ fontSize: '1.2rem', color: '#8B4513' }} />
+                          <LocationOnIcon sx={{ fontSize: '1.2rem', color: MENU_PRIMARY }} />
                           <Typography
                             sx={{
-                              fontFamily: '"EB Garamond", serif',
+                              fontFamily: PULP_GROTESK,
                               fontSize: '1rem',
-                              fontWeight: orderType === 'pickup' ? 600 : 400,
+                              fontWeight: orderType === 'pickup' ? 800 : 600,
                             }}
                           >
                             Pickup
@@ -1505,19 +1714,19 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       control={
                         <Radio
                           sx={{
-                            color: parchmentText,
-                            '&.Mui-checked': { color: '#8B4513' },
+                            color: PULP_INK,
+                            '&.Mui-checked': { color: MENU_PRIMARY },
                           }}
                         />
                       }
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LocationOnIcon sx={{ fontSize: '1.2rem', color: '#8B4513' }} />
+                          <LocationOnIcon sx={{ fontSize: '1.2rem', color: MENU_PRIMARY }} />
                           <Typography
                             sx={{
-                              fontFamily: '"EB Garamond", serif',
+                              fontFamily: PULP_GROTESK,
                               fontSize: '1rem',
-                              fontWeight: orderType === 'delivery' ? 600 : 400,
+                              fontWeight: orderType === 'delivery' ? 800 : 600,
                             }}
                           >
                             Delivery
@@ -1534,11 +1743,13 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Typography
                       variant="h6"
                       sx={{
-                        fontFamily: '"Cinzel", serif',
-                        color: parchmentText,
+                        fontFamily: PULP_GROTESK,
+                        color: MENU_ON_SURFACE,
                         mb: 2,
-                        fontSize: { xs: '1.1rem', md: '1.2rem' },
-                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
                       }}
                     >
                       When
@@ -1554,18 +1765,13 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         control={
                           <Radio
                             sx={{
-                              color: parchmentText,
-                              '&.Mui-checked': { color: '#8B4513' },
+                              color: PULP_INK,
+                              '&.Mui-checked': { color: MENU_PRIMARY },
                             }}
                           />
                         }
                         label={
-                          <Typography
-                            sx={{
-                              fontFamily: '"EB Garamond", serif',
-                              fontSize: '1rem',
-                            }}
-                          >
+                          <Typography sx={{ fontFamily: PULP_GROTESK, fontSize: '1rem', fontWeight: 700 }}>
                             ASAP
                           </Typography>
                         }
@@ -1575,20 +1781,15 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         control={
                           <Radio
                             sx={{
-                              color: parchmentText,
-                              '&.Mui-checked': { color: '#8B4513' },
+                              color: PULP_INK,
+                              '&.Mui-checked': { color: MENU_PRIMARY },
                             }}
                           />
                         }
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <ScheduleIcon sx={{ fontSize: '1.2rem' }} />
-                            <Typography
-                              sx={{
-                                fontFamily: '"EB Garamond", serif',
-                                fontSize: '1rem',
-                              }}
-                            >
+                            <ScheduleIcon sx={{ fontSize: '1.2rem', color: MENU_PRIMARY }} />
+                            <Typography sx={{ fontFamily: PULP_GROTESK, fontSize: '1rem', fontWeight: 700 }}>
                               Schedule
                             </Typography>
                           </Box>
@@ -1596,11 +1797,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       />
                     </RadioGroup>
                     {timeOption === 'schedule' && (
-                      <Stack
-                        direction={{ xs: 'column', sm: 'row' }}
-                        spacing={2}
-                        sx={{ mt: 2 }}
-                      >
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                         <TextField
                           type="date"
                           label="Pickup Date"
@@ -1608,12 +1805,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           onChange={(e) => setScheduledDate(e.target.value)}
                           InputLabelProps={{ shrink: true }}
                           fullWidth
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              fontFamily: '"EB Garamond", serif',
-                              backgroundColor: '#fafafa',
-                            },
-                          }}
+                          sx={menuFieldSx}
                         />
                         <TextField
                           type="time"
@@ -1622,12 +1814,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           onChange={(e) => setScheduledTime(e.target.value)}
                           InputLabelProps={{ shrink: true }}
                           fullWidth
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              fontFamily: '"EB Garamond", serif',
-                              backgroundColor: '#fafafa',
-                            },
-                          }}
+                          sx={menuFieldSx}
                         />
                       </Stack>
                     )}
@@ -1637,14 +1824,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Typography
                       variant="h6"
                       sx={{
-                        fontFamily: '"Cinzel", serif',
-                        color: parchmentText,
+                        fontFamily: PULP_GROTESK,
+                        color: MENU_ON_SURFACE,
                         mb: 2,
-                        fontSize: { xs: '1.1rem', md: '1.2rem' },
-                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
                       }}
                     >
-                      Delivery Address
+                      Delivery address
                     </Typography>
                     <Box sx={{ position: 'relative' }}>
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
@@ -1662,16 +1851,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             }}
                             required
                             error={menuDeliveryAddress === ''}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                fontFamily: '"EB Garamond", serif',
-                                backgroundColor: '#fafafa',
-                              },
-                            }}
+                            sx={menuFieldSx}
                           />
                           {showSuggestions && addressSuggestions.length > 0 && (
                             <Paper
-                              elevation={4}
+                              elevation={0}
                               sx={{
                                 position: 'absolute',
                                 top: '100%',
@@ -1681,6 +1865,10 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                                 mt: 0.5,
                                 maxHeight: '200px',
                                 overflow: 'auto',
+                                border: MENU_BORDER_SM,
+                                borderRadius: 0,
+                                boxShadow: PULP_COMIC_SHADOW,
+                                bgcolor: MENU_WHITE,
                               }}
                             >
                               <Stack>
@@ -1691,18 +1879,10 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                                     sx={{
                                       p: 2,
                                       cursor: 'pointer',
-                                      '&:hover': {
-                                        backgroundColor: 'rgba(139, 69, 19, 0.05)',
-                                      },
+                                      '&:hover': { bgcolor: MENU_SURFACE_CONTAINER_LOW },
                                     }}
                                   >
-                                    <Typography
-                                      sx={{
-                                        fontFamily: '"EB Garamond", serif',
-                                        fontSize: '0.95rem',
-                                        color: parchmentText,
-                                      }}
-                                    >
+                                    <Typography sx={{ fontFamily: PULP_GROTESK, fontSize: '0.95rem', color: MENU_ON_SURFACE }}>
                                       {suggestion}
                                     </Typography>
                                   </Box>
@@ -1719,17 +1899,17 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             mt: 0.5,
                             minWidth: 100,
                             height: 56,
-                            fontFamily: '"EB Garamond", serif',
-                            backgroundColor: '#8B4513',
-                            color: '#ffffff',
-                            textTransform: 'none',
-                            '&:hover': {
-                              backgroundColor: '#A0522D',
-                            },
-                            '&:disabled': {
-                              backgroundColor: '#d0d0d0',
-                              color: '#999',
-                            },
+                            fontFamily: PULP_GROTESK,
+                            fontWeight: 800,
+                            backgroundColor: MENU_PRIMARY,
+                            color: MENU_WHITE,
+                            textTransform: 'uppercase',
+                            border: MENU_BORDER_SM,
+                            borderRadius: 0,
+                            boxShadow: PULP_COMIC_SHADOW,
+                            '&:hover': { backgroundColor: MENU_PRIMARY, filter: 'brightness(1.08)' },
+                            '&:disabled': { backgroundColor: '#d0d0d0', color: '#999', boxShadow: 'none' },
+                            '&:active': { transform: 'translate(4px, 4px)', boxShadow: 'none' },
                           }}
                         >
                           Enter
@@ -1742,61 +1922,69 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       onClick={handleUseLocation}
                       sx={{
                         mt: 2,
-                        fontFamily: '"EB Garamond", serif',
-                        borderColor: 'rgba(58, 52, 41, 0.3)',
-                        color: parchmentText,
+                        fontFamily: PULP_GROTESK,
+                        fontWeight: 700,
+                        borderColor: PULP_INK,
+                        borderWidth: 3,
+                        color: MENU_ON_SURFACE,
+                        borderRadius: 0,
                         textTransform: 'none',
+                        '&:hover': { borderColor: MENU_PRIMARY, borderWidth: 3, bgcolor: MENU_SURFACE_CONTAINER_LOW },
                       }}
                     >
-                      Use My Location
+                      Use my location
                     </Button>
                   </Box>
                 )}
               </Stack>
             </Paper>
 
-            {/* Category Navigation */}
+            {/* Category Navigation — stitch hard-line strip */}
             <Box
               sx={{
                 position: 'sticky',
-                top: 80,
+                top: 72,
                 zIndex: 100,
-                backgroundColor: '#fbfbf8',
+                backgroundColor: MENU_SURFACE,
                 py: 2,
                 mb: 3,
-                borderBottom: '1px solid rgba(58, 52, 41, 0.1)',
+                borderBottom: '8px solid',
+                borderColor: PULP_INK,
+                boxShadow: PULP_COMIC_SHADOW,
               }}
             >
               <Stack
                 direction="row"
-                spacing={2}
+                spacing={1.5}
                 sx={{
                   overflowX: 'auto',
+                  pb: 0.5,
                   '&::-webkit-scrollbar': { display: 'none' },
                   scrollbarWidth: 'none',
                 }}
               >
-                {categories.map((category) => (
+                {categories.map((category, ci) => (
                   <Button
                     key={category}
                     onClick={() => handleCategoryChange(category)}
-                    variant={selectedCategory === category ? 'contained' : 'outlined'}
                     sx={{
-                      fontFamily: '"EB Garamond", serif',
-                      textTransform: 'capitalize',
-                      fontSize: '1rem',
-                      minWidth: '100px',
-                      backgroundColor:
-                        selectedCategory === category
-                          ? '#8B4513'
-                          : 'transparent',
-                      color:
-                        selectedCategory === category ? '#fff' : parchmentText,
-                      borderColor: '#8B4513',
+                      fontFamily: PULP_GROTESK,
+                      textTransform: 'uppercase',
+                      fontSize: '0.8rem',
+                      fontWeight: 900,
+                      letterSpacing: '0.06em',
+                      minWidth: '92px',
+                      flexShrink: 0,
+                      borderRadius: 0,
+                      border: MENU_BORDER_SM,
+                      py: 1.25,
+                      color: selectedCategory === category ? MENU_WHITE : MENU_ON_SURFACE,
+                      bgcolor: selectedCategory === category ? MENU_PRIMARY : MENU_WHITE,
+                      boxShadow: selectedCategory === category ? PULP_COMIC_SHADOW : 'none',
+                      transform: selectedCategory === category ? `rotate(${ci % 2 === 0 ? -1 : 1}deg)` : 'none',
                       '&:hover': {
-                        backgroundColor:
-                          selectedCategory === category ? '#A0522D' : 'rgba(139, 69, 19, 0.1)',
-                        borderColor: '#8B4513',
+                        bgcolor: selectedCategory === category ? MENU_PRIMARY : MENU_SURFACE_CONTAINER_LOW,
+                        borderColor: PULP_INK,
                       },
                     }}
                   >
@@ -1806,7 +1994,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               </Stack>
             </Box>
 
-            {/* Products Grid */}
+            {/* Products Grid — stitch hard-line + ink-bleed cards */}
             <Box ref={setCategoryRef('all')} sx={{ mb: 6 }}>
               <Box
                 sx={{
@@ -1814,40 +2002,38 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                   gridTemplateColumns: {
                     xs: '1fr',
                     md: 'repeat(2, 1fr)',
+                    lg: 'repeat(2, 1fr)',
                   },
-                  gap: { xs: 4, md: 6 },
+                  gap: { xs: 3, md: 4 },
                 }}
               >
-                {paginatedProducts.map((product) => (
+                {paginatedProducts.map((product, pi) => (
                   <Box
                     key={product._id}
                     onClick={() => handleProductClick(product)}
                     sx={{
                       cursor: 'pointer',
-                      border: '1px solid rgba(58, 52, 41, 0.15)',
-                      borderRadius: '4px',
+                      border: MENU_BORDER_HEAVY,
+                      borderRadius: 0,
                       overflow: 'hidden',
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                      transition: 'border-color 0.2s ease',
+                      backgroundColor: MENU_SURFACE_BRIGHT,
+                      boxShadow: PULP_COMIC_SHADOW_8,
+                      transform: `rotate(${pi % 2 === 0 ? 0.6 : -0.6}deg)`,
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                       '&:hover': {
-                        borderColor: 'rgba(58, 52, 41, 0.3)',
+                        transform: `rotate(${pi % 2 === 0 ? 0.6 : -0.6}deg) translateY(-6px)`,
+                        boxShadow: `10px 10px 0 0 ${PULP_INK}`,
                       },
                     }}
                   >
-                    <Box
-                      sx={{
-                        p: { xs: 2, md: 3 },
-                        backgroundColor: '#faf8f3',
-                      }}
-                    >
+                    <Box sx={{ p: { xs: 2, md: 2.5 }, backgroundColor: MENU_SURFACE_CONTAINER_LOW }}>
                       <Box
                         sx={{
                           position: 'relative',
-                          mb: 3,
-                          borderRadius: '80px 80px 8px 8px',
+                          mb: 2.5,
                           overflow: 'hidden',
-                          backgroundColor: '#f5f1e8',
-                          border: '1px solid rgba(58, 52, 41, 0.08)',
+                          backgroundColor: MENU_SURFACE_CONTAINER,
+                          border: MENU_BORDER_SM,
                         }}
                       >
                         <Box
@@ -1860,7 +2046,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           alt={product.productName}
                           sx={{
                             width: '100%',
-                            height: { xs: '320px', md: '400px' },
+                            height: { xs: '220px', md: '260px' },
                             objectFit: 'cover',
                             display: 'block',
                           }}
@@ -1870,11 +2056,14 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       <Box>
                         <Typography
                           sx={{
-                            fontFamily: '"Cinzel", "Cormorant Garamond", serif',
-                            fontSize: { xs: '1.3rem', md: '1.5rem' },
-                            color: parchmentText,
-                            mb: 1,
-                            fontWeight: 500,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: { xs: '1.15rem', md: '1.35rem' },
+                            color: MENU_ON_SURFACE,
+                            mb: 0.75,
+                            fontWeight: 900,
+                            fontStyle: 'italic',
+                            textTransform: 'uppercase',
+                            letterSpacing: '-0.02em',
                           }}
                         >
                           {product.productName}
@@ -1883,14 +2072,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         {product.productDesc && (
                           <Typography
                             sx={{
-                              fontFamily: '"EB Garamond", serif',
-                              fontSize: { xs: '0.95rem', md: '1rem' },
-                              color: parchmentText,
-                              opacity: 0.65,
-                              mb: 2.5,
+                              fontFamily: PULP_GROTESK,
+                              fontSize: { xs: '0.85rem', md: '0.9rem' },
+                              color: MENU_ON_SURFACE_VARIANT,
+                              mb: 2,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              lineHeight: 1.35,
                             }}
                           >
                             {product.productDesc}
@@ -1902,16 +2093,17 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            pt: 1,
-                            borderTop: '1px solid rgba(58, 52, 41, 0.1)',
+                            pt: 2,
+                            borderTop: '2px dashed',
+                            borderColor: PULP_INK,
                           }}
                         >
                           <Typography
                             sx={{
-                              fontFamily: '"Cinzel", serif',
-                              fontSize: { xs: '1.2rem', md: '1.3rem' },
-                              color: '#8B4513',
-                              fontWeight: 500,
+                              fontFamily: PULP_GROTESK,
+                              fontSize: { xs: '1.25rem', md: '1.4rem' },
+                              color: MENU_PRIMARY,
+                              fontWeight: 900,
                             }}
                           >
                             ${product.productPrice.toFixed(2)}
@@ -1924,16 +2116,21 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                               handleProductClick(product);
                             }}
                             sx={{
-                              fontFamily: '"EB Garamond", serif',
-                              fontSize: { xs: '0.9rem', md: '1rem' },
-                              borderColor: 'rgba(58, 52, 41, 0.3)',
-                              color: parchmentText,
-                              px: { xs: 2, md: 3 },
-                              py: 0.75,
-                              textTransform: 'none',
+                              fontFamily: PULP_GROTESK,
+                              fontSize: '0.8rem',
+                              fontWeight: 800,
+                              borderColor: PULP_INK,
+                              color: MENU_ON_SURFACE,
+                              borderWidth: 3,
+                              borderRadius: 0,
+                              px: 2,
+                              py: 0.5,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.06em',
                               '&:hover': {
-                                borderColor: 'rgba(58, 52, 41, 0.5)',
-                                backgroundColor: 'rgba(58, 52, 41, 0.05)',
+                                borderColor: MENU_PRIMARY,
+                                borderWidth: 3,
+                                bgcolor: MENU_PRIMARY_CONTAINER,
                               },
                             }}
                           >
@@ -1947,26 +2144,23 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               </Box>
               
               {totalPages > 1 && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    mt: 6,
-                  }}
-                >
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
                   <Pagination
                     count={totalPages}
                     page={page}
                     onChange={handlePageChange}
-                    color="primary"
                     sx={{
                       '& .MuiPaginationItem-root': {
-                        fontFamily: '"EB Garamond", serif',
+                        fontFamily: PULP_GROTESK,
+                        fontWeight: 800,
                         fontSize: '1rem',
-                        color: parchmentText,
+                        borderRadius: 0,
+                        color: MENU_ON_SURFACE,
+                        border: `${MENU_BORDER_SM} !important`,
                         '&.Mui-selected': {
-                          backgroundColor: '#8B4513',
-                          color: '#fff',
+                          backgroundColor: MENU_PRIMARY,
+                          color: MENU_WHITE,
+                          boxShadow: PULP_COMIC_SHADOW,
                         },
                       },
                     }}
@@ -1975,7 +2169,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               )}
             </Box>
 
-            {/* Add to Cart Modal */}
+            {/* Add to Cart Modal — stitch comic panel */}
             <Dialog
               open={modalOpen}
               onClose={() => setModalOpen(false)}
@@ -1983,18 +2177,25 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               fullWidth
               PaperProps={{
                 sx: {
-                  backgroundColor: '#ffffff',
-                  borderRadius: '12px',
-                  maxWidth: { xs: '90%', md: '1000px' },
+                  backgroundColor: MENU_WHITE,
+                  borderRadius: 0,
+                  border: MENU_BORDER_HEAVY,
+                  boxShadow: PULP_COMIC_SHADOW_8,
+                  maxWidth: { xs: '92%', md: '1000px' },
                 },
               }}
             >
               <DialogTitle
                 sx={{
-                  fontFamily: '"Cinzel", serif',
-                  color: parchmentText,
-                  fontSize: { xs: '1.5rem', md: '2rem' },
-                  fontWeight: 600,
+                  fontFamily: PULP_GROTESK,
+                  color: MENU_ON_SURFACE,
+                  fontSize: { xs: '1.35rem', md: '1.75rem' },
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  textTransform: 'uppercase',
+                  letterSpacing: '-0.02em',
+                  borderBottom: '4px solid',
+                  borderColor: PULP_INK,
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -2003,9 +2204,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 {selectedProduct?.productName}
                 <IconButton
                   onClick={() => setModalOpen(false)}
-                  sx={{
-                    color: parchmentText,
-                  }}
+                  sx={{ color: PULP_INK }}
                 >
                   <CloseIcon />
                 </IconButton>
@@ -2019,11 +2218,12 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     <Box sx={{ flex: { xs: 'none', md: '0 0 45%' } }}>
                       <Box
                         sx={{
-                          border: '1px solid rgba(58, 52, 41, 0.12)',
-                          borderRadius: '6px',
+                          border: MENU_BORDER_SM,
+                          borderRadius: 0,
                           overflow: 'hidden',
-                          backgroundColor: '#faf8f3',
-                          p: { xs: 2, md: 3 },
+                          backgroundColor: MENU_SURFACE_CONTAINER_LOW,
+                          p: { xs: 2, md: 2.5 },
+                          boxShadow: PULP_COMIC_SHADOW,
                         }}
                       >
                         <Box
@@ -2036,9 +2236,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           alt={selectedProduct.productName}
                           sx={{
                             width: '100%',
-                            height: { xs: '280px', md: '400px' },
+                            height: { xs: '240px', md: '320px' },
                             objectFit: 'cover',
-                            borderRadius: '4px',
+                            border: `2px solid ${PULP_INK}`,
                           }}
                         />
                       </Box>
@@ -2048,11 +2248,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       {selectedProduct.productDesc && (
                         <Typography
                           sx={{
-                            fontFamily: '"EB Garamond", serif',
-                            color: parchmentText,
-                            opacity: 0.65,
+                            fontFamily: PULP_GROTESK,
+                            color: MENU_ON_SURFACE_VARIANT,
                             fontSize: { xs: '0.95rem', md: '1rem' },
                             mb: 3,
+                            lineHeight: 1.45,
                           }}
                         >
                           {selectedProduct.productDesc}
@@ -2063,10 +2263,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       <Box sx={{ mb: 3 }}>
                         <Typography
                           sx={{
-                            fontFamily: '"Cinzel", serif',
-                            fontSize: '0.75rem',
-                            color: parchmentText,
-                            opacity: 0.7,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: '0.7rem',
+                            fontWeight: 900,
+                            color: MENU_ON_SURFACE,
+                            letterSpacing: '0.12em',
                             textTransform: 'uppercase',
                             mb: 1.5,
                           }}
@@ -2078,17 +2279,19 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           onChange={(e, expanded) => setSizeAccordionExpanded(expanded)}
                           sx={{
                             boxShadow: 'none',
-                            border: '1px solid rgba(58, 52, 41, 0.2)',
-                            borderRadius: '4px',
-                            backgroundColor: '#fafafa',
+                            border: MENU_BORDER_SM,
+                            borderRadius: 0,
+                            backgroundColor: MENU_WHITE,
+                            '&:before': { display: 'none' },
                           }}
                         >
                           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography
                               sx={{
-                                fontFamily: '"EB Garamond", serif',
+                                fontFamily: PULP_GROTESK,
                                 fontSize: '1rem',
-                                color: parchmentText,
+                                fontWeight: 700,
+                                color: MENU_ON_SURFACE,
                                 textTransform: 'capitalize',
                               }}
                             >
@@ -2110,8 +2313,15 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                                   }}
                                   variant={selectedSize === size ? 'contained' : 'outlined'}
                                   sx={{
-                                    fontFamily: '"EB Garamond", serif',
+                                    fontFamily: PULP_GROTESK,
                                     textTransform: 'capitalize',
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: PULP_INK,
+                                    fontWeight: 800,
+                                    ...(selectedSize === size
+                                      ? { bgcolor: MENU_PRIMARY, color: MENU_WHITE, '&:hover': { bgcolor: MENU_PRIMARY } }
+                                      : { color: MENU_ON_SURFACE }),
                                   }}
                                 >
                                   {size} (+${size === 'large' ? '1.50' : '0.00'})
@@ -2126,10 +2336,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       <Box sx={{ mb: 4 }}>
                         <Typography
                           sx={{
-                            fontFamily: '"Cinzel", serif',
-                            fontSize: '0.75rem',
-                            color: parchmentText,
-                            opacity: 0.7,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: '0.7rem',
+                            fontWeight: 900,
+                            color: MENU_ON_SURFACE,
+                            letterSpacing: '0.12em',
                             textTransform: 'uppercase',
                             mb: 1.5,
                           }}
@@ -2141,36 +2352,34 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             display: 'flex',
                             alignItems: 'center',
                             gap: 2,
-                            backgroundColor: '#fafafa',
-                            borderRadius: '4px',
+                            backgroundColor: MENU_SURFACE_CONTAINER_LOW,
+                            border: MENU_BORDER_SM,
+                            borderRadius: 0,
                             p: 1,
                             width: 'fit-content',
                           }}
                         >
                           <IconButton
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            sx={{
-                              border: '1px solid rgba(58, 52, 41, 0.15)',
-                            }}
+                            sx={{ border: MENU_BORDER_SM, borderRadius: 0 }}
                           >
                             <RemoveIcon />
                           </IconButton>
                           <Typography
                             sx={{
-                              fontFamily: '"Cinzel", serif',
+                              fontFamily: PULP_GROTESK,
                               fontSize: '1.3rem',
+                              fontWeight: 900,
                               minWidth: '50px',
                               textAlign: 'center',
-                              color: parchmentText,
+                              color: MENU_ON_SURFACE,
                             }}
                           >
                             {quantity}
                           </Typography>
                           <IconButton
                             onClick={() => setQuantity(quantity + 1)}
-                            sx={{
-                              border: '1px solid rgba(58, 52, 41, 0.15)',
-                            }}
+                            sx={{ border: MENU_BORDER_SM, borderRadius: 0 }}
                           >
                             <AddIcon />
                           </IconButton>
@@ -2185,16 +2394,18 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           alignItems: 'center',
                           pt: 3,
                           mt: 'auto',
-                          borderTop: '1px solid rgba(58, 52, 41, 0.1)',
+                          borderTop: '2px dashed',
+                          borderColor: PULP_INK,
                           mb: 3,
                         }}
                       >
                         <Typography
                           sx={{
-                            fontFamily: '"Cinzel", serif',
-                            fontSize: '0.75rem',
-                            color: parchmentText,
-                            opacity: 0.7,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: '0.7rem',
+                            fontWeight: 900,
+                            color: MENU_ON_SURFACE_VARIANT,
+                            letterSpacing: '0.12em',
                             textTransform: 'uppercase',
                           }}
                         >
@@ -2202,10 +2413,10 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: '"Cinzel", serif',
-                            fontSize: { xs: '1.5rem', md: '1.8rem' },
-                            color: '#8B4513',
-                            fontWeight: 600,
+                            fontFamily: PULP_GROTESK,
+                            fontSize: { xs: '1.5rem', md: '1.85rem' },
+                            color: MENU_PRIMARY,
+                            fontWeight: 900,
                           }}
                         >
                           ${(selectedProduct.productPrice * quantity).toFixed(2)}
@@ -2217,17 +2428,22 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         fullWidth
                         onClick={handleAddToCart}
                         sx={{
-                          backgroundColor: '#8B4513',
-                          fontFamily: '"EB Garamond", serif',
-                          fontSize: { xs: '1rem', md: '1.1rem' },
-                          py: { xs: 1.5, md: 1.75 },
-                          textTransform: 'none',
-                          '&:hover': {
-                            backgroundColor: '#A0522D',
-                          },
+                          backgroundColor: MENU_PRIMARY,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: { xs: '1rem', md: '1.15rem' },
+                          fontWeight: 900,
+                          fontStyle: 'italic',
+                          py: { xs: 1.75, md: 2 },
+                          textTransform: 'uppercase',
+                          letterSpacing: '-0.02em',
+                          border: MENU_BORDER_SM,
+                          borderRadius: 0,
+                          boxShadow: PULP_COMIC_SHADOW_8,
+                          '&:hover': { backgroundColor: MENU_PRIMARY, filter: 'brightness(1.06)' },
+                          '&:active': { transform: 'translate(4px, 4px)', boxShadow: 'none' },
                         }}
                       >
-                        Add to Cart
+                        Add to cart
                       </Button>
                     </Box>
                   </Stack>
@@ -2235,11 +2451,11 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               </DialogContent>
             </Dialog>
 
-            {/* Sticky Cart Summary */}
+            {/* Sticky Cart Summary — stitch bottom bar */}
             <Slide direction="up" in={showCartSummary} mountOnEnter unmountOnExit>
               <Paper
                 ref={cartSummaryRef}
-                elevation={8}
+                elevation={0}
                 sx={{
                   position: 'fixed',
                   bottom: 0,
@@ -2247,51 +2463,59 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                   right: 0,
                   zIndex: 1000,
                   p: 2,
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderTop: '2px solid #8B4513',
+                  backgroundColor: MENU_SURFACE,
+                  borderTop: '8px solid',
+                  borderColor: PULP_INK,
+                  boxShadow: '0 -6px 0 0 rgba(26,15,13,0.08)',
                 }}
               >
-                <Container maxWidth="lg">
+                <Box sx={{ maxWidth: 'min(100%, 80rem)', mx: 'auto', px: { xs: 1, md: 2 } }}>
                   <Stack
-                    direction="row"
-                    spacing={3}
-                    alignItems="center"
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={2}
+                    alignItems={{ xs: 'stretch', sm: 'center' }}
                     justifyContent="space-between"
                   >
                     <Box>
                       <Typography
                         sx={{
-                          fontFamily: '"Cinzel", serif',
-                          fontSize: '1.1rem',
-                          color: parchmentText,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: '0.75rem',
+                          fontWeight: 900,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          color: MENU_ON_SURFACE_VARIANT,
                         }}
                       >
                         {cartItemCount} {cartItemCount === 1 ? 'item' : 'items'}
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: '"Cinzel", serif',
-                          fontSize: '1.5rem',
-                          color: '#8B4513',
-                          fontWeight: 600,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: '1.65rem',
+                          color: MENU_PRIMARY,
+                          fontWeight: 900,
                         }}
                       >
                         ${cartTotal.toFixed(2)}
                       </Typography>
                     </Box>
-                    <Stack direction="row" spacing={2}>
+                    <Stack direction="row" spacing={1.5} justifyContent="flex-end">
                       <Button
                         variant="outlined"
                         onClick={handleViewCart}
                         sx={{
-                          fontFamily: '"EB Garamond", serif',
-                          borderColor: '#8B4513',
-                          color: '#8B4513',
-                          textTransform: 'none',
+                          fontFamily: PULP_GROTESK,
+                          fontWeight: 800,
+                          borderColor: PULP_INK,
+                          borderWidth: 3,
+                          color: MENU_ON_SURFACE,
+                          borderRadius: 0,
+                          textTransform: 'uppercase',
+                          '&:hover': { borderWidth: 3, borderColor: MENU_PRIMARY },
                         }}
                       >
-                        View Cart
+                        View cart
                       </Button>
                       <Button
                         variant="contained"
@@ -2300,23 +2524,30 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           history.push('/orders?tab=checkout');
                         }}
                         sx={{
-                          backgroundColor: '#8B4513',
-                          fontFamily: '"EB Garamond", serif',
-                          fontSize: '1.1rem',
-                          px: 4,
-                          '&:hover': { backgroundColor: '#A0522D' },
+                          backgroundColor: MENU_PRIMARY,
+                          fontFamily: PULP_GROTESK,
+                          fontSize: '1rem',
+                          fontWeight: 900,
+                          fontStyle: 'italic',
+                          px: 3,
+                          border: MENU_BORDER_SM,
+                          borderRadius: 0,
+                          boxShadow: PULP_COMIC_SHADOW,
+                          textTransform: 'uppercase',
+                          '&:hover': { backgroundColor: MENU_PRIMARY, filter: 'brightness(1.06)' },
+                          '&:active': { transform: 'translate(4px, 4px)', boxShadow: 'none' },
                         }}
                       >
                         Checkout
                       </Button>
                     </Stack>
                   </Stack>
-                </Container>
+                </Box>
               </Paper>
             </Slide>
-          </Container>
+          </Box>
         )}
-      </Container>
+      </Box>
 
       {/* Success Dialog */}
       <Dialog
@@ -2349,9 +2580,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
             <Typography
               variant="h4"
               sx={{
-                fontFamily: '"Cinzel", serif',
+                fontFamily: PULP_GROTESK,
                 fontWeight: 700,
-                color: "#3a3429",
+                color: "#1A0F0D",
                 mb: 1,
               }}
             >
@@ -2360,9 +2591,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
           </DialogTitle>
           <Typography
             sx={{
-              fontFamily: '"EB Garamond", serif',
+              fontFamily: PULP_GROTESK,
               fontSize: "1rem",
-              color: "#3a3429",
+              color: "#1A0F0D",
               opacity: 0.7,
               mb: 3,
             }}
@@ -2373,16 +2604,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
             variant="contained"
             onClick={() => setShowSuccessDialog(false)}
             sx={{
-              backgroundColor: "#8B4513",
+              backgroundColor: "#FF4E00",
               color: "#ffffff",
-              fontFamily: '"EB Garamond", serif',
+              fontFamily: PULP_GROTESK,
               fontWeight: 600,
               px: 4,
               py: 1.5,
               borderRadius: "16px",
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#A0522D",
+                backgroundColor: "#E04300",
               },
             }}
           >
@@ -2412,6 +2643,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
         </Alert>
       </Snackbar>
     </Box>
+    </>
   );
 }
 

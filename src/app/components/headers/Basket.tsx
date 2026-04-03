@@ -6,26 +6,54 @@ import {
   Typography, 
   IconButton, 
   Badge, 
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Divider,
   Chip,
   Avatar,
+  Popover,
   useTheme,
-  useMediaQuery
 } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import CreditCardOutlinedIcon from "@mui/icons-material/CreditCardOutlined";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useHistory } from "react-router-dom";
 import { CartItem } from "../../../lib/types/search";
 import { Messages, serverApi } from "../../../lib/config";
 import { sweetErrorHandling } from "../../../lib/sweetAlert";
 import { useGlobals } from "../../hooks/useGlobals";
 import OrderService from "../../services/OrderService";
+import { STITCH_THEME } from "../../../components/stitchUi";
+
+const GROTESK = '"Space Grotesk", system-ui, sans-serif';
+const ORDER_SUMMARY_SURFACE = "#FFF9F0";
+
+const benDayLayer = {
+  pointerEvents: 'none' as const,
+  position: 'absolute' as const,
+  inset: 0,
+  backgroundImage: `radial-gradient(${STITCH_THEME.ink} 10%, transparent 11%)`,
+  backgroundSize: '10px 10px',
+  opacity: 0.07,
+  zIndex: 0,
+};
+
+const COMIC_ERROR_TINT = '#ffdad6';
+
+const comicIconBtn = {
+  width: 32,
+  height: 32,
+  borderRadius: 0,
+  border: `3px solid ${STITCH_THEME.ink}`,
+  boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
+  transition: 'transform 0.12s ease, box-shadow 0.12s ease',
+  '&:hover': {
+    transform: 'translate(-1px, -1px)',
+    boxShadow: `3px 3px 0 0 ${STITCH_THEME.ink}`,
+  },
+};
 
 interface BasketProps {
   cartItems: CartItem[];
@@ -40,22 +68,21 @@ export default function Basket(props:BasketProps) {
   const {authMember, setOrderBuilder} = useGlobals();
   const history = useHistory();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  const cartOpen = Boolean(anchorEl);
+
+  const itemCount = cartItems.reduce((n, c) => n + c.quantity, 0);
   const itemsPrice: number = cartItems.reduce((a: number, c: CartItem)=> a + c.quantity*c.price,0);
   const shippingCost: number = itemsPrice < 100 ? 5 : 0;
-  const totalPrice = (itemsPrice + shippingCost).toFixed(1);
+  const estimatedTax: number =
+    itemsPrice > 0 ? Math.round(itemsPrice * 0.062 * 100) / 100 : 0;
+  const orderTotal = itemsPrice + shippingCost + estimatedTax;
 
-  const [basketAccordionExpanded, setBasketAccordionExpanded] = React.useState(false);
-
-  /** HANDLERS **/
-  const handleToggle = () => {
-    setBasketAccordionExpanded(!basketAccordionExpanded);
-  };
+  const closeCart = () => setAnchorEl(null);
 
   const proceedOrderHandler = async () => {
     try{
-      setBasketAccordionExpanded(false);
+      closeCart();
       
       if(!authMember) throw new Error(Messages.error2);
 
@@ -75,295 +102,430 @@ export default function Basket(props:BasketProps) {
   }
 
   return (
-    <Box sx={{ position: 'relative', height: 56, width: 56 }}>
-      <Accordion
-        expanded={basketAccordionExpanded}
-        onChange={(e, isExpanded) => setBasketAccordionExpanded(isExpanded)}
+    <Box sx={{ position: 'relative', height: 60, width: 60 }}>
+      <IconButton
+        aria-label="cart"
+        aria-expanded={cartOpen}
+        aria-haspopup="true"
+        onClick={(e) => setAnchorEl((prev) => (prev ? null : e.currentTarget))}
         sx={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: 56,
-          height: 56,
-          boxShadow: basketAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-          border: 'none',
-          borderRadius: '50%',
-          backgroundColor: 'transparent',
-          '&:before': {
-            display: 'none',
+          width: 60,
+          height: 60,
+          borderRadius: 0,
+          bgcolor: STITCH_THEME.surface,
+          color: STITCH_THEME.ink,
+          border: `4px solid ${STITCH_THEME.ink}`,
+          boxShadow: cartOpen
+            ? `2px 2px 0 0 ${STITCH_THEME.ink}`
+            : `6px 6px 0 0 ${STITCH_THEME.ink}`,
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          '&:hover': {
+            bgcolor: STITCH_THEME.primaryContainer,
+            color: STITCH_THEME.ink,
+            transform: 'translate(-2px, -2px)',
+            boxShadow: `8px 8px 0 0 ${STITCH_THEME.ink}`,
           },
-          '&.Mui-expanded': {
-            margin: 0,
-            minHeight: '56px !important',
+          '&:active': {
+            transform: 'translate(2px, 2px)',
+            boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
           },
         }}
       >
-        <AccordionSummary
+        <Badge 
+          badgeContent={itemCount} 
+          invisible={itemCount === 0}
           sx={{
-            minHeight: 56,
-            maxHeight: 56,
-            padding: 0,
-            '&.Mui-expanded': {
-              minHeight: 56,
-              maxHeight: 56,
-            },
-            '& .MuiAccordionSummary-content': {
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+            '& .MuiBadge-badge': {
+              fontFamily: GROTESK,
+              bgcolor: STITCH_THEME.primary,
+              color: STITCH_THEME.onPrimary,
+              fontWeight: 900,
+              fontStyle: 'italic',
+              fontSize: '0.7rem',
+              minWidth: 22,
+              height: 22,
+              borderRadius: 0,
+              border: `2px solid ${STITCH_THEME.ink}`,
+              boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
             },
           }}
         >
-          <IconButton
-            aria-label="cart"
-            onClick={handleToggle}
+          <ShoppingCartIcon sx={{ fontSize: 26 }} />
+        </Badge>
+      </IconButton>
+
+      <Popover
+        open={cartOpen}
+        anchorEl={anchorEl}
+        onClose={closeCart}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        marginThreshold={8}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            mt: 1,
+            maxWidth: 'min(calc(100vw - 16px), 420px)',
+            maxHeight: 'min(85vh, 680px)',
+            overflow: 'hidden',
+            borderRadius: 0,
+            border: `4px solid ${STITCH_THEME.ink}`,
+            boxShadow: `10px 10px 0 0 ${STITCH_THEME.ink}`,
+            bgcolor: ORDER_SUMMARY_SURFACE,
+          },
+        }}
+        sx={{ zIndex: theme.zIndex.modal }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: 'min(85vh - 16px, 664px)',
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={benDayLayer} aria-hidden />
+          <Box
             sx={{
-              width: 56,
-              height: 56,
-              backgroundColor: 'rgba(139, 69, 19, 0.1)',
-              color: '#8b4513',
-              borderRadius: '50%',
-              border: '2px solid #8b4513',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(139, 69, 19, 0.2)',
-                transform: 'scale(1.1)',
-                boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
-              },
-              '&:active': {
-                transform: 'scale(0.95)',
-              },
+              position: 'relative',
+              zIndex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
             }}
           >
-            <Badge 
-              badgeContent={cartItems.length} 
-              color="error"
-              sx={{
-                '& .MuiBadge-badge': {
-                  backgroundColor: '#e74c3c',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.8rem',
-                  minWidth: 20,
-                  height: 20,
-                  animation: cartItems.length > 0 ? 'pulse 2s infinite' : 'none',
-                  '@keyframes pulse': {
-                    '0%': {
-                      boxShadow: '0 0 0 0 rgba(231, 76, 60, 0.7)',
-                    },
-                    '70%': {
-                      boxShadow: '0 0 0 10px rgba(231, 76, 60, 0)',
-                    },
-                    '100%': {
-                      boxShadow: '0 0 0 0 rgba(231, 76, 60, 0)',
-                    },
-                  },
-                },
-              }}
-            >
-              <ShoppingCartIcon sx={{ fontSize: 24 }} />
-            </Badge>
-          </IconButton>
-        </AccordionSummary>
-        <AccordionDetails
-          sx={{
-            p: 0,
-            position: 'absolute',
-            top: '100%',
-            right: 0,
-            width: 400,
-            backgroundColor: '#ffffff',
-            border: '1px solid #e0e0e0',
-            borderRadius: '16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            zIndex: 1001,
-            mt: 1,
-            maxHeight: 500,
-            overflow: 'auto',
-            display: basketAccordionExpanded ? 'block' : 'none',
-          }}
-        >
-            <Box sx={{ px: 3, pb: 3 }}>
-              <Divider sx={{ mb: 2 }} />
-
-          {/* Cart Items */}
-          <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
-            {cartItems.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <ShoppingCartIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
-                <Typography variant="body1" sx={{ color: '#666' }}>
-                  Your cart is empty
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#999', mt: 1 }}>
-                  Add some delicious items to get started!
-                </Typography>
-              </Box>
-            ) : (
-              <Stack spacing={2}>
-                {cartItems.map((item: CartItem) => {
-                  const imagePath = `${serverApi}${item.image}`;
-                  return (
-                    <Box
-                      key={item._id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        p: 2,
-                        borderRadius: '12px',
-                        backgroundColor: '#fafafa',
-                        border: '1px solid #f0f0f0',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          backgroundColor: '#f5f5f5',
-                          transform: 'translateX(-4px)',
-                        }
-                      }}
-                    >
-                      <Avatar
-                        src={imagePath}
-                        sx={{ width: 50, height: 50, borderRadius: '8px' }}
-                        variant="rounded"
-                      />
-                      
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50', mb: 0.5 }}>
-                          {item.name}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#8b4513', fontWeight: 600 }}>
-                          ${item.price}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <IconButton
-                          size="small"
-                          onClick={() => onRemove(item)}
-                          sx={{
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            color: '#e74c3c',
-                            width: 28,
-                            height: 28,
-                            '&:hover': {
-                              backgroundColor: 'rgba(231, 76, 60, 0.2)',
-                            }
-                          }}
-                        >
-                          <RemoveIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                        
-                        <Chip
-                          label={item.quantity}
-                          size="small"
-                          sx={{
-                            backgroundColor: '#8b4513',
-                            color: '#ffffff',
-                            fontWeight: 600,
-                            minWidth: 32,
-                          }}
-                        />
-                        
-                        <IconButton
-                          size="small"
-                          onClick={() => onAdd(item)}
-                          sx={{
-                            backgroundColor: 'rgba(139, 69, 19, 0.1)',
-                            color: '#8b4513',
-                            width: 28,
-                            height: 28,
-                            '&:hover': {
-                              backgroundColor: 'rgba(139, 69, 19, 0.2)',
-                            }
-                          }}
-                        >
-                          <AddIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                        
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete(item)}
-                          sx={{
-                            color: '#999',
-                            width: 28,
-                            height: 28,
-                            '&:hover': {
-                              color: '#e74c3c',
-                              backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            }
-                          }}
-                        >
-                          <CancelIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  );
-                })}
-              </Stack>
-            )}
-          </Box>
-
-          {/* Footer */}
-          {cartItems.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Divider sx={{ mb: 2 }} />
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2" sx={{ color: '#666' }}>
-                  Subtotal:
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  ${itemsPrice.toFixed(2)}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2" sx={{ color: '#666' }}>
-                  Shipping:
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  ${shippingCost.toFixed(2)}
-                </Typography>
-              </Box>
-              
-              <Divider sx={{ mb: 2 }} />
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
-                  Total:
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#8b4513' }}>
-                  ${totalPrice}
-                </Typography>
-              </Box>
-              
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={proceedOrderHandler}
-                startIcon={<ShoppingCartIcon />}
+            <Box sx={{ px: 2.5, pt: 2, flexShrink: 0 }}>
+              <Typography
                 sx={{
-                  backgroundColor: '#8b4513',
-                  color: '#ffffff',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  py: 1.5,
-                  fontSize: '1rem',
-                  boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
-                  '&:hover': {
-                    backgroundColor: '#a0522d',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(139, 69, 19, 0.4)',
-                  }
+                  fontFamily: GROTESK,
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  fontSize: '1.1rem',
+                  color: STITCH_THEME.primary,
+                  textShadow: `2px 2px 0 ${STITCH_THEME.ink}`,
+                  mb: 0.5,
                 }}
               >
-                Proceed to Order
-              </Button>
+                Your selection
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: GROTESK,
+                  fontWeight: 700,
+                  fontSize: '0.68rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.14em',
+                  color: '#504442',
+                  mb: 1.5,
+                }}
+              >
+                Pulled fresh for checkout
+              </Typography>
+              <Divider sx={{ borderBottomWidth: 3, borderColor: STITCH_THEME.ink }} />
             </Box>
-          )}
+
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 120,
+                overflowY: 'auto',
+                px: 2.5,
+                py: 2,
+              }}
+            >
+              {cartItems.length === 0 ? (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 3,
+                    px: 2,
+                    border: `3px dashed ${STITCH_THEME.ink}`,
+                    bgcolor: STITCH_THEME.surface,
+                    boxShadow: `4px 4px 0 0 ${STITCH_THEME.ink}`,
+                  }}
+                >
+                  <ShoppingCartIcon sx={{ fontSize: 44, color: STITCH_THEME.ink, opacity: 0.35, mb: 1.5 }} />
+                  <Typography
+                    sx={{
+                      fontFamily: GROTESK,
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: STITCH_THEME.ink,
+                      fontSize: '0.95rem',
+                    }}
+                  >
+                    Empty loot bag
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: GROTESK,
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      color: '#504442',
+                      mt: 1,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    Stack beans, mugs & merch here — then slam checkout.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack spacing={2}>
+                  {cartItems.map((item: CartItem) => {
+                    const imagePath = `${serverApi}${item.image}`;
+                    return (
+                      <Box
+                        key={item._id}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1.5,
+                          p: 1.5,
+                          bgcolor: STITCH_THEME.surface,
+                          border: `3px solid ${STITCH_THEME.ink}`,
+                          boxShadow: `4px 4px 0 0 ${STITCH_THEME.ink}`,
+                        }}
+                      >
+                        <Avatar
+                          src={imagePath}
+                          sx={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 0,
+                            border: `3px solid ${STITCH_THEME.ink}`,
+                            flexShrink: 0,
+                          }}
+                          variant="square"
+                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            sx={{
+                              fontFamily: GROTESK,
+                              fontWeight: 900,
+                              fontStyle: 'italic',
+                              textTransform: 'uppercase',
+                              fontSize: '0.78rem',
+                              letterSpacing: '0.02em',
+                              color: STITCH_THEME.ink,
+                              lineHeight: 1.25,
+                              mb: 0.5,
+                            }}
+                          >
+                            {item.name}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: GROTESK,
+                              fontWeight: 900,
+                              fontStyle: 'italic',
+                              fontSize: '0.9rem',
+                              color: STITCH_THEME.primary,
+                              transform: 'skewX(-4deg)',
+                            }}
+                          >
+                            ${(item.price * item.quantity).toFixed(2)}
+                            {item.quantity > 1 && (
+                              <Box component="span" sx={{ fontWeight: 600, fontSize: '0.65rem', color: '#504442', fontStyle: 'normal', transform: 'none', display: 'block', mt: 0.25 }}>
+                                ({item.quantity} × ${item.price.toFixed(2)})
+                              </Box>
+                            )}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, mt: 1.25 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => onRemove(item)}
+                              sx={{
+                                ...comicIconBtn,
+                                bgcolor: STITCH_THEME.surfaceContainer,
+                                color: STITCH_THEME.ink,
+                                '&:hover': { bgcolor: COMIC_ERROR_TINT, color: '#93000a' },
+                              }}
+                            >
+                              <RemoveIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <Chip
+                              label={item.quantity}
+                              size="small"
+                              sx={{
+                                fontFamily: GROTESK,
+                                fontWeight: 900,
+                                height: 32,
+                                borderRadius: 0,
+                                bgcolor: STITCH_THEME.primary,
+                                color: STITCH_THEME.onPrimary,
+                                border: `3px solid ${STITCH_THEME.ink}`,
+                                boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
+                                minWidth: 36,
+                                '& .MuiChip-label': { px: 1 },
+                              }}
+                            />
+                            <IconButton
+                              size="small"
+                              onClick={() => onAdd(item)}
+                              sx={{
+                                ...comicIconBtn,
+                                bgcolor: STITCH_THEME.tertiaryContainer,
+                                color: STITCH_THEME.ink,
+                                '&:hover': { bgcolor: STITCH_THEME.primary, color: STITCH_THEME.onPrimary },
+                              }}
+                            >
+                              <AddIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => onDelete(item)}
+                              aria-label="Remove line"
+                              sx={{
+                                ...comicIconBtn,
+                                ml: { xs: 0, sm: 0.5 },
+                                bgcolor: 'transparent',
+                                borderStyle: 'dashed',
+                                boxShadow: 'none',
+                                '&:hover': {
+                                  bgcolor: COMIC_ERROR_TINT,
+                                  color: '#93000a',
+                                  borderStyle: 'solid',
+                                  boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
+                                },
+                              }}
+                            >
+                              <CancelIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
             </Box>
-        </AccordionDetails>
-      </Accordion>
+
+            {cartItems.length > 0 && (
+              <Box
+                sx={{
+                  flexShrink: 0,
+                  position: 'relative',
+                  p: 2.5,
+                  borderTop: `4px solid ${STITCH_THEME.ink}`,
+                  bgcolor: STITCH_THEME.surface,
+                  boxShadow: `inset 0 1px 0 0 rgba(26,15,13,0.06)`,
+                }}
+              >
+                <Box
+                  sx={{
+                    pointerEvents: 'none',
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `radial-gradient(${STITCH_THEME.ink} 10%, transparent 11%)`,
+                    backgroundSize: '10px 10px',
+                    opacity: 0.06,
+                    zIndex: 0,
+                  }}
+                />
+                <Typography
+                  sx={{
+                    position: 'relative',
+                    zIndex: 1,
+                    fontFamily: GROTESK,
+                    fontWeight: 900,
+                    fontStyle: 'italic',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    fontSize: '1.15rem',
+                    color: STITCH_THEME.ink,
+                    mb: 2,
+                  }}
+                >
+                  Order summary
+                </Typography>
+                <Stack spacing={1.5} sx={{ position: 'relative', zIndex: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '0.7rem', color: '#504442' }}>
+                      Subtotal
+                    </Typography>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 900, fontStyle: 'italic', fontSize: '1.02rem', color: STITCH_THEME.ink, transform: 'skewX(-4deg)' }}>
+                      ${itemsPrice.toFixed(2)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '0.7rem', color: '#504442' }}>
+                      Shipping
+                    </Typography>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 900, fontStyle: 'italic', fontSize: '1.02rem', color: STITCH_THEME.ink, transform: 'skewX(-4deg)' }}>
+                      ${shippingCost.toFixed(2)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '0.7rem', color: '#504442' }}>
+                      Est. tax
+                    </Typography>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 900, fontStyle: 'italic', fontSize: '1.02rem', color: STITCH_THEME.ink, transform: 'skewX(-4deg)' }}>
+                      ${estimatedTax.toFixed(2)}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ borderColor: `${STITCH_THEME.ink}33`, my: 0.5 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 900, textTransform: 'uppercase', fontSize: '1.15rem', color: STITCH_THEME.ink }}>
+                      Total
+                    </Typography>
+                    <Typography sx={{ fontFamily: GROTESK, fontWeight: 900, fontStyle: 'italic', fontSize: '1.55rem', color: STITCH_THEME.ink, transform: 'skewX(-4deg)' }}>
+                      ${orderTotal.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Button
+                  fullWidth
+                  onClick={proceedOrderHandler}
+                  sx={{
+                    position: 'relative',
+                    zIndex: 1,
+                    mt: 2.5,
+                    py: 1.75,
+                    bgcolor: STITCH_THEME.primary,
+                    color: '#fff',
+                    borderRadius: 0,
+                    border: `4px solid ${STITCH_THEME.ink}`,
+                    boxShadow: `4px 4px 0 0 ${STITCH_THEME.ink}`,
+                    fontFamily: GROTESK,
+                    fontWeight: 900,
+                    fontStyle: 'italic',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    fontSize: '1rem',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                    '&:hover': {
+                      bgcolor: '#e04300',
+                      transform: 'translate(2px, 2px)',
+                      boxShadow: `2px 2px 0 0 ${STITCH_THEME.ink}`,
+                    },
+                  }}
+                >
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                    <ShoppingCartIcon sx={{ fontSize: 22 }} />
+                    Proceed to Order
+                  </Box>
+                </Button>
+                <Stack alignItems="center" spacing={1} sx={{ position: 'relative', zIndex: 1, mt: 2 }}>
+                  <Typography sx={{ fontFamily: GROTESK, fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#827471' }}>
+                    Encrypted & Secure
+                  </Typography>
+                  <Stack direction="row" spacing={3} sx={{ opacity: 0.35 }}>
+                    <CreditCardOutlinedIcon sx={{ fontSize: 26, color: STITCH_THEME.ink }} />
+                    <AccountBalanceWalletOutlinedIcon sx={{ fontSize: 26, color: STITCH_THEME.ink }} />
+                    <LockOutlinedIcon sx={{ fontSize: 26, color: STITCH_THEME.ink }} />
+                  </Stack>
+                </Stack>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Popover>
     </Box>
   );
 }

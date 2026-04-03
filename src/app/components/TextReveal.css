@@ -1,0 +1,28 @@
+.tr-root {
+  display: grid;
+  gap: 0.65em;
+}
+
+.tr-item {
+  position: relative;
+  width: max-content;
+  display: block;
+}
+
+.tr-text {
+  position: relative;
+  display: block;
+  z-index: 0;
+}
+
+.tr-block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 101%;
+  height: 101%;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 1;
+}
+

@@ -57,6 +57,15 @@ import { useTheme as useCoffeeTheme } from "../../../mui-coffee/context/ThemeCon
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductService from "../../services/ProductService";
+import {
+  StitchFindYourStationSection,
+  getStitchComicStripLabelSx,
+  getStitchStripCardShellSx,
+  getStitchStripCardContentBandSx,
+  stitchComicStripGridRotation,
+  STITCH_THEME,
+  type StitchComicStripAccent,
+} from "../../../components/stitchUi";
 
 // Lazy load the AwardsStrip component
 import { serverApi } from "../../../lib/config";
@@ -113,16 +122,43 @@ interface CoffeeItem {
 
 interface CoffeesProps {
   onAdd: (item: CartItem) => void;
+  /** Pulp / stitch shop layout (products route) — brutalist panels, no map/awards extras */
+  stitchShop?: boolean;
 }
 
 export default function Coffees(props: CoffeesProps) {
-  const { onAdd } = props;
+  const { onAdd, stitchShop = false } = props;
   const history = useHistory();
   const location = useLocation();
   const { isDarkMode, toggleTheme, colors } = useCoffeeTheme();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const { t } = useTranslation();
+
+  const inkStitch = isDarkMode ? "#e8ddd4" : "#1A0F0D";
+  const panelStitch = isDarkMode ? "rgba(238,232,216,0.12)" : "#eee8d8";
+  const groteskStitch = '"Space Grotesk", system-ui, sans-serif';
+  const stitchPanelSx = stitchShop
+    ? {
+        backgroundColor: panelStitch,
+        border: `4px solid ${inkStitch}`,
+        borderRadius: 0,
+        boxShadow: `6px 6px 0 0 ${inkStitch}`,
+        fontFamily: groteskStitch,
+        backdropFilter: "none",
+      }
+    : {};
+
+  const accentStitchSx = stitchShop
+    ? {
+        backgroundColor: isDarkMode ? "rgba(255, 120, 77, 0.2)" : "#ff784d",
+        border: `4px solid ${inkStitch}`,
+        borderRadius: 0,
+        boxShadow: `6px 6px 0 0 ${inkStitch}`,
+        fontFamily: groteskStitch,
+        backdropFilter: "none",
+      }
+    : {};
   
   // Pagination constants
   const ITEMS_PER_PAGE = 5;
@@ -413,36 +449,53 @@ export default function Coffees(props: CoffeesProps) {
   ];
 
   return (
-    <Box sx={{ 
-      width: '100%',
-      minHeight: '100vh',
-      position: 'relative',
-    }}>
-      {/* Content in Container */}
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: stitchShop ? 0 : "100vh",
+        position: "relative",
+      }}
+    >
       <Container
-        maxWidth="xl"
+        maxWidth={stitchShop ? false : "xl"}
         sx={{
-          position: 'relative',
+          position: "relative",
           zIndex: 1,
           overflowX: "hidden",
-          paddingTop: { xs: "2rem", sm: "3rem", md: "4rem" },
-          paddingBottom: { xs: "3.5rem", sm: "4.5rem", md: "6rem" },
-          paddingLeft: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
-          paddingRight: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
+          width: "100%",
+          boxSizing: "border-box",
+          ...(stitchShop
+            ? {
+                px: 0,
+                pt: { xs: 2, md: 2.5 },
+                pb: { xs: 3, md: 4 },
+              }
+            : {
+                paddingTop: { xs: "2rem", sm: "3rem", md: "4rem" },
+                paddingBottom: { xs: "3.5rem", sm: "4.5rem", md: "6rem" },
+                paddingLeft: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
+                paddingRight: { xs: "1.25rem", sm: "2rem", md: "2.5rem" },
+              }),
         }}
       >
-        <Stack spacing={6}>
+        <Stack spacing={stitchShop ? 4 : 6}>
           {/* Enhanced Search and Controls */}
-          <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-            borderRadius: '20px',
-            p: 3,
-            boxShadow: isDarkMode 
-              ? '0 8px 32px rgba(0,0,0,0.3)'
-              : '0 8px 32px rgba(0,0,0,0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
+          <Paper
+            sx={{
+              ...(stitchShop
+                ? { ...stitchPanelSx, p: { xs: 2.5, sm: 2.75, md: 3 } }
+                : {
+                    backgroundColor: isDarkMode ? "#1a1a1a" : "#ffffff",
+                    border: `1px solid ${isDarkMode ? "#333333" : "#e0e0e0"}`,
+                    borderRadius: "20px",
+                    p: 3,
+                    boxShadow: isDarkMode
+                      ? "0 8px 32px rgba(0,0,0,0.3)"
+                      : "0 8px 32px rgba(0,0,0,0.1)",
+                    backdropFilter: "blur(10px)",
+                  }),
+            }}
+          >
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -463,25 +516,38 @@ export default function Coffees(props: CoffeesProps) {
                   size="medium"
                   fullWidth
                   sx={{
+                    ...(stitchShop
+                      ? {
+                          '& .MuiInputLabel-root': {
+                            fontFamily: groteskStitch,
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                          },
+                        }
+                      : {}),
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                      borderRadius: '12px',
-                      fontSize: '1.1rem',
+                      borderRadius: stitchShop ? 0 : '12px',
+                      fontSize: stitchShop ? '1.2rem' : '1.1rem',
+                      fontFamily: stitchShop ? groteskStitch : 'inherit',
+                      ...(stitchShop
+                        ? { minHeight: 58, alignItems: 'center' }
+                        : {}),
                       '& fieldset': {
                         borderColor: isDarkMode ? '#404040' : '#e0e0e0',
-                        borderWidth: '2px',
+                        borderWidth: stitchShop ? '3px' : '2px',
                       },
                       '&:hover fieldset': {
                         borderColor: isDarkMode ? '#ffd700' : '#8B4513',
                       },
                       '&.Mui-focused fieldset': {
                         borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                        borderWidth: '2px',
+                        borderWidth: stitchShop ? '3px' : '2px',
                       },
                     },
                     '& .MuiInputBase-input': {
                       color: isDarkMode ? '#ffffff' : '#333333',
-                      padding: '16px 20px',
+                      padding: stitchShop ? '18px 22px' : '16px 20px',
                     },
                   }}
                   InputProps={{
@@ -489,7 +555,7 @@ export default function Coffees(props: CoffeesProps) {
                       <InputAdornment position="start" sx={{ ml: 1 }}>
                         <SearchIcon sx={{ 
                           color: isDarkMode ? '#ffd700' : '#8B4513',
-                          fontSize: '1.5rem'
+                          fontSize: stitchShop ? '1.75rem' : '1.5rem'
                         }} />
                       </InputAdornment>
                     ),
@@ -520,10 +586,13 @@ export default function Coffees(props: CoffeesProps) {
                 sx={{
                   backgroundColor: isDarkMode ? '#333333' : '#f5f5f5',
                   color: isDarkMode ? '#ffd700' : '#8B4513',
-                  width: 56,
-                  height: 56,
-                  borderRadius: '16px',
-                  border: `2px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                  width: stitchShop ? 64 : 56,
+                  height: stitchShop ? 64 : 56,
+                  borderRadius: stitchShop ? 0 : '16px',
+                  border: `${stitchShop ? 3 : 2}px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                  ...(stitchShop
+                    ? { boxShadow: `4px 4px 0 0 ${inkStitch}`, fontFamily: groteskStitch }
+                    : {}),
                   '&:hover': {
                     backgroundColor: isDarkMode ? '#404040' : '#e8e8e8',
                     transform: 'scale(1.05)',
@@ -534,26 +603,32 @@ export default function Coffees(props: CoffeesProps) {
                   transition: 'all 0.3s ease',
                 }}
               >
-                {isDarkMode ? <LightModeIcon sx={{ fontSize: '1.5rem' }} /> : <DarkModeIcon sx={{ fontSize: '1.5rem' }} />}
+                {isDarkMode ? <LightModeIcon sx={{ fontSize: stitchShop ? '1.75rem' : '1.5rem' }} /> : <DarkModeIcon sx={{ fontSize: stitchShop ? '1.75rem' : '1.5rem' }} />}
               </IconButton>
             </Box>
           </Paper>
 
           {/* Awards & Certifications Section */}
-          <Suspense fallback={<CircularProgress />}>
-            <AwardsStrip />
-          </Suspense>
+          {!stitchShop && (
+            <Suspense fallback={<CircularProgress />}>
+              <AwardsStrip />
+            </Suspense>
+          )}
 
           {/* Enhanced Category Tabs */}
           <Box ref={categoryTabsRef}>
           <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: isDarkMode 
-              ? '0 4px 20px rgba(0,0,0,0.2)'
-              : '0 4px 20px rgba(0,0,0,0.08)'
+            ...(stitchShop
+              ? { ...stitchPanelSx, overflow: "hidden", p: 0 }
+              : {
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+                  border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  boxShadow: isDarkMode 
+                    ? '0 4px 20px rgba(0,0,0,0.2)'
+                    : '0 4px 20px rgba(0,0,0,0.08)',
+                }),
           }}>
             <Tabs
               value={selectedCategory}
@@ -561,28 +636,31 @@ export default function Coffees(props: CoffeesProps) {
               variant={isMobile ? "scrollable" : "fullWidth"}
               scrollButtons={isMobile ? "auto" : false}
               sx={{
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                backgroundColor: stitchShop
+                  ? (isDarkMode ? "rgba(26,22,18,0.95)" : "#fcf6e8")
+                  : isDarkMode ? '#2a2a2a' : '#f8f9fa',
                 '& .MuiTab-root': {
                   color: isDarkMode ? '#b0b0b0' : '#666666',
                   fontWeight: 600,
-                  textTransform: 'none',
-                  fontSize: '1.1rem',
-                  padding: '20px 24px',
-                  minHeight: '64px',
+                  textTransform: stitchShop ? 'uppercase' : 'none',
+                  fontFamily: stitchShop ? groteskStitch : 'inherit',
+                  fontSize: stitchShop ? { xs: '0.875rem', md: '0.95rem' } : '1.1rem',
+                  padding: stitchShop ? '16px 20px' : '20px 24px',
+                  minHeight: stitchShop ? 62 : 64,
                   transition: 'all 0.3s ease',
                   '&:hover': {
                     color: isDarkMode ? '#ffd700' : '#8B4513',
                     backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
                   },
                   '&.Mui-selected': {
-                    color: isDarkMode ? '#ffd700' : '#8B4513',
+                    color: stitchShop ? (isDarkMode ? '#ff784d' : '#a83100') : (isDarkMode ? '#ffd700' : '#8B4513'),
                     fontWeight: 700,
                   },
                 },
                 '& .MuiTabs-indicator': {
-                  backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
-                  height: '4px',
-                  borderRadius: '2px 2px 0 0',
+                  backgroundColor: stitchShop ? '#ff784d' : (isDarkMode ? '#ffd700' : '#8B4513'),
+                  height: stitchShop ? '5px' : '4px',
+                  borderRadius: 0,
                 },
               }}
             >
@@ -596,32 +674,37 @@ export default function Coffees(props: CoffeesProps) {
 
           {/* Enhanced Sort Controls */}
           <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-            borderRadius: '16px',
-            p: 3,
-            boxShadow: isDarkMode 
-              ? '0 4px 20px rgba(0,0,0,0.2)'
-              : '0 4px 20px rgba(0,0,0,0.08)'
+            ...(stitchShop
+              ? { ...stitchPanelSx, p: { xs: 2.25, sm: 2.5, md: 2.75 } }
+              : {
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+                  border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+                  borderRadius: '16px',
+                  p: 3,
+                  boxShadow: isDarkMode 
+                    ? '0 4px 20px rgba(0,0,0,0.2)'
+                    : '0 4px 20px rgba(0,0,0,0.08)',
+                }),
           }}>
             <Box sx={{ 
               display: 'flex', 
-              gap: 3, 
+              gap: stitchShop ? 2 : 3, 
               flexWrap: 'wrap', 
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'nowrap', position: 'relative', zIndex: 10 }}>
-                <Box sx={{ position: 'relative', height: 48, flexShrink: 0, width: 180 }}>
+              <Box sx={{ display: 'flex', gap: stitchShop ? 1.5 : 2, alignItems: 'flex-start', flexWrap: 'nowrap', position: 'relative', zIndex: 10 }}>
+                <Box sx={{ position: 'relative', height: stitchShop ? 48 : 48, flexShrink: 0, width: stitchShop ? 176 : 180 }}>
                   <Accordion 
                     expanded={sortAccordionExpanded} 
                     onChange={(e, isExpanded) => setSortAccordionExpanded(isExpanded)}
                     sx={{ 
                       width: '100%',
                       boxShadow: sortAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
-                      borderRadius: '12px',
+                      border: `${stitchShop ? 3 : 1}px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                      borderRadius: stitchShop ? 0 : '12px',
                       backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      ...(stitchShop ? { fontFamily: groteskStitch } : {}),
                       position: 'relative',
                       zIndex: sortAccordionExpanded ? 1000 : 1,
                       '&:before': {
@@ -629,17 +712,17 @@ export default function Coffees(props: CoffeesProps) {
                       },
                       '&.Mui-expanded': {
                         margin: 0,
-                        minHeight: '48px !important',
+                        minHeight: stitchShop ? '48px !important' : '48px !important',
                       },
                     }}
                   >
                   <AccordionSummary sx={{ 
-                    minHeight: 48, 
-                    '&.Mui-expanded': { minHeight: 48 },
+                    minHeight: stitchShop ? 48 : 48, 
+                    '&.Mui-expanded': { minHeight: stitchShop ? 48 : 48 },
                   color: isDarkMode ? '#ffffff' : '#333333', 
                   }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: stitchShop ? '0.9rem' : undefined, fontFamily: stitchShop ? groteskStitch : 'inherit' }}>
                         {t('common.sortBy')}: {
                           sortBy === 'new' ? t('common.newest') :
                           sortBy === 'price' ? t('common.price') :
@@ -751,16 +834,17 @@ export default function Coffees(props: CoffeesProps) {
                 </Accordion>
                       </Box>
 
-                <Box sx={{ position: 'relative', height: 48, flexShrink: 0, width: 150 }}>
+                <Box sx={{ position: 'relative', height: stitchShop ? 48 : 48, flexShrink: 0, width: stitchShop ? 148 : 150 }}>
                   <Accordion 
                     expanded={orderAccordionExpanded} 
                     onChange={(e, isExpanded) => setOrderAccordionExpanded(isExpanded)}
                     sx={{
                       width: '100%',
                       boxShadow: orderAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
-                      borderRadius: '12px',
+                      border: `${stitchShop ? 3 : 1}px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                      borderRadius: stitchShop ? 0 : '12px',
                       backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      ...(stitchShop ? { fontFamily: groteskStitch } : {}),
                       position: 'relative',
                       zIndex: orderAccordionExpanded ? 1000 : 1,
                       '&:before': {
@@ -768,20 +852,20 @@ export default function Coffees(props: CoffeesProps) {
                       },
                       '&.Mui-expanded': {
                         margin: 0,
-                        minHeight: '48px !important',
+                        minHeight: stitchShop ? '48px !important' : '48px !important',
                       },
                     }}
                   >
                   <AccordionSummary sx={{ 
-                    minHeight: 48,
-                    maxHeight: 48,
+                    minHeight: stitchShop ? 48 : 48,
+                    maxHeight: stitchShop ? 48 : 48,
                     '&.Mui-expanded': { 
-                      minHeight: 48,
-                      maxHeight: 48,
+                      minHeight: stitchShop ? 48 : 48,
+                      maxHeight: stitchShop ? 48 : 48,
                     },
                       color: isDarkMode ? '#ffffff' : '#333333',
                   }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: stitchShop ? '0.875rem' : undefined, fontFamily: stitchShop ? groteskStitch : 'inherit' }}>
                       {t('common.order')}: {sortOrder === 'desc' ? t('common.descending') : t('common.ascending')}
                     </Typography>
                   </AccordionSummary>
@@ -843,13 +927,15 @@ export default function Coffees(props: CoffeesProps) {
 
               <Typography variant="body1" sx={{ 
                 color: isDarkMode ? '#b0b0b0' : '#666666',
-                fontWeight: 500,
-                fontSize: '1rem',
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                px: 2,
-                py: 1,
-                borderRadius: '8px',
-                border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`
+                fontWeight: stitchShop ? 700 : 500,
+                fontSize: stitchShop ? { xs: '0.9rem', md: '0.98rem' } : '1rem',
+                fontFamily: stitchShop ? groteskStitch : 'inherit',
+                backgroundColor: stitchShop ? panelStitch : (isDarkMode ? '#2a2a2a' : '#f8f9fa'),
+                px: stitchShop ? 1.5 : 2,
+                py: stitchShop ? 0.75 : 1,
+                borderRadius: stitchShop ? 0 : '8px',
+                border: stitchShop ? `3px solid ${inkStitch}` : `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                boxShadow: stitchShop ? `4px 4px 0 0 ${inkStitch}` : 'none',
               }}>
                 {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, filteredCoffees.length)} {t('common.of')} {filteredCoffees.length} {t('common.items')}
               </Typography>
@@ -866,15 +952,20 @@ export default function Coffees(props: CoffeesProps) {
               <Paper sx={{ 
                 p: 2, 
                 mb: 3,
-                backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`,
-                borderRadius: '12px',
-                textAlign: 'center'
+                textAlign: 'center',
+                ...(stitchShop
+                  ? { ...accentStitchSx }
+                  : {
+                      backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                      border: `1px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`,
+                      borderRadius: '12px',
+                    }),
               }}>
                 <Typography variant="body1" sx={{ 
-                  color: isDarkMode ? '#ffd700' : '#8B4513',
-                  fontWeight: 600,
-                  fontSize: '1rem'
+                  color: stitchShop ? (isDarkMode ? "#fcf6e8" : inkStitch) : (isDarkMode ? '#ffd700' : '#8B4513'),
+                  fontWeight: 700,
+                  fontSize: stitchShop ? '0.875rem' : '1rem',
+                  fontFamily: stitchShop ? groteskStitch : 'inherit',
                 }}>
                   🔍 Found {filteredCoffees.length} result{filteredCoffees.length !== 1 ? 's' : ''} for "{searchText}"
                 </Typography>
@@ -887,11 +978,24 @@ export default function Coffees(props: CoffeesProps) {
             ref={productsGridRef}
             sx={{ 
               display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-              gap: 4,
+              gridTemplateColumns: stitchShop
+                ? {
+                    xs: '1fr',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    md: 'repeat(3, minmax(0, 1fr))',
+                    lg: 'repeat(4, minmax(0, 1fr))',
+                  }
+                : { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
+              // Stitch: tighter row rhythm + slightly wider column gap so comic shadows read as separated
+              ...(stitchShop
+                ? {
+                    rowGap: { xs: 3, sm: 3.5, md: 4, lg: 4.5 },
+                    columnGap: { xs: 4.5, sm: 5.5, md: 6.5, lg: 7.5 },
+                  }
+                : { gap: 4 }),
               position: 'relative',
               borderRadius: '16px',
-              padding: '16px',
+              padding: stitchShop ? { xs: 1.5, sm: 2, md: 2.25 } : '16px',
               transition: 'all 0.5s ease',
               backgroundColor: highlightResults 
                 ? (isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)')
@@ -908,7 +1012,12 @@ export default function Coffees(props: CoffeesProps) {
             {loading ? (
               <GridSkeleton />
             ) : (
-              currentItems.map((item) => (
+              currentItems.map((item, stripIndex) => {
+              const stripAccents: StitchComicStripAccent[] = ['primary', 'tertiary', 'primaryDark', 'primary'];
+              const stripAccent = stripAccents[stripIndex % 4];
+              const categoryRibbon = item.category.toUpperCase();
+
+              return (
               <Card 
                 key={item.id}
                 sx={{ 
@@ -968,296 +1077,563 @@ export default function Coffees(props: CoffeesProps) {
                       transform: 'scale(1.1)',
                     },
                   },
+                  ...(stitchShop
+                    ? {
+                        ...getStitchStripCardShellSx(isDarkMode),
+                        transform: stitchComicStripGridRotation(stripIndex),
+                        fontFamily: groteskStitch,
+                        '&::before': { display: 'none' },
+                        '&:hover': {
+                          transform: stitchComicStripGridRotation(stripIndex),
+                        },
+                        '& .glassmorphism-glow': { display: 'none' },
+                      }
+                    : {}),
                 }}
                 onClick={() => handleCoffeeClick(item.id)}
               >
-                {/* Glassmorphism glow effect */}
-                <Box 
-                  className="glassmorphism-glow"
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    background: isDarkMode 
-                      ? 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)' 
-                      : 'radial-gradient(circle, rgba(139, 69, 19, 0.1) 0%, transparent 70%)',
-                    transform: 'translate(-50%, -50%) scale(0.8)',
-                    opacity: 0,
-                    transition: 'all 0.4s ease',
-                    pointerEvents: 'none',
-                    zIndex: 0,
-                  }}
-                />
-                <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-                  <CardMedia
-                    component="img"
-                    image={item.image}
-                    alt={item.name}
-                    sx={{ 
-                      height: '220px',
-                      objectFit: 'cover',
-                      transition: 'transform 0.4s ease',
-                      '&:hover': {
-                        transform: 'scale(1.05)',
-                      }
-                    }}
-                  />
-                  
-                  {/* Gradient Overlay */}
-                  <Box sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: isDarkMode 
-                      ? 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)'
-                      : 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%)',
-                    pointerEvents: 'none'
-                  }} />
-                  
-                  {/* New Badge with glassmorphism */}
-                  {item.isNew && (
-                    <Chip
-                      label="NEW"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 0.9)' 
-                          : 'rgba(139, 69, 19, 0.9)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        borderRadius: '16px',
-                        border: isDarkMode 
-                          ? '1px solid rgba(255, 215, 0, 0.3)' 
-                          : '1px solid rgba(139, 69, 19, 0.3)',
-                        boxShadow: isDarkMode 
-                          ? '0 4px 12px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                          : '0 4px 12px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                        zIndex: 2,
-                      }}
-                    />
-                  )}
-                  
-                  {/* Favorite Button with enhanced glassmorphism */}
-                  <IconButton
-                    sx={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      backgroundColor: isDarkMode 
-                        ? 'rgba(255, 255, 255, 0.15)' 
-                        : 'rgba(255, 255, 255, 0.9)',
-                      backdropFilter: 'blur(15px)',
-                      WebkitBackdropFilter: 'blur(15px)',
-                      width: 44,
-                      height: 44,
-                      borderRadius: '16px',
-                      border: isDarkMode 
-                        ? '1px solid rgba(255, 255, 255, 0.2)' 
-                        : '1px solid rgba(255, 255, 255, 0.3)',
-                      boxShadow: isDarkMode 
-                        ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
-                        : '0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                      zIndex: 2,
-                      '&:hover': {
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(255, 255, 255, 0.25)' 
-                          : 'rgba(255, 255, 255, 1)',
-                        transform: 'scale(1.1)',
-                        boxShadow: isDarkMode 
-                          ? '0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                          : '0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation();
-                      toggleFavorite(item.id);
-                    }}
-                  >
-                    {item.isFavorite ? (
-                      <FavoriteIcon sx={{ color: '#e91e63', fontSize: '1.3rem' }} />
-                    ) : (
-                      <FavoriteBorderIcon sx={{ fontSize: '1.3rem' }} />
-                    )}
-                  </IconButton>
-                  
-                  {/* Out of Stock Badge with glassmorphism */}
-                  {!item.inStock && (
-                    <Chip
-                      label="Out of Stock"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        bottom: 12,
-                        left: 12,
-                        backgroundColor: 'rgba(244, 67, 54, 0.9)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        color: '#ffffff',
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(244, 67, 54, 0.3)',
-                        boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                        zIndex: 2,
-                      }}
-                    />
-                  )}
-                </Box>
-                
-                <CardContent sx={{ 
-                  flexGrow: 1, 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  p: 2,
-                  position: 'relative',
-                }}>
-                  {/* Title and Price in same row */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography 
-                      variant="subtitle1" 
-                      component="h2" 
-                      sx={{ 
-                        color: isDarkMode ? '#ffffff' : '#1a1a1a',
-                        fontWeight: 600,
-                        flex: 1,
-                        fontSize: '1rem',
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {item.name}
-                    </Typography>
-                  <Typography 
-                      variant="subtitle1" 
-                    sx={{ 
-                        color: isDarkMode ? '#ffd700' : '#8B4513',
-                        fontWeight: 700,
-                        ml: 1,
-                        fontSize: '1rem'
-                      }}
-                    >
-                      ${item.price}
-                  </Typography>
-                  </Box>
-                  
-                  {/* Rating and reviews - with spacing */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                    <Rating 
-                      value={item.rating} 
-                      precision={0.1} 
-                      size="small" 
-                      readOnly 
-                      sx={{
-                        fontSize: '0.875rem',
-                        '& .MuiRating-iconFilled': {
-                          color: isDarkMode ? '#ffd700' : '#ffc107',
-                        },
-                      }}
-                    />
-                    <Typography variant="caption" sx={{ 
-                      color: isDarkMode ? '#b0b0b0' : '#666666',
-                      ml: 0.5,
-                      fontSize: '0.75rem'
-                    }}>
-                      ({item.reviews})
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
-                      <VisibilityIcon fontSize="small" sx={{ color: isDarkMode ? '#ffd700' : '#8B4513', fontSize: '0.75rem' }} />
-                      <Typography variant="caption" sx={{ 
-                        color: isDarkMode ? '#b0b0b0' : '#666666',
-                        fontSize: '0.75rem'
-                      }}>
-                        {item.views}
-                      </Typography>
+                {stitchShop ? (
+                  <>
+                    <Box sx={{ position: 'relative', flexShrink: 0, lineHeight: 0 }}>
+                      <Box
+                        component="img"
+                        className="stitch-product-strip-img"
+                        src={item.image}
+                        alt={item.name}
+                        sx={{
+                          width: '100%',
+                          display: 'block',
+                          height: { xs: 234, sm: 268, md: 300, lg: 334 },
+                          objectFit: 'cover',
+                        }}
+                      />
+                      {!item.inStock ? (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: { xs: 10, md: 12 },
+                            left: { xs: 10, md: 12 },
+                            zIndex: 3,
+                            bgcolor: STITCH_THEME.primary,
+                            color: STITCH_THEME.onPrimary,
+                            border: `4px solid ${inkStitch}`,
+                            px: 1,
+                            py: 0.4,
+                            transform: 'rotate(-6deg)',
+                            boxShadow: `4px 4px 0 0 ${inkStitch}`,
+                            maxWidth: 'calc(100% - 96px)',
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              m: 0,
+                              fontSize: '0.62rem',
+                              fontWeight: 900,
+                              fontStyle: 'italic',
+                              textTransform: 'uppercase',
+                              fontFamily: groteskStitch,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Sold out
+                          </Typography>
+                        </Box>
+                      ) : (
+                        item.isNew && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: { xs: 10, md: 12 },
+                              left: { xs: 10, md: 12 },
+                              zIndex: 3,
+                              bgcolor: STITCH_THEME.tertiaryContainer,
+                              color: STITCH_THEME.onTertiary,
+                              border: `4px solid ${inkStitch}`,
+                              px: 1,
+                              py: 0.4,
+                              transform: 'rotate(-10deg)',
+                              boxShadow: `4px 4px 0 0 ${inkStitch}`,
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                m: 0,
+                                fontSize: '0.68rem',
+                                fontWeight: 900,
+                                fontStyle: 'italic',
+                                textTransform: 'uppercase',
+                                fontFamily: groteskStitch,
+                                lineHeight: 1.2,
+                              }}
+                            >
+                              New
+                            </Typography>
+                          </Box>
+                        )
+                      )}
+                      <IconButton
+                        sx={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          zIndex: 3,
+                          width: 42,
+                          height: 42,
+                          borderRadius: 0,
+                          bgcolor: isDarkMode ? '#2a2620' : STITCH_THEME.surface,
+                          border: `3px solid ${inkStitch}`,
+                          boxShadow: `4px 4px 0 0 ${inkStitch}`,
+                          color: isDarkMode ? '#f5ebe3' : inkStitch,
+                          '&:hover': {
+                            bgcolor: isDarkMode ? '#3d3830' : STITCH_THEME.surfaceContainer,
+                            transform: 'translate(1px, 1px)',
+                            boxShadow: `3px 3px 0 0 ${inkStitch}`,
+                          },
+                        }}
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation();
+                          toggleFavorite(item.id);
+                        }}
+                      >
+                        {item.isFavorite ? (
+                          <FavoriteIcon sx={{ color: '#e91e63', fontSize: '1.2rem' }} />
+                        ) : (
+                          <FavoriteBorderIcon sx={{ fontSize: '1.2rem' }} />
+                        )}
+                      </IconButton>
+                      <Box component="span" sx={getStitchComicStripLabelSx(stripAccent, isDarkMode)}>
+                        {categoryRibbon}
+                      </Box>
                     </Box>
-                  </Box>
-                  
-                  {/* Category chip - with spacing */}
-                  <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
-                    <Chip 
-                      label={item.category.charAt(0).toUpperCase() + item.category.slice(1)} 
-                      size="small" 
-                      variant="outlined"
-                      sx={{ 
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 0.1)' 
-                          : 'rgba(139, 69, 19, 0.1)',
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
-                        color: isDarkMode ? '#ffd700' : '#8B4513',
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                        height: 22,
-                        borderRadius: '8px',
+                    <CardContent
+                      sx={{
+                        ...getStitchStripCardContentBandSx(isDarkMode),
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: { xs: 2.25, sm: 2.65, md: 2.85 },
+                        fontFamily: groteskStitch,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        aria-hidden
+                        sx={{
+                          position: 'absolute',
+                          inset: 0,
+                          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                          backgroundSize: '10px 10px',
+                          color: inkStitch,
+                          opacity: isDarkMode ? 0.14 : 0.08,
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      <Box sx={{ position: 'relative', zIndex: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, mb: 0.75 }}>
+                          <Typography
+                            component="h2"
+                            variant="subtitle1"
+                            sx={{
+                              flex: 1,
+                              m: 0,
+                              color: isDarkMode ? '#f5ebe3' : inkStitch,
+                              fontWeight: 900,
+                              fontStyle: 'italic',
+                              textTransform: 'uppercase',
+                              fontSize: { xs: '0.9rem', sm: '0.98rem', md: '1.02rem' },
+                              letterSpacing: '-0.03em',
+                              lineHeight: 1.2,
+                              fontFamily: groteskStitch,
+                            }}
+                          >
+                            {item.name}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              flexShrink: 0,
+                              m: 0,
+                              fontWeight: 900,
+                              fontStyle: 'italic',
+                              textTransform: 'uppercase',
+                              fontSize: { xs: '0.9rem', sm: '0.98rem', md: '1.04rem' },
+                              color: STITCH_THEME.primary,
+                              fontFamily: groteskStitch,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            ${item.price}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 0.5 }}>
+                          <Rating
+                            value={item.rating}
+                            precision={0.1}
+                            size="small"
+                            readOnly
+                            sx={{
+                              fontSize: '0.9rem',
+                              '& .MuiRating-iconFilled': {
+                                color: STITCH_THEME.primaryContainer,
+                              },
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              color: isDarkMode ? 'rgba(245,235,227,0.75)' : 'rgba(26,15,13,0.7)',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              fontFamily: groteskStitch,
+                            }}
+                          >
+                            ({item.reviews})
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                            <VisibilityIcon sx={{ fontSize: '0.875rem', color: STITCH_THEME.primary }} />
+                            <Typography
+                              sx={{
+                                color: isDarkMode ? 'rgba(245,235,227,0.75)' : 'rgba(26,15,13,0.7)',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                fontFamily: groteskStitch,
+                              }}
+                            >
+                              {item.views}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Button
+                          variant="contained"
+                          startIcon={<AddShoppingCartIcon sx={{ fontSize: '0.95rem' }} />}
+                          fullWidth
+                          disabled={!item.inStock}
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.stopPropagation();
+                            handleAddToCart(item);
+                          }}
+                          sx={{
+                            mt: 'auto',
+                            backgroundColor: isDarkMode
+                              ? 'rgba(255, 215, 0, 0.9)'
+                              : 'rgba(139, 69, 19, 0.9)',
+                            color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                            fontWeight: 800,
+                            fontSize: '0.9rem',
+                            minHeight: 44,
+                            height: 44,
+                            borderRadius: 0,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            py: 0,
+                            fontFamily: groteskStitch,
+                            border: `4px solid ${inkStitch}`,
+                            boxShadow: `6px 6px 0 0 ${inkStitch}`,
+                            '&:hover': {
+                              backgroundColor: isDarkMode
+                                ? 'rgba(255, 215, 0, 1)'
+                                : 'rgba(139, 69, 19, 1)',
+                              transform: 'translate(2px, 2px)',
+                              boxShadow: `4px 4px 0 0 ${inkStitch}`,
+                            },
+                            '&:disabled': {
+                              backgroundColor: 'rgba(204, 204, 204, 0.5)',
+                              boxShadow: 'none',
+                              transform: 'none',
+                            },
+                          }}
+                        >
+                          {item.inStock ? 'Add to Cart' : 'Out of Stock'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </>
+                ) : (
+                  <>
+                    <Box
+                      className="glassmorphism-glow"
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: '100%',
+                        height: '100%',
+                        background: isDarkMode
+                          ? 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)'
+                          : 'radial-gradient(circle, rgba(139, 69, 19, 0.1) 0%, transparent 70%)',
+                        transform: 'translate(-50%, -50%) scale(0.8)',
+                        opacity: 0,
+                        transition: 'all 0.4s ease',
+                        pointerEvents: 'none',
+                        zIndex: 0,
                       }}
                     />
-                  </Box>
-                  
-                  {/* Add to cart button - compact with margin-top */}
-                  <Button
-                    variant="contained"
-                    startIcon={<AddShoppingCartIcon sx={{ fontSize: '0.875rem' }} />}
-                    fullWidth
-                    disabled={!item.inStock}
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation();
-                      handleAddToCart(item);
-                    }}
-                    sx={{
-                      backgroundColor: isDarkMode 
-                        ? 'rgba(255, 215, 0, 0.9)' 
-                        : 'rgba(139, 69, 19, 0.9)',
-                      color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                      fontWeight: 600,
-                      fontSize: '0.8rem',
-                      height: 36,
-                      borderRadius: '8px',
-                      textTransform: 'none',
-                      mt: 1,
-                      py: 0,
-                      '&:hover': {
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 1)' 
-                          : 'rgba(139, 69, 19, 1)',
-                      },
-                      '&:disabled': {
-                        backgroundColor: 'rgba(204, 204, 204, 0.5)',
-                      },
-                    }}
-                  >
-                    {item.inStock ? 'Add to Cart' : 'Out of Stock'}
-                  </Button>
-                </CardContent>
+                    <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+                      <CardMedia
+                        component="img"
+                        image={item.image}
+                        alt={item.name}
+                        sx={{
+                          height: 220,
+                          objectFit: 'cover',
+                          transition: 'transform 0.4s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: isDarkMode
+                            ? 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)'
+                            : 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%)',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      {item.isNew && (
+                        <Chip
+                          label="NEW"
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 12,
+                            left: 12,
+                            backgroundColor: isDarkMode
+                              ? 'rgba(255, 215, 0, 0.9)'
+                              : 'rgba(139, 69, 19, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            borderRadius: '16px',
+                            border: isDarkMode
+                              ? '1px solid rgba(255, 215, 0, 0.3)'
+                              : '1px solid rgba(139, 69, 19, 0.3)',
+                            boxShadow: isDarkMode
+                              ? '0 4px 12px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                              : '0 4px 12px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                            zIndex: 2,
+                          }}
+                        />
+                      )}
+                      <IconButton
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          right: 12,
+                          backgroundColor: isDarkMode
+                            ? 'rgba(255, 255, 255, 0.15)'
+                            : 'rgba(255, 255, 255, 0.9)',
+                          backdropFilter: 'blur(15px)',
+                          WebkitBackdropFilter: 'blur(15px)',
+                          width: 44,
+                          height: 44,
+                          borderRadius: '16px',
+                          border: isDarkMode
+                            ? '1px solid rgba(255, 255, 255, 0.2)'
+                            : '1px solid rgba(255, 255, 255, 0.3)',
+                          boxShadow: isDarkMode
+                            ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                            : '0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                          zIndex: 2,
+                          '&:hover': {
+                            backgroundColor: isDarkMode
+                              ? 'rgba(255, 255, 255, 0.25)'
+                              : 'rgba(255, 255, 255, 1)',
+                            transform: 'scale(1.1)',
+                            boxShadow: isDarkMode
+                              ? '0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                              : '0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                          },
+                          transition: 'all 0.3s ease',
+                        }}
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation();
+                          toggleFavorite(item.id);
+                        }}
+                      >
+                        {item.isFavorite ? (
+                          <FavoriteIcon sx={{ color: '#e91e63', fontSize: '1.3rem' }} />
+                        ) : (
+                          <FavoriteBorderIcon sx={{ fontSize: '1.3rem' }} />
+                        )}
+                      </IconButton>
+                      {!item.inStock && (
+                        <Chip
+                          label="Out of Stock"
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            bottom: 12,
+                            left: 12,
+                            backgroundColor: 'rgba(244, 67, 54, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(244, 67, 54, 0.3)',
+                            boxShadow:
+                              '0 4px 12px rgba(244, 67, 54, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                            zIndex: 2,
+                          }}
+                        />
+                      )}
+                    </Box>
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 2,
+                        position: 'relative',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          component="h2"
+                          sx={{
+                            color: isDarkMode ? '#ffffff' : '#1a1a1a',
+                            fontWeight: 600,
+                            flex: 1,
+                            fontSize: '1rem',
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {item.name}
+                        </Typography>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            color: isDarkMode ? '#ffd700' : '#8B4513',
+                            fontWeight: 700,
+                            ml: 1,
+                            fontSize: '1rem',
+                          }}
+                        >
+                          ${item.price}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                        <Rating
+                          value={item.rating}
+                          precision={0.1}
+                          size="small"
+                          readOnly
+                          sx={{
+                            fontSize: '0.875rem',
+                            '& .MuiRating-iconFilled': {
+                              color: isDarkMode ? '#ffd700' : '#ffc107',
+                            },
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: isDarkMode ? '#b0b0b0' : '#666666',
+                            ml: 0.5,
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          ({item.reviews})
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                          <VisibilityIcon
+                            fontSize="small"
+                            sx={{ color: isDarkMode ? '#ffd700' : '#8B4513', fontSize: '0.75rem' }}
+                          />
+                          <Typography variant="caption" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666', fontSize: '0.75rem' }}>
+                            {item.views}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
+                        <Chip
+                          label={item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            backgroundColor: isDarkMode
+                              ? 'rgba(255, 215, 0, 0.1)'
+                              : 'rgba(139, 69, 19, 0.1)',
+                            borderColor: isDarkMode ? '#ffd700' : '#8B4513',
+                            color: isDarkMode ? '#ffd700' : '#8B4513',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            height: 22,
+                            borderRadius: '8px',
+                          }}
+                        />
+                      </Box>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddShoppingCartIcon sx={{ fontSize: '0.875rem' }} />}
+                        fullWidth
+                        disabled={!item.inStock}
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation();
+                          handleAddToCart(item);
+                        }}
+                        sx={{
+                          backgroundColor: isDarkMode
+                            ? 'rgba(255, 215, 0, 0.9)'
+                            : 'rgba(139, 69, 19, 0.9)',
+                          color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          height: 36,
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          mt: 1,
+                          py: 0,
+                          '&:hover': {
+                            backgroundColor: isDarkMode
+                              ? 'rgba(255, 215, 0, 1)'
+                              : 'rgba(139, 69, 19, 1)',
+                          },
+                          '&:disabled': {
+                            backgroundColor: 'rgba(204, 204, 204, 0.5)',
+                          },
+                        }}
+                      >
+                        {item.inStock ? 'Add to Cart' : 'Out of Stock'}
+                      </Button>
+                    </CardContent>
+                  </>
+                )}
               </Card>
-            ))
+              );
+              })
             )}
           </Box>
 
           {/* Enhanced Pagination */}
           {totalPages > 1 && (
             <Paper sx={{ 
-              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-              border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-              borderRadius: '16px',
-              p: 3,
-              boxShadow: isDarkMode 
-                ? '0 4px 20px rgba(0,0,0,0.2)'
-                : '0 4px 20px rgba(0,0,0,0.08)'
+              ...(stitchShop
+                ? { ...stitchPanelSx, p: { xs: 2.25, md: 2.75 } }
+                : {
+                    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+                    border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+                    borderRadius: '16px',
+                    p: 3,
+                    boxShadow: isDarkMode 
+                      ? '0 4px 20px rgba(0,0,0,0.2)'
+                      : '0 4px 20px rgba(0,0,0,0.08)',
+                  }),
             }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: stitchShop ? 2 : 3 }}>
                 <Typography variant="h6" sx={{ 
                   color: isDarkMode ? '#ffffff' : '#333333',
                   fontWeight: 600,
-                  fontSize: '1.1rem'
+                  fontSize: stitchShop ? { xs: '1.06rem', md: '1.14rem' } : '1.1rem',
+                  fontFamily: stitchShop ? groteskStitch : 'inherit',
                 }}>
                   Page {currentPage} of {totalPages}
                 </Typography>
@@ -1266,7 +1642,7 @@ export default function Coffees(props: CoffeesProps) {
                   page={currentPage}
                   onChange={handlePageChange}
                   color="primary"
-                  size={isMobile ? "small" : "medium"}
+                  size={stitchShop ? (isMobile ? 'small' : 'medium') : (isMobile ? 'small' : 'medium')}
                   showFirstButton
                   showLastButton
                   sx={{
@@ -1275,11 +1651,11 @@ export default function Coffees(props: CoffeesProps) {
                       backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
                       border: `2px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
                       borderRadius: '12px',
-                      margin: '0 4px',
+                      margin: stitchShop ? '0 3px' : '0 4px',
                       fontWeight: 600,
-                      fontSize: '1rem',
-                      minWidth: 44,
-                      height: 44,
+                      fontSize: stitchShop ? '0.875rem' : '1rem',
+                      minWidth: stitchShop ? 38 : 44,
+                      height: stitchShop ? 38 : 44,
                       '&:hover': {
                         backgroundColor: isDarkMode ? '#404040' : '#e8e8e8',
                         borderColor: isDarkMode ? '#ffd700' : '#8B4513',
@@ -1309,22 +1685,27 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           )}
 
-          {/* Image Right Section */}
-          <Suspense fallback={<Box sx={{ py: 4 }} />}>
-            <ImageRightSection imageSrc="/penguin.png" />
-          </Suspense>
+          {!stitchShop && (
+            <Suspense fallback={<Box sx={{ py: 4 }} />}>
+              <ImageRightSection imageSrc="/penguin.png" />
+            </Suspense>
+          )}
 
           {/* Enhanced No Results */}
           {filteredCoffees.length === 0 && (
             <Paper sx={{ 
-              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-              border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-              borderRadius: '20px',
               p: 6,
               textAlign: 'center',
-              boxShadow: isDarkMode 
-                ? '0 4px 20px rgba(0,0,0,0.2)'
-                : '0 4px 20px rgba(0,0,0,0.08)'
+              ...(stitchShop
+                ? stitchPanelSx
+                : {
+                    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+                    border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+                    borderRadius: '20px',
+                    boxShadow: isDarkMode 
+                      ? '0 4px 20px rgba(0,0,0,0.2)'
+                      : '0 4px 20px rgba(0,0,0,0.08)',
+                  }),
             }}>
               <Box sx={{ 
                 display: 'flex', 
@@ -1392,21 +1773,23 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           )}
 
-          {/* Map Section */}
+          {/* Stitch shop: “Find your station” panel from stitch.tsx; classic page keeps simple locations card */}
+          {stitchShop ? (
+            <StitchFindYourStationSection isDarkMode={isDarkMode} />
+          ) : (
           <Box sx={{ mt: 6 }}>
             <Typography variant="h5" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 3, fontWeight: 600 }}>
               Find Our Locations
             </Typography>
-            
-            <Paper 
-              sx={{ 
-                p: 3, 
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#ffffff', 
+
+            <Paper
+              sx={{
+                p: 3,
+                backgroundColor: isDarkMode ? '#2a2a2a' : '#ffffff',
                 border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-                overflow: 'hidden'
+                overflow: 'hidden',
               }}
             >
-              {/* Interactive Map */}
               <Box sx={{ height: 400, position: 'relative', mb: 3 }}>
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2219901290355!2d-74.00369368400567!3d40.71312937933185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a23e28c1191%3A0x49f75d3281df052a!2s150%20Park%20Row%2C%20New%20York%2C%20NY%2010007%2C%20USA!5e0!3m2!1sen!2sus!4v1640995200000!5m2!1sen!2sus"
@@ -1419,10 +1802,8 @@ export default function Coffees(props: CoffeesProps) {
                   title="Coffee Shop Location"
                 />
               </Box>
-              
-              {/* Location Info */}
+
               <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                {/* Main Location */}
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <LocationOnIcon sx={{ color: isDarkMode ? '#8B4513' : '#8B4513' }} />
@@ -1456,8 +1837,7 @@ export default function Coffees(props: CoffeesProps) {
                     </Button>
                   </Box>
                 </Box>
-                
-                {/* Additional Locations */}
+
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 2 }}>
                     Other Locations
@@ -1492,6 +1872,7 @@ export default function Coffees(props: CoffeesProps) {
               </Box>
             </Paper>
           </Box>
+          )}
         </Stack>
       </Container>
     </Box>
