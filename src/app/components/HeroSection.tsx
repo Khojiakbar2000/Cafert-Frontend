@@ -104,7 +104,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onReservationClick }) => {
         </svg>
       </Box>
 
-      <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center' }}>
+      <Container
+  maxWidth={false}
+  sx={{
+    position: 'relative',
+    zIndex: 2,
+    width: '100%',
+    maxWidth: '1400px',
+    height: '100%',
+    mx: 'auto',
+    px: { xs: 2, sm: 3, md: 5, lg: 6 },
+    display: 'flex',
+    alignItems: 'center',
+  }}
+>
         <Grid container spacing={4} alignItems="center" sx={{ height: '100%', minHeight: '100%' }}>
           {/* Main Content */}
           <Grid item xs={12} md={6}>
