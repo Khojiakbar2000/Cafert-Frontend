@@ -260,12 +260,12 @@ const StatsPage: React.FC = () => {
         {
           label: 'Orders',
           data: mockData.salesData.map(item => item.orders),
-          borderColor: isDarkMode ? '#00CED1' : '#4682B4',
-          backgroundColor: isDarkMode ? 'rgba(0, 206, 209, 0.1)' : 'rgba(70, 130, 180, 0.1)',
+          borderColor: isDarkMode ? '#b2b588' : '#7b865e',
+          backgroundColor: isDarkMode ? 'rgba(178, 181, 136, 0.12)' : 'rgba(123, 134, 94, 0.12)',
           borderWidth: 3,
           fill: false,
           tension: 0.4,
-          pointBackgroundColor: isDarkMode ? '#00CED1' : '#4682B4',
+          pointBackgroundColor: isDarkMode ? '#b2b588' : '#7b865e',
           pointBorderColor: isDarkMode ? '#000' : '#fff',
           pointBorderWidth: 2,
           pointRadius: 6,
@@ -394,14 +394,36 @@ const StatsPage: React.FC = () => {
   return (
     <Box sx={{
       minHeight: '100vh',
-      background: isDarkMode
-        ? 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'
-        : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      position: 'relative',
+      isolation: 'isolate',
+      overflow: 'hidden',
+      backgroundColor: isDarkMode ? '#29231c' : '#f2eadc',
+      backgroundImage: isDarkMode
+        ? 'url("/img/coffee/coffee-branch-cutout.webp"), url("/img/coffee/coffee-branch-cutout.webp"), radial-gradient(circle at 18% 22%, transparent 0 72px, rgba(196,155,104,.12) 73px 75px, transparent 76px), radial-gradient(ellipse at 82% 62%, rgba(116,127,83,.12), transparent 33%), repeating-linear-gradient(0deg, rgba(239,218,188,.022) 0 1px, transparent 1px 5px)'
+        : 'url("/img/coffee/coffee-branch-cutout.webp"), url("/img/coffee/coffee-branch-cutout.webp"), radial-gradient(circle at 18% 22%, transparent 0 72px, rgba(173,128,80,.18) 73px 75px, transparent 76px), radial-gradient(ellipse at 82% 62%, rgba(144,151,107,.16), transparent 33%), repeating-linear-gradient(0deg, rgba(104,76,47,.035) 0 1px, transparent 1px 5px)',
+      backgroundRepeat: 'no-repeat, no-repeat, no-repeat, no-repeat, repeat',
+      backgroundSize: '340px auto, 390px auto, auto, auto, auto',
+      backgroundPosition: 'right -110px top 150px, left -150px bottom 150px, 0 0, 0 0, 0 0',
       paddingTop: '80px', // Add top padding for navbar
-      transition: 'background 0.3s',
+      transition: 'background-color 0.3s',
+      '&& .MuiCard-root': {
+        background: isDarkMode ? '#382f25' : '#fff9ee',
+        border: `1px solid ${isDarkMode ? 'rgba(214,185,145,.28)' : 'rgba(121,87,52,.2)'}`,
+        borderRadius: '5px 10px 4px 8px',
+        boxShadow: isDarkMode
+          ? '5px 7px 0 rgba(16,12,8,.16), 0 18px 38px rgba(0,0,0,.18)'
+          : '5px 7px 0 rgba(181,148,107,.16), 0 18px 38px rgba(72,49,27,.09)',
+        backdropFilter: 'none',
+      },
+      '&& .MuiPaper-root:not(.MuiCard-root)': {
+        backgroundColor: isDarkMode ? '#332a21' : '#f8f0e3',
+        borderColor: isDarkMode ? 'rgba(214,185,145,.26)' : 'rgba(121,87,52,.2)',
+        boxShadow: isDarkMode ? '0 9px 24px rgba(0,0,0,.16)' : '0 9px 24px rgba(72,49,27,.07)',
+        backdropFilter: 'none',
+      },
     }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, position: 'relative', minHeight: { xs: 0, lg: 218 }, pr: { lg: 25 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Analytics sx={{ fontSize: 32, color: isDarkMode ? '#FFD700' : '#8B4513' }} />
@@ -472,6 +494,10 @@ const StatsPage: React.FC = () => {
             label="Real-time Updates"
             sx={{ color: isDarkMode ? '#fff' : '#333' }}
           />
+        </Box>
+        <Box component="img" src="/img/coffee/cafert-counter-barista.webp" alt="" aria-hidden="true" sx={{ display: { xs: 'none', lg: 'block' }, position: 'absolute', right: 24, bottom: -5, width: 150, height: 220, objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 8px 5px rgba(60,39,21,.18))', pointerEvents: 'none' }} />
+        <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'absolute', right: 166, bottom: 66, px: 1.35, py: .8, maxWidth: 190, color: '#503a29', backgroundColor: '#fff9ee', border: '1px solid #d4bd9c', boxShadow: '3px 4px 0 rgba(78,53,29,.12)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.9rem', transform: 'rotate(-2deg)', '&::after': { content: '""', position: 'absolute', right: -6, bottom: 8, width: 10, height: 10, backgroundColor: '#fff9ee', borderRight: '1px solid #d4bd9c', borderBottom: '1px solid #d4bd9c', transform: 'rotate(-45deg)' } }}>
+          Let’s see what the beans are telling us.
         </Box>
       </Box>
 
@@ -951,4 +977,4 @@ const StatsPage: React.FC = () => {
   );
 };
 
-export default StatsPage; 
+export default StatsPage;

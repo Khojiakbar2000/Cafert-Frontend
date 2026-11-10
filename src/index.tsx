@@ -72,7 +72,8 @@ const root = createRoot(container);
     const currentWidth = window.innerWidth;
     const currentDPR = window.devicePixelRatio;
     const baseZoom = (devWidth / currentWidth) * (devDPR / currentDPR);
-    const zoom = baseZoom * 0.66;
+    // Keep touch layouts at their native size so mobile breakpoints stay usable.
+    const zoom = currentWidth <= 760 ? 1 : baseZoom * 0.66;
     const zoomValue = zoom.toFixed(2);
 
     // Only apply if zoom value has actually changed

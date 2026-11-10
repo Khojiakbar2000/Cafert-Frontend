@@ -55,6 +55,7 @@ import ProductService from "../../services/ProductService";
 import { serverApi } from "../../../lib/config";
 import { useSelector } from "react-redux";
 import { retrieveProducts } from "./selector";
+import "./ProductServingCounter.css";
 
 
 // Lazy loaded components
@@ -1342,11 +1343,23 @@ export default function Products(props: ProductsProps) {
         </Box>
 
 
+        <section className="cafert-serving-counter" aria-label="Browse the café counter">
+          <div className="cafert-counter-scene" aria-hidden="true">
+            <img src="/img/coffee/cafert-counter-barista.png" alt="" />
+            <span className="cafert-counter-note">MADE FRESH · SERVED HERE</span>
+          </div>
+          <div className="cafert-counter-heading">
+            <span className="cafert-counter-kicker">THE CAFERT SERVICE PASS</span>
+            <h2>What are you in the mood for?</h2>
+            <p>Pick a shelf and we’ll bring today’s favourites forward.</p>
+          </div>
+
         {/* ====================================================
             CATEGORY NAVIGATION
         ==================================================== */}
 
         <Box
+          className="cafert-counter-categories"
           sx={{
             maxWidth:
               "1240px",
@@ -1484,6 +1497,7 @@ export default function Products(props: ProductsProps) {
         ==================================================== */}
 
         <Box
+          className="cafert-counter-sorting"
           sx={{
             maxWidth:
               "1240px",
@@ -2008,6 +2022,8 @@ export default function Products(props: ProductsProps) {
 
         </Box>
 
+        </section>
+
 
         {/* ====================================================
             PRODUCTS
@@ -2145,9 +2161,12 @@ export default function Products(props: ProductsProps) {
                   >
 
                     <Card
+                      className={`cafert-menu-slip${isDarkMode ? " cafert-menu-slip-dark" : ""}`}
                       sx={{
                         height:
                           "100%",
+
+                        position: "relative",
 
                         minHeight:
                           380,
@@ -2162,13 +2181,15 @@ export default function Products(props: ProductsProps) {
                           "hidden",
 
                         borderRadius:
-                          "18px",
+                          0,
+
+                        clipPath: "polygon(0 0,94% 0,95% 1%,100% 1%,100% 4%,97.5% 5%,100% 6%,100% 9%,97.5% 10%,100% 11%,100% 14%,97.5% 15%,100% 16%,100% 19%,97.5% 20%,100% 21%,100% 24%,97.5% 25%,100% 26%,100% 29%,97.5% 30%,100% 31%,100% 34%,97.5% 35%,100% 36%,100% 39%,97.5% 40%,100% 41%,100% 44%,97.5% 45%,100% 46%,100% 49%,97.5% 50%,100% 51%,100% 54%,97.5% 55%,100% 56%,100% 59%,97.5% 60%,100% 61%,100% 64%,97.5% 65%,100% 66%,100% 69%,97.5% 70%,100% 71%,100% 74%,97.5% 75%,100% 76%,100% 79%,97.5% 80%,100% 81%,100% 84%,97.5% 85%,100% 86%,100% 89%,97.5% 90%,100% 91%,100% 94%,97.5% 95%,100% 96%,98% 100%,0 100%)",
 
                         background:
-                          surface,
+                          isDarkMode ? "#302923" : "#f8f2e9",
 
                         border:
-                          `1px solid ${border}`,
+                          `1px solid ${isDarkMode ? "rgba(214,190,165,.22)" : "#ddcbb8"}`,
 
                         boxShadow:
                           isDarkMode
@@ -2177,6 +2198,18 @@ export default function Products(props: ProductsProps) {
 
                         transition:
                           "transform 0.25s ease, box-shadow 0.25s ease",
+
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          zIndex: 5,
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: 16,
+                          pointerEvents: "none",
+                          background: `radial-gradient(circle at 100% 7px, ${isDarkMode ? "#302923" : "#f8f2e9"} 0 4px, transparent 4.5px) right top / 9px 16px repeat-y, linear-gradient(90deg, transparent 0 11px, ${isDarkMode ? "rgba(214,190,165,.4)" : "rgba(132,100,72,.32)"} 11px 12px, transparent 12px)`,
+                        },
 
                         "&:hover":
                           {
@@ -2194,26 +2227,30 @@ export default function Products(props: ProductsProps) {
                       {/* PRODUCT IMAGE */}
 
                       <Box
+                        className="cafert-menu-photo"
                         sx={{
                           position:
                             "relative",
 
-                          width:
-                            "100%",
-
                           height: {
-                            xs: 210,
-                            sm: 190,
-                            md: 195,
+                            xs: 205,
+                            sm: 220,
+                            md: 220,
                           },
+
+                        width: "calc(100% - 27px)",
+                        mt: 1.5,
+                        ml: 1.5,
+                        mr: 2.5,
+                        p: 1,
+                        boxSizing: "border-box",
+                        background: isDarkMode ? "#e8d7c1" : "#fffaf2",
+                        boxShadow: "0 5px 12px rgba(66,45,29,.14)",
+                        clipPath: "polygon(1% 0,99% 1%,100% 5%,99% 10%,100% 15%,99% 20%,100% 25%,99% 30%,100% 35%,99% 40%,100% 45%,99% 50%,100% 55%,99% 60%,100% 65%,99% 70%,100% 75%,99% 80%,100% 85%,99% 90%,100% 95%,98% 100%,1% 100%,0 95%,1% 90%,0 85%,1% 80%,0 75%,1% 70%,0 65%,1% 60%,0 55%,1% 50%,0 45%,1% 40%,0 35%,1% 30%,0 25%,1% 20%,0 15%,1% 10%,0 5%)",
 
                           overflow:
                             "hidden",
 
-                          background:
-                            isDarkMode
-                              ? "#29221e"
-                              : "#f2ede8",
                         }}
                       >
 
@@ -2427,6 +2464,7 @@ export default function Products(props: ProductsProps) {
                       {/* PRODUCT CONTENT */}
 
                       <CardContent
+                        className="cafert-menu-details"
                         sx={{
                           flexGrow: 1,
 
@@ -2436,7 +2474,11 @@ export default function Products(props: ProductsProps) {
                           flexDirection:
                             "column",
 
-                          p: 2,
+                        p: "18px 28px 19px 18px",
+
+                        background: isDarkMode
+                          ? "linear-gradient(180deg,rgba(255,255,255,.015),rgba(255,255,255,.045))"
+                          : "linear-gradient(180deg,rgba(255,252,247,.48),rgba(255,252,247,.9))",
 
                           "&:last-child":
                             {
@@ -2476,13 +2518,15 @@ export default function Products(props: ProductsProps) {
                               flex: 1,
 
                               fontSize:
-                                "0.96rem",
+                                "1.08rem",
 
                               lineHeight:
                                 1.3,
 
                               fontWeight:
-                                650,
+                                700,
+
+                              fontFamily: 'Georgia, "Times New Roman", serif',
 
                               color:
                                 textPrimary,
@@ -2522,6 +2566,14 @@ export default function Products(props: ProductsProps) {
 
                               color:
                                 accent,
+
+                              border: "1px solid rgba(153,101,62,.48)",
+                              borderRadius: 0,
+                              background: isDarkMode ? "#48382d" : "#ead2b4",
+                              px: 1.1,
+                              py: 0.65,
+                              boxShadow: "2px 2px 0 rgba(103,67,46,.13)",
+                              fontFamily: 'Georgia, "Times New Roman", serif',
 
                               whiteSpace:
                                 "nowrap",
@@ -2735,6 +2787,7 @@ export default function Products(props: ProductsProps) {
                         {/* CART BUTTON */}
 
                         <Button
+                          className="cafert-menu-order"
                           fullWidth
                           variant="contained"
                           disabled={
@@ -2762,7 +2815,9 @@ export default function Products(props: ProductsProps) {
                             height: 38,
 
                             borderRadius:
-                              "10px",
+                              "2px",
+
+                            clipPath: "polygon(0 0,98% 0,100% 12%,99% 25%,100% 38%,99% 50%,100% 62%,99% 75%,100% 88%,98% 100%,0 100%)",
 
                             textTransform:
                               "none",

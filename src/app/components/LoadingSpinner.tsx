@@ -33,7 +33,12 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         position: 'relative',
         isolation: 'isolate',
         backgroundColor: colors.background,
-        backgroundImage: `radial-gradient(ellipse at 50% 100%, ${isDarkMode ? 'rgba(154,104,66,.14)' : 'rgba(179,142,106,.18)'}, transparent 60%), repeating-linear-gradient(0deg, transparent 0 31px, ${isDarkMode ? 'rgba(240,227,209,.025)' : 'rgba(83,73,49,.035)'} 32px)`,
+        backgroundImage: isDarkMode
+          ? `linear-gradient(rgba(33,29,23,.82), rgba(33,29,23,.82)), url('/img/coffee/cafert-loading-counter.webp')`
+          : `linear-gradient(rgba(255,250,241,.16), rgba(255,250,241,.16)), url('/img/coffee/cafert-loading-counter.webp')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         '&::before': {
           content: '""', position: 'absolute', zIndex: -1, left: '-8%', right: '-8%', bottom: '12%', height: 18,
           backgroundColor: isDarkMode ? '#3a3025' : '#e6d7c1', borderTop: `1px solid ${colors.line}`,

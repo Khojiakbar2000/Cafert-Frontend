@@ -111,7 +111,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  
+
   // Profile editing form state
   const [profileForm, setProfileForm] = useState({
     memberNick: '',
@@ -119,7 +119,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     memberAddress: '',
     memberDesc: ''
   });
-  
+
   // Image upload state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -140,22 +140,22 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     if (!authMember?._id) {
       return;
     }
-    
+
     setIsLoadingOrders(true);
     try {
       const orderService = new OrderService();
-      
+
       let allOrders: any[] = [];
-      
+
       try {
         const allOrdersInquiry: OrderInquiry = {
           page: 1,
           limit: 50,
           orderStatus: undefined
         };
-        
+
         allOrders = await orderService.getMyOrders(allOrdersInquiry);
-        
+
         if (!allOrders || allOrders.length === 0) {
           // Combine all orders from Redux store
           allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
@@ -167,33 +167,33 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         // Combine all orders from Redux store
         allOrders = [...pausedOrders, ...processOrders, ...finishedOrders];
       }
-      
+
       // Set recent orders (show all orders, sorted by creation date)
-      const sortedOrders = allOrders?.sort((a, b) => 
+      const sortedOrders = allOrders?.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ) || [];
-      
+
       setRecentOrders(sortedOrders);
-      
+
       // Calculate enhanced stats
       const total = allOrders?.length || 0;
       const completed = allOrders?.filter(o => o.orderStatus === OrderStatus.FINISH).length || 0;
       const inProgress = allOrders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
       const active = allOrders?.filter(o => [OrderStatus.PAUSE, OrderStatus.PROCESS].includes(o.orderStatus)).length || 0;
-      
+
       // Calculate monthly orders
       const now = new Date();
       const thisMonth = allOrders?.filter(o => {
         const orderDate = new Date(o.createdAt);
         return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
       }).length || 0;
-      
+
       // Calculate total spent
       const totalSpent = allOrders?.reduce((sum, o) => sum + (o.orderTotal || 0), 0) || 0;
-      
+
       // Calculate loyalty points (1 point per $1 spent)
       const loyaltyPoints = Math.floor(totalSpent);
-      
+
       setOrderStats({
         total,
         completed,
@@ -203,7 +203,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         totalSpent,
         loyaltyPoints
       });
-      
+
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error fetching user data:', error);
@@ -240,11 +240,11 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   // Add a periodic refresh to catch completed orders
   useEffect(() => {
     if (!authMember?._id) return;
-    
+
     const interval = setInterval(() => {
       fetchUserData();
     }, 30000); // Refresh every 30 seconds
-    
+
     return () => clearInterval(interval);
   }, [authMember?._id, fetchUserData]);
 
@@ -326,7 +326,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         setShowSnackbar(true);
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setSnackbarMessage('Image size should be less than 5MB.');
@@ -334,9 +334,9 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         setShowSnackbar(true);
         return;
       }
-      
+
       setSelectedImage(file);
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -353,35 +353,35 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
 
   const handleSaveProfile = async () => {
     if (!authMember) return;
-    
+
     try {
       setIsEditingProfile(true);
-      
+
       // Create FormData for multipart upload
       const formData = new FormData();
       formData.append("memberNick", profileForm.memberNick || "");
       formData.append("memberPhone", profileForm.memberPhone || "");
       formData.append("memberAddress", profileForm.memberAddress || "");
       formData.append("memberDesc", profileForm.memberDesc || "");
-      
+
       // Add image if selected
       if (selectedImage) {
         formData.append("memberImage", selectedImage);
       }
-      
+
       // Make direct API call for image upload
       const result = await fetch(`${serverApi}member/update`, {
         method: "POST",
         body: formData,
         credentials: 'include',
       });
-      
+
       if (!result.ok) {
         throw new Error('Failed to update profile');
       }
-      
+
       const updatedMember = await result.json();
-      
+
       if (updatedMember) {
         setAuthMember(updatedMember);
         localStorage.setItem("memberData", JSON.stringify(updatedMember));
@@ -453,7 +453,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
       color: string;
       action: () => void;
     }> = [];
-    
+
     if (lastOrder) {
       actions.push({
         title: 'Reorder Last Order',
@@ -465,7 +465,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         }
       });
     }
-    
+
     if (activeOrder) {
       actions.push({
         title: `Track Order #${activeOrder._id?.slice(-4) || '0001'}`,
@@ -475,7 +475,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         action: () => history.push('/orders')
       });
     }
-    
+
     if (authMember?.memberAddress) {
       actions.push({
         title: 'Update Delivery Info',
@@ -485,40 +485,40 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         action: handleEditProfile
       });
     }
-    
+
     return actions;
   }, [recentOrders, authMember, componentColors.accent, history]);
 
   // Enhanced stats with trends
   const stats = [
-    { 
-      label: 'Active Orders', 
-      value: orderStats.active.toString(), 
-      icon: <ShippingIcon />, 
-      color: '#2196f3',
-      trend: '+1 today',
+    {
+      label: 'Active Orders',
+      value: orderStats.active.toString(),
+      icon: <ShippingIcon />,
+      color: '#a05245',
+      trend: orderStats.active ? 'currently underway' : 'all caught up',
       highlighted: true
     },
     {
-      label: 'Orders This Month', 
-      value: orderStats.monthly.toString(), 
+      label: 'Orders This Month',
+      value: orderStats.monthly.toString(),
       icon: <OrdersIcon />,
       color: componentColors.accent,
-      trend: '↑ from last week'
+      trend: 'since the month began'
     },
-    { 
-      label: 'Total Spent', 
-      value: `$${orderStats.totalSpent.toFixed(0)}`, 
-      icon: <AttachMoneyIcon />, 
-      color: '#4caf50',
+    {
+      label: 'Total Spent',
+      value: `$${orderStats.totalSpent.toFixed(0)}`,
+      icon: <AttachMoneyIcon />,
+      color: '#697451',
       trend: 'All time'
     },
-    { 
-      label: 'Loyalty Points', 
-      value: orderStats.loyaltyPoints.toString(), 
-      icon: <StarIcon />, 
-      color: '#ff9800',
-      trend: `${Math.floor(orderStats.loyaltyPoints / 10)} free drinks`
+    {
+      label: 'Loyalty Points',
+      value: orderStats.loyaltyPoints.toString(),
+      icon: <StarIcon />,
+      color: '#b77b45',
+      trend: `${orderStats.loyaltyPoints % 10} / 10 stamps to next drink`
     },
   ];
 
@@ -532,15 +532,15 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundColor: componentColors.background,
+        backgroundColor: isDarkMode ? componentColors.background : '#efe3cf',
         background: isDarkMode
           ? `radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
              radial-gradient(circle at 80% 80%, rgba(179, 142, 106, 0.1) 0%, transparent 50%),
              ${componentColors.background}`
-          : `radial-gradient(circle at 20% 50%, rgba(179, 142, 106, 0.08) 0%, transparent 50%),
-             radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
-             ${componentColors.background}`,
-        backgroundAttachment: 'fixed',
+          : `linear-gradient(rgba(250,246,238,.12),rgba(250,246,238,.12)), url('/img/coffee/cafert-regular-scrapbook.webp')`,
+        backgroundSize: '100% auto',
+        backgroundRepeat: 'repeat-y',
+        backgroundPosition: 'center top',
         pt: 12,
         pb: 4,
         px: isMobile ? 2 : 4,
@@ -569,8 +569,8 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: isMobile 
-              ? '1fr' 
+            gridTemplateColumns: isMobile
+              ? '1fr'
               : 'repeat(12, 1fr)',
             gridAutoRows: 'minmax(200px, auto)',
             gap: 3,
@@ -589,14 +589,17 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           >
             <Card
               sx={{
-                backgroundColor: componentColors.surface,
-                borderRadius: '20px',
-                border: `1px solid ${componentColors.border}`,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                backgroundColor: isDarkMode ? componentColors.surface : '#f7efdf',
+                borderRadius: '8px',
+                border: isDarkMode ? `1px solid ${componentColors.border}` : '1px solid #d6c4a5',
+                boxShadow: '0 12px 28px rgba(70,53,32,.13)',
                 height: '100%',
-                background: isDarkMode 
+                position: 'relative',
+                overflow: 'hidden',
+                background: isDarkMode
                   ? `linear-gradient(135deg, ${componentColors.surface} 0%, ${componentColors.surface}dd 100%)`
-                  : `linear-gradient(135deg, ${componentColors.surface} 0%, #ffffff 100%)`,
+                  : `linear-gradient(135deg, #fbf5e9 0%, #f0e4ce 100%)`,
+                '&::before': { content: '""', position: 'absolute', inset: 9, border: '1px dashed rgba(154,119,77,.38)', pointerEvents: 'none' },
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
@@ -604,17 +607,21 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                 }
               }}
             >
-              <CardContent sx={{ p: 4 }}>
+              <CardContent sx={{ p: { xs: 2.5, md: 4 }, position: 'relative', zIndex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, px: .5 }}>
+                  <Typography sx={{ font: '700 .62rem/1 monospace', letterSpacing: '.17em', color: '#826c4e' }}>CAFERT REGULAR’S MEMBER PASS</Typography>
+                  <Box sx={{ px: 1.2, py: .65, border: '1.5px solid #a05245', outline: '1px dashed #a05245', outlineOffset: -4, color: '#a05245', bgcolor: 'rgba(255,248,235,.7)', transform: 'rotate(-5deg)', font: '700 .55rem/1 monospace', letterSpacing: '.1em' }}>REGULAR</Box>
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                     <Avatar
                       src={authMember?.memberImage ? `${serverApi}${authMember.memberImage}` : "/icons/default-user.svg"}
                       sx={{
-                        width: 80,
-                        height: 80,
-                        border: isDarkMode
-                          ? '3px solid rgba(255, 255, 255, 0.2)'
-                          : '3px solid rgba(255, 255, 255, 0.8)',
+                        width: 92,
+                        height: 92,
+                        border: isDarkMode ? '3px solid rgba(255, 255, 255, 0.2)' : '4px solid #fff8e9',
+                        outline: isDarkMode ? 'none' : '1px dashed #bca27e',
+                        outlineOffset: 4,
                         boxShadow: isDarkMode
                           ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02), 0 0 20px ${componentColors.accent}30`
                           : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 20px ${componentColors.accent}20`
@@ -649,7 +656,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       startIcon={<EditIcon />}
                       onClick={handleEditProfile}
                       sx={{
-                        backgroundColor: isDarkMode 
+                        backgroundColor: isDarkMode
                           ? 'rgba(42, 42, 42, 0.3)'
                           : 'rgba(248, 249, 250, 0.5)',
                         backdropFilter: 'blur(10px)',
@@ -790,8 +797,8 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 + index * 0.05 }}
               style={{
-                gridColumn: isMobile 
-                  ? '1' 
+                gridColumn: isMobile
+                  ? '1'
                   : index === 0 ? 'span 6' : index === 1 ? 'span 6' : index === 2 ? 'span 4' : 'span 4',
                 gridRow: 'span 1'
               }}
@@ -802,22 +809,10 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
               >
                 <Card
                   sx={{
-                    backgroundColor: stat.highlighted 
-                      ? (isDarkMode 
-                          ? 'rgba(33, 150, 243, 0.25)' 
-                          : 'rgba(33, 150, 243, 0.15)')
-                      : (isDarkMode 
-                          ? 'rgba(42, 42, 42, 0.4)' 
-                          : 'rgba(248, 249, 250, 0.6)'),
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    borderRadius: '24px',
-                    border: isDarkMode
-                      ? '1px solid rgba(255, 255, 255, 0.1)'
-                      : '1px solid rgba(255, 255, 255, 0.5)',
-                    boxShadow: isDarkMode
-                      ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 6px 6px 12px rgba(0, 0, 0, 0.3), -3px -3px 6px rgba(255, 255, 255, 0.02)'
-                      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 6px 6px 12px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.8)',
+                    backgroundColor: isDarkMode ? 'rgba(42,42,42,.72)' : stat.label === 'Loyalty Points' ? '#edf0e3' : '#fffaf1',
+                    borderRadius: '7px',
+                    border: isDarkMode ? '1px solid rgba(255,255,255,.1)' : '1px solid #ddceb5',
+                    boxShadow: isDarkMode ? '0 8px 20px rgba(0,0,0,.25)' : '0 9px 22px rgba(70,53,32,.1)',
                     textAlign: 'center',
                     p: 3,
                     height: '100%',
@@ -843,12 +838,12 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                         : `inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 8px 8px 16px rgba(0, 0, 0, 0.15), -4px -4px 8px rgba(255, 255, 255, 0.9), 0 0 20px ${stat.color}15`,
                       borderColor: stat.color,
                       transform: 'translateY(-4px) scale(1.02)',
-                      backgroundColor: stat.highlighted 
-                        ? (isDarkMode 
-                            ? 'rgba(33, 150, 243, 0.3)' 
+                      backgroundColor: stat.highlighted
+                        ? (isDarkMode
+                            ? 'rgba(33, 150, 243, 0.3)'
                             : 'rgba(33, 150, 243, 0.2)')
-                        : (isDarkMode 
-                            ? 'rgba(42, 42, 42, 0.5)' 
+                        : (isDarkMode
+                            ? 'rgba(42, 42, 42, 0.5)'
                             : 'rgba(248, 249, 250, 0.7)')
                     },
                     '&:active': {
@@ -919,6 +914,15 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                     <TrendingUpIcon sx={{ fontSize: 14 }} />
                     {stat.trend}
                   </Typography>
+                  {stat.label === 'Loyalty Points' && (
+                    <Box aria-label={`${orderStats.loyaltyPoints % 10} of 10 loyalty stamps`} sx={{ display: 'flex', justifyContent: 'center', gap: .45, mt: 1.8 }}>
+                      {Array.from({ length: 10 }, (_, stampIndex) => (
+                        <Box key={stampIndex} sx={{ width: 17, height: 17, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: stampIndex < orderStats.loyaltyPoints % 10 ? '#a05245' : 'transparent', border: stampIndex < orderStats.loyaltyPoints % 10 ? '1px solid #a05245' : '1px dashed #b9aa8d', color: '#fff8e9', fontSize: 9, transform: `rotate(${stampIndex % 2 ? 7 : -7}deg)` }}>
+                          {stampIndex < orderStats.loyaltyPoints % 10 ? '✦' : ''}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
                 </Card>
               </motion.div>
             </motion.div>
@@ -937,18 +941,10 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
             >
               <Card
                 sx={{
-                  backgroundColor: isDarkMode 
-                    ? 'rgba(42, 42, 42, 0.4)'
-                    : 'rgba(248, 249, 250, 0.6)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  borderRadius: '24px',
-                  border: isDarkMode
-                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: isDarkMode
-                    ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
-                    : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
+                  backgroundColor: isDarkMode ? 'rgba(42,42,42,.72)' : '#fffaf0',
+                  borderRadius: '8px',
+                  border: isDarkMode ? '1px solid rgba(255,255,255,.1)' : '1px solid #d9c7a8',
+                  boxShadow: isDarkMode ? '0 8px 20px rgba(0,0,0,.25)' : '0 12px 28px rgba(70,53,32,.12)',
                   height: '100%',
                   position: 'relative',
                   overflow: 'hidden',
@@ -986,7 +982,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       fontSize: '1.25rem'
                     }}
                   >
-                    Quick Actions
+                    Counter Notes
                   </Typography>
                   <Stack spacing={2}>
                     {smartActions.map((action, index) => (
@@ -1003,15 +999,11 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                             justifyContent: 'flex-start',
                             textAlign: 'left',
                             p: 2,
-                            borderRadius: '12px',
-                            backgroundColor: isDarkMode
-                              ? 'rgba(42, 42, 42, 0.3)'
-                              : 'rgba(248, 249, 250, 0.5)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
+                            borderRadius: '4px',
+                            backgroundColor: isDarkMode ? 'rgba(42,42,42,.4)' : '#f5eddd',
                             border: isDarkMode
                               ? '1px solid rgba(255, 255, 255, 0.1)'
-                              : '1px solid rgba(255, 255, 255, 0.5)',
+                              : '1px dashed #d2bea0',
                             color: componentColors.text,
                             textTransform: 'none',
                             boxShadow: isDarkMode
@@ -1073,18 +1065,10 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           >
             <Card
               sx={{
-                backgroundColor: isDarkMode 
-                  ? 'rgba(42, 42, 42, 0.4)'
-                  : 'rgba(248, 249, 250, 0.6)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                borderRadius: '24px',
-                border: isDarkMode
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid rgba(255, 255, 255, 0.5)',
-                boxShadow: isDarkMode
-                  ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 8px 8px 16px rgba(0, 0, 0, 0.3), -4px -4px 8px rgba(255, 255, 255, 0.02)'
-                  : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 8px 8px 16px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.8)',
+                backgroundColor: isDarkMode ? 'rgba(42,42,42,.72)' : '#fffaf0',
+                borderRadius: '8px',
+                border: isDarkMode ? '1px solid rgba(255,255,255,.1)' : '1px solid #d9c7a8',
+                boxShadow: isDarkMode ? '0 8px 20px rgba(0,0,0,.25)' : '0 12px 28px rgba(70,53,32,.12)',
                 height: '100%',
                 position: 'relative',
                 overflow: 'hidden',
@@ -1122,7 +1106,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                       fontSize: '1.25rem'
                     }}
                   >
-                    Recent Orders
+                    Recent Order Tickets
                   </Typography>
                   <Button
                     variant="text"
@@ -1153,7 +1137,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                         top: 0,
                         bottom: 0,
                         width: 2,
-                        backgroundColor: componentColors.border,
+                        background: 'repeating-linear-gradient(to bottom, #ad5c4c 0 7px, transparent 7px 13px)',
                       }}
                     />
                     <Stack spacing={2}>
@@ -1324,15 +1308,11 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
                                   sx={{
                                     flex: 1,
                                     p: 2,
-                                    borderRadius: '16px',
-                                    backgroundColor: isDarkMode 
-                                      ? 'rgba(42, 42, 42, 0.3)'
-                                      : 'rgba(248, 249, 250, 0.5)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
+                                    borderRadius: '3px',
+                                    backgroundColor: isDarkMode ? 'rgba(42,42,42,.42)' : '#f8f0e2',
                                     border: isDarkMode
                                       ? '1px solid rgba(255, 255, 255, 0.1)'
-                                      : '1px solid rgba(255, 255, 255, 0.5)',
+                                      : '1px dashed #d3c0a1',
                                     boxShadow: isDarkMode
                                       ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 4px 4px 8px rgba(0, 0, 0, 0.2), -2px -2px 4px rgba(255, 255, 255, 0.02)'
                                       : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.6), 4px 4px 8px rgba(0, 0, 0, 0.08), -2px -2px 4px rgba(255, 255, 255, 0.8)',
@@ -1498,7 +1478,7 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
-                  backgroundColor: isDarkMode 
+                  backgroundColor: isDarkMode
                     ? 'rgba(42, 42, 42, 0.4)'
                     : 'rgba(248, 249, 250, 0.6)',
                   backdropFilter: 'blur(20px) saturate(180%)',
@@ -1769,9 +1749,9 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button 
+          <Button
             onClick={handleCloseProfileDialog}
-            sx={{ 
+            sx={{
               color: componentColors.textSecondary,
               mr: 1
             }}
@@ -1811,8 +1791,8 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
         onClose={() => setShowSnackbar(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={() => setShowSnackbar(false)} 
+        <Alert
+          onClose={() => setShowSnackbar(false)}
           severity={snackbarType}
           sx={{ width: '100%' }}
         >
@@ -1823,4 +1803,4 @@ const MyPage: React.FC<MyPageProps> = ({ colors }) => {
   );
 };
 
-export default MyPage; 
+export default MyPage;

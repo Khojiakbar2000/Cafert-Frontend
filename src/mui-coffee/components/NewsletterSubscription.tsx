@@ -1,21 +1,7 @@
-import React, { useState, useMemo, useRef } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  IconButton,
-  useTheme,
-  useMediaQuery
-} from '@mui/material';
-import {
-  Email as EmailIcon,
-  CheckCircle as CheckCircleIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { Box, Button, Container, TextField, Typography } from '@mui/material';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface NewsletterSubscriptionProps {
   colors?: {
@@ -30,7 +16,6 @@ interface NewsletterSubscriptionProps {
   };
 }
 
-// Default colors defined outside component to prevent recreation
 const DEFAULT_COLORS = {
   primary: '#2C1810',
   secondary: '#8B4513',
@@ -43,438 +28,215 @@ const DEFAULT_COLORS = {
 };
 
 const NewsletterSubscriptionComponent: React.FC<NewsletterSubscriptionProps> = ({ colors }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  // Use ref to store previous color values and object reference
-  const prevColorValuesRef = useRef<string | null>(null);
-  const prevComponentColorsRef = useRef(DEFAULT_COLORS);
-
-  // Memoize componentColors with stable reference - only create new object if values actually changed
-  // Use a ref-based approach to avoid dependency on colors object reference
-  const componentColors = useMemo(() => {
-    if (!colors) {
-      if (prevColorValuesRef.current !== 'DEFAULT') {
-        prevComponentColorsRef.current = DEFAULT_COLORS;
-        prevColorValuesRef.current = 'DEFAULT';
-      }
-      return prevComponentColorsRef.current;
-    }
-    
-    // Create a string key from all color values to compare
-    const colorKey = `${colors.primary}|${colors.secondary}|${colors.accent}|${colors.background}|${colors.text}|${colors.textSecondary}|${colors.border}|${colors.surface}`;
-    
-    // If values haven't changed, return previous object reference
-    if (colorKey === prevColorValuesRef.current) {
-      return prevComponentColorsRef.current;
-    }
-    
-    // Values changed, create new object and store it
-    prevColorValuesRef.current = colorKey;
-    const newColors = {
-      primary: String(colors.primary || DEFAULT_COLORS.primary),
-      secondary: String(colors.secondary || DEFAULT_COLORS.secondary),
-      accent: String(colors.accent || DEFAULT_COLORS.accent),
-      background: String(colors.background || DEFAULT_COLORS.background),
-      text: String(colors.text || DEFAULT_COLORS.text),
-      textSecondary: String(colors.textSecondary || DEFAULT_COLORS.textSecondary),
-      border: String(colors.border || DEFAULT_COLORS.border),
-      surface: String(colors.surface || DEFAULT_COLORS.surface)
-    };
-    prevComponentColorsRef.current = newColors;
-    
-    return prevComponentColorsRef.current;
-  }, [
-    colors?.primary,
-    colors?.secondary,
-    colors?.accent,
-    colors?.background,
-    colors?.text,
-    colors?.textSecondary,
-    colors?.border,
-    colors?.surface
-  ]);
-
-  // Memoize benefits array to prevent recreation on every render
-  const benefits = useMemo(() => [
-    { text: 'Weekly Coffee Tips', emoji: '☕' },
-    { text: 'Exclusive Offers', emoji: '🎁' },
-    { text: 'Event Updates', emoji: '📅' }
-  ], []);
+  const { t } = useTranslation();
+  const reduceMotion = useReducedMotion();
+  const componentColors = useMemo(() => ({
+    ...DEFAULT_COLORS,
+    ...(colors || {})
+  }), [colors]);
 
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubscribe = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!email.trim()) {
-      setError('Please enter your email address');
-      setShowAlert(true);
+      setError(t('newsletter.required'));
       return;
     }
-
     if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      setShowAlert(true);
+      setError(t('newsletter.invalidEmail'));
       return;
     }
 
-    setIsLoading(true);
     setError('');
-
+    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // Keep the existing local preview response until a newsletter endpoint is connected.
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
       setIsSubscribed(true);
       setEmail('');
-      setShowAlert(true);
-      
-      // Reset success state after 5 seconds
-      setTimeout(() => {
-        setIsSubscribed(false);
-        setShowAlert(false);
-      }, 5000);
-      
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-      setShowAlert(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCloseAlert = () => {
-    setShowAlert(false);
-    setError('');
-  };
-
-  // Early return if componentColors is invalid to prevent crashes
-  if (!componentColors) {
-    return null;
-  }
+  const benefits = [
+    t('newsletter.benefits.tips'),
+    t('newsletter.benefits.offers'),
+    t('newsletter.benefits.events')
+  ];
 
   return (
     <Box
+      component="section"
+      id="cafert-newsletter"
+      aria-labelledby="cafert-newsletter-title"
+      className="cafert-postcard-newsletter"
       sx={{
-        backgroundColor: componentColors.background,
-        borderTop: `1px solid ${componentColors.border}`,
-        borderBottom: `1px solid ${componentColors.border}`,
-        padding: { xs: '3rem 0', md: '4rem 0' },
+        '--postcard-ink': componentColors.text,
+        '--postcard-muted': componentColors.textSecondary,
+        '--postcard-red': '#a44f42',
+        '--postcard-stock': '#fff9ed',
+        '--postcard-edge': componentColors.border,
         position: 'relative',
-        overflow: 'hidden'
-      }}
+        overflow: 'hidden',
+        py: { xs: 7, md: 10 },
+        backgroundColor: componentColors.background,
+        color: componentColors.text
+      } as React.CSSProperties}
     >
-      {/* Background Pattern */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.03,
-          backgroundImage: `radial-gradient(circle at 25% 25%, ${componentColors.primary} 2px, transparent 2px),
-                           radial-gradient(circle at 75% 75%, ${componentColors.primary} 2px, transparent 2px)`,
-          backgroundSize: '50px 50px',
-          backgroundPosition: '0 0, 25px 25px'
-        }}
-      />
+      <Box className="cafert-postcard-newsletter__grain" aria-hidden="true" />
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Box className="cafert-postcard-newsletter__heading">
+          <Typography component="p" className="cafert-postcard-newsletter__eyebrow">{t('newsletter.eyebrow')}</Typography>
+          <Typography component="h2" id="cafert-newsletter-title" className="cafert-postcard-newsletter__title">{t('newsletter.title')}</Typography>
+          <Typography component="p" className="cafert-postcard-newsletter__intro">{t('newsletter.intro')}</Typography>
+        </Box>
 
-      <Container maxWidth="md">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            {/* Icon */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  viewport={{ once: true }}
-                >
-                  <Box
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: '50%',
-                      backgroundColor: componentColors.accent,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mx: 'auto',
-                      mb: 3,
-                      boxShadow: `0 8px 32px rgba(210, 105, 30, 0.3)`,
-                      fontSize: '36px'
-                    }}
-                  >
-                    ☕
-                  </Box>
-                </motion.div>
-
-            {/* Title */}
-            <Typography
-              variant="h3"
-              sx={{
-                color: componentColors.text,
-                fontWeight: 700,
-                mb: 2,
-                fontFamily: 'Playfair Display, serif',
-                fontSize: { xs: '2rem', md: '2.5rem' }
-              }}
-            >
-              Stay Brewed In
-            </Typography>
-
-            {/* Subtitle */}
-            <Typography
-              variant="h6"
-              sx={{
-                color: componentColors.textSecondary,
-                maxWidth: '600px',
-                mx: 'auto',
-                lineHeight: 1.6,
-                fontSize: { xs: '1rem', md: '1.1rem' }
-              }}
-            >
-              Subscribe to our newsletter and be the first to know about new coffee blends, 
-              special events, and exclusive offers. Join our coffee-loving community!
-            </Typography>
+        <Box className="cafert-postcard" role="group" aria-label={t('newsletter.cardLabel')}>
+          <Box className="cafert-postcard__message">
+            <span className="cafert-postcard__message-kicker">{t('newsletter.messageKicker')}</span>
+            <Typography component="h3" className="cafert-postcard__message-title">{t('newsletter.messageTitle')}</Typography>
+            <Typography component="p" className="cafert-postcard__message-copy">{t('newsletter.messageCopy')}</Typography>
+            <span className="cafert-postcard__handnote">{t('newsletter.handnote')}</span>
+            <img className="cafert-postcard__coffee-cutout" src="/img/coffee/newsletter-postcard-cutout.webp" alt="" aria-hidden="true" />
+            <span className="cafert-postcard__sender">{t('newsletter.sender')}</span>
           </Box>
 
-          {/* Alert Messages */}
-          <AnimatePresence>
-            {showAlert && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box sx={{ mb: 3 }}>
-                  <Alert
-                    severity={isSubscribed ? 'success' : 'error'}
-                    icon={isSubscribed ? <CheckCircleIcon /> : undefined}
-                    action={
-                      <IconButton
-                        color="inherit"
-                        size="small"
-                        onClick={handleCloseAlert}
-                      >
-                        <CloseIcon />
-                      </IconButton>
-                    }
-                    sx={{
-                      borderRadius: '12px',
-                      backgroundColor: isSubscribed ? '#4caf50' : '#f44336',
-                      color: 'white',
-                      '& .MuiAlert-icon': {
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    {isSubscribed 
-                      ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          Thank you for subscribing! Welcome to our coffee community! ☕
-                        </Box>
-                      )
-                      : error
-                    }
-                  </Alert>
-                </Box>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <Box className="cafert-postcard__address">
+            <Box className="cafert-postcard__stamp" aria-hidden="true">
+              <span>CAFERT</span>
+              <strong>01</strong>
+              <i>POST</i>
+            </Box>
+            <span className="cafert-postcard__to">{t('newsletter.addressTo')}</span>
 
-          {/* Subscription Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <Box
-              component="form"
-              onSubmit={handleSubscribe}
-              sx={{
-                maxWidth: '500px',
-                mx: 'auto',
-                position: 'relative'
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  gap: 2,
-                  backgroundColor: componentColors.surface,
-                  borderRadius: '16px',
-                  padding: '8px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  border: `1px solid ${componentColors.border}`
-                }}
-              >
-                <TextField
-                  fullWidth
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  InputProps={{
-                    startAdornment: (
-                      <EmailIcon 
-                        sx={{ 
-                          color: componentColors.textSecondary, 
-                          mr: 1,
-                          fontSize: 20
-                        }} 
-                      />
-                    ),
-                    sx: {
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      '& fieldset': {
-                        border: 'none'
-                      },
-                      '&:hover': {
-                        backgroundColor: '#fafafa'
-                      },
-                      '&.Mui-focused': {
-                        backgroundColor: 'white'
-                      }
-                    }
-                  }}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      fontSize: { xs: '0.9rem', md: '1rem' }
-                    }
-                  }}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isLoading}
-                  sx={{
-                    backgroundColor: componentColors.accent,
-                    color: 'white',
-                    fontWeight: 600,
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    fontSize: { xs: '0.9rem', md: '1rem' },
-                    minWidth: { xs: '100%', sm: '140px' },
-                    '&:hover': {
-                      backgroundColor: componentColors.secondary,
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 6px 20px rgba(210, 105, 30, 0.4)`
-                    },
-                    '&:disabled': {
-                      backgroundColor: componentColors.border,
-                      color: componentColors.textSecondary
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
+            <AnimatePresence mode="wait" initial={false}>
+              {isSubscribed ? (
+                <motion.div
+                  key="postcard-thanks"
+                  className="cafert-postcard__success"
+                  initial={reduceMotion ? false : { opacity: 0, scale: 0.92, rotate: 1 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={reduceMotion ? undefined : { opacity: 0 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.2, 0.75, 0.25, 1] }}
+                  role="status"
+                  aria-live="polite"
                 >
-                  {isLoading ? 'Subscribing...' : 'Subscribe'}
-                </Button>
-              </Box>
-            </Box>
-          </motion.div>
-
-          {/* Additional Info */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: componentColors.textSecondary,
-                  fontSize: { xs: '0.8rem', md: '0.9rem' },
-                  maxWidth: '400px',
-                  mx: 'auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}
-              >
-                    We respect your privacy. Unsubscribe at any time. 
-                    No spam, just coffee love! ☕
-              </Typography>
-            </Box>
-          </motion.div>
-
-          {/* Benefits */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: { xs: 2, md: 4 },
-                mt: 4,
-                flexWrap: 'wrap'
-              }}
-            >
-              {benefits.map((benefit, index) => {
-                return (
-                  <Box
-                    key={benefit.text}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      backgroundColor: `${componentColors.accent}08`,
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      border: `1px solid ${componentColors.accent}20`
-                    }}
-                  >
-                    <span style={{ fontSize: '1.2rem' }}>{benefit.emoji}</span>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: componentColors.text,
-                        fontWeight: 500,
-                        fontSize: { xs: '0.8rem', md: '0.9rem' }
-                      }}
+                  <span className="cafert-postcard__success-mark">{t('newsletter.stamped')}</span>
+                  <Typography component="h3">{t('newsletter.thanksTitle')}</Typography>
+                  <Typography component="p">{t('newsletter.thanksCopy')}</Typography>
+                  <Button onClick={() => setIsSubscribed(false)} className="cafert-postcard__again">{t('newsletter.writeAnother')}</Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="postcard-form"
+                  className="cafert-postcard__form-wrap"
+                  initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.25 }}
+                >
+                  <Typography component="p" className="cafert-postcard__address-hint">{t('newsletter.addressHint')}</Typography>
+                  <Box component="form" onSubmit={handleSubscribe} noValidate>
+                    <TextField
+                      id="cafert-newsletter-email"
+                      className="cafert-postcard__email"
+                      type="email"
+                      label={t('newsletter.emailLabel')}
+                      placeholder={t('newsletter.emailPlaceholder')}
+                      value={email}
+                      onChange={(event) => { setEmail(event.target.value); setError(''); }}
+                      disabled={isLoading}
+                      error={Boolean(error)}
+                      helperText={error || t('newsletter.emailHelper')}
+                      autoComplete="email"
+                      fullWidth
+                      required
+                      inputProps={{ 'aria-describedby': 'cafert-newsletter-email-help' }}
+                      FormHelperTextProps={{ id: 'cafert-newsletter-email-help' }}
+                    />
+                    <Button
+                      type="submit"
+                      className="cafert-postcard__send"
+                      disabled={isLoading}
+                      aria-label={isLoading ? t('newsletter.stamping') : t('newsletter.submit')}
                     >
-                      {benefit.text}
-                    </Typography>
+                      <span>{isLoading ? t('newsletter.stamping') : t('newsletter.submit')}</span>
+                      <i aria-hidden="true">{isLoading ? '…' : '↗'}</i>
+                    </Button>
                   </Box>
-                );
-              })}
-            </Box>
-          </motion.div>
-        </motion.div>
+                  <Typography component="p" className="cafert-postcard__privacy">{t('newsletter.privacy')}</Typography>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
+        </Box>
+
+        <Box className="cafert-postcard-newsletter__benefits" aria-label={t('newsletter.benefitsLabel')}>
+          {benefits.map((benefit, index) => (
+            <span key={benefit}><i aria-hidden="true">{['✳', '✦', '✳'][index]}</i>{benefit}</span>
+          ))}
+        </Box>
       </Container>
+
+      <style>{`
+        .cafert-postcard-newsletter__grain{position:absolute;inset:0;pointer-events:none;opacity:.26;background-image:radial-gradient(#9f7b5521 .8px,transparent .8px);background-size:13px 13px}
+        .cafert-postcard-newsletter__heading{position:relative;max-width:1020px;margin:0 auto 28px;padding-left:12px}
+        .cafert-postcard-newsletter__eyebrow{margin:0 0 7px;color:${componentColors.secondary};font:600 10px/1.3 monospace;letter-spacing:.19em;text-transform:uppercase}
+        .cafert-postcard-newsletter__title{margin:0;color:${componentColors.text};font:500 clamp(39px,5vw,62px)/.98 'Playfair Display',Georgia,serif;letter-spacing:-.035em}
+        .cafert-postcard-newsletter__intro{max-width:58ch;margin:12px 0 0;color:${componentColors.textSecondary};font:italic 19px/1.4 'EB Garamond',Georgia,serif}
+        .cafert-postcard{position:relative;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);max-width:1040px;min-height:405px;margin:0 auto;background:var(--postcard-stock);border:1px solid #d4bea0;box-shadow:0 18px 32px #47341e1c,0 3px 5px #47341e14;transform:rotate(-.35deg)}
+        .cafert-postcard:before{content:'';position:absolute;z-index:3;inset:8px;border:1px solid #b69b7340;pointer-events:none}
+        .cafert-postcard:after{content:'';position:absolute;z-index:3;inset:0;pointer-events:none;background:repeating-linear-gradient(7deg,#6d4c2907 0 1px,transparent 1px 5px);mix-blend-mode:multiply}
+        .cafert-postcard__message{position:relative;isolation:isolate;min-width:0;overflow:hidden;padding:32px 35px 26px;background-color:#f1e5d1;background-image:repeating-linear-gradient(0deg,transparent 0 32px,#a7835321 33px,#a7835321 34px);border-right:1px dashed #a88d6d}
+        .cafert-postcard__message-kicker,.cafert-postcard__to{position:relative;z-index:2;display:block;color:#916e4c;font:9px/1.3 monospace;letter-spacing:.15em;text-transform:uppercase}
+        .cafert-postcard__message-title{position:relative;z-index:2;max-width:8ch;margin:16px 0 10px;color:#503f2d;font:500 clamp(33px,4vw,47px)/.98 'Playfair Display',Georgia,serif;letter-spacing:-.04em}
+        .cafert-postcard__message-copy{position:relative;z-index:2;max-width:28ch;margin:0;color:#62523e;font:italic 17px/1.36 'EB Garamond',Georgia,serif}
+        .cafert-postcard__handnote{position:absolute;z-index:2;left:35px;bottom:51px;color:#a05243;font:italic 14px/1.2 'EB Garamond',Georgia,serif;transform:rotate(-4deg)}
+        .cafert-postcard__coffee-cutout{position:absolute;z-index:1;right:-38px;bottom:-56px;width:min(82%,410px);height:auto;filter:drop-shadow(0 12px 9px #45331e2a);pointer-events:none}
+        .cafert-postcard__sender{position:absolute;z-index:2;left:35px;bottom:21px;color:#8b765c;font:8px/1 monospace;letter-spacing:.13em;text-transform:uppercase}
+        .cafert-postcard__address{position:relative;z-index:4;min-width:0;padding:36px clamp(24px,4vw,52px) 26px 37px;background-color:#fffaf0;background-image:repeating-linear-gradient(0deg,transparent 0 45px,#a783531c 46px,#a783531c 47px);}
+        .cafert-postcard__stamp{position:absolute;right:28px;top:25px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:72px;height:78px;border:2px dashed #a75b4d;color:#a75b4d;background:#f7ecdc;transform:rotate(4deg)}
+        .cafert-postcard__stamp:before{content:'';position:absolute;inset:4px;border:1px solid #a75b4d55}
+        .cafert-postcard__stamp span,.cafert-postcard__stamp i{font:7px/1 monospace;letter-spacing:.08em}.cafert-postcard__stamp strong{font:700 22px/1 'Playfair Display',Georgia,serif}.cafert-postcard__stamp i{font-style:normal}
+        .cafert-postcard__to{max-width:calc(100% - 90px);padding-bottom:13px;border-bottom:1px solid #b69b7355}
+        .cafert-postcard__address-hint{margin:20px 0 16px;color:#77634b;font:italic 16px/1.25 'EB Garamond',Georgia,serif}
+        .cafert-postcard__email .MuiInputLabel-root{color:#806c52;font:13px/1.2 'EB Garamond',Georgia,serif}
+        .cafert-postcard__email .MuiOutlinedInput-root{border-radius:0;background:#fffdf8;color:#463824;font:17px/1.3 'EB Garamond',Georgia,serif}
+        .cafert-postcard__email .MuiOutlinedInput-notchedOutline{border:1px solid #bea681}
+        .cafert-postcard__email .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline{border-color:#9f7850}
+        .cafert-postcard__email .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline{border-width:1px;border-color:#a45a48}
+        .cafert-postcard__email .MuiFormHelperText-root{margin-left:0;color:#786850;font:11px/1.3 monospace}
+        .cafert-postcard__email .MuiFormHelperText-root.Mui-error{color:#a14439}
+        .cafert-postcard__send{position:relative;display:flex!important;align-items:center;justify-content:space-between!important;gap:20px;width:100%;min-height:58px!important;margin-top:15px!important;padding:11px 17px!important;border:1px dashed #fff1!important;border-radius:0!important;background:#a85646!important;color:#fff7e9!important;box-shadow:0 3px 0 #783e35,0 7px 12px #54351f20!important;font:600 12px/1 monospace!important;letter-spacing:.12em;text-transform:uppercase!important;transform:rotate(-.7deg);transition:transform .18s ease,box-shadow .18s ease!important}
+        .cafert-postcard__send:before{content:'';position:absolute;inset:4px;border:1px dashed #f1c9a88a;pointer-events:none}
+        .cafert-postcard__send i{font:normal 19px/1 sans-serif}
+        .cafert-postcard__send:hover{background:#94483b!important;box-shadow:0 1px 0 #783e35,0 3px 7px #54351f20!important;transform:translateY(2px) rotate(0)}
+        .cafert-postcard__send:focus-visible{outline:3px solid #704735;outline-offset:4px}
+        .cafert-postcard__send.Mui-disabled{background:#a78a6c!important;color:#fff8ed!important;opacity:.72}
+        .cafert-postcard__privacy{max-width:36ch;margin:14px 0 0;color:#86755d;font:11px/1.45 monospace}
+        .cafert-postcard__success{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:260px;padding:29px 0 0}
+        .cafert-postcard__success-mark{position:absolute;right:4px;top:18px;padding:9px 13px;border:2px solid #a85646;color:#a85646;font:700 10px/1 monospace;letter-spacing:.13em;text-transform:uppercase;transform:rotate(-9deg)}
+        .cafert-postcard__success h3{max-width:9ch;margin:10px 0 12px;color:#503f2d;font:500 34px/1 'Playfair Display',Georgia,serif}
+        .cafert-postcard__success p{max-width:34ch;margin:0;color:#695941;font:italic 18px/1.4 'EB Garamond',Georgia,serif}
+        .cafert-postcard__again{margin:19px 0 0!important;padding:8px 0!important;color:#945344!important;font:600 10px/1 monospace!important;letter-spacing:.08em;text-decoration:underline;text-underline-offset:4px;text-transform:uppercase!important}
+        .cafert-postcard-newsletter__benefits{display:flex;justify-content:center;gap:clamp(18px,4vw,54px);flex-wrap:wrap;max-width:980px;margin:24px auto 0;color:#66563f}
+        .cafert-postcard-newsletter__benefits span{display:flex;align-items:center;gap:8px;font:14px/1.3 'EB Garamond',Georgia,serif}
+        .cafert-postcard-newsletter__benefits i{color:#a85646;font:normal 12px/1 monospace}
+        @media(max-width:700px){.cafert-postcard-newsletter__heading{padding-left:2px;margin-bottom:22px}.cafert-postcard{grid-template-columns:1fr;transform:none}.cafert-postcard__message{min-height:325px;border-right:0;border-bottom:1px dashed #a88d6d;padding:26px 24px 21px}.cafert-postcard__message-title{max-width:10ch;font-size:39px}.cafert-postcard__message-copy{max-width:31ch;font-size:16px}.cafert-postcard__coffee-cutout{right:-12px;bottom:-60px;width:min(75%,360px)}.cafert-postcard__handnote{left:24px;bottom:42px}.cafert-postcard__sender{left:24px;bottom:18px}.cafert-postcard__address{padding:27px 24px 24px}.cafert-postcard__stamp{right:24px;top:17px}.cafert-postcard__to{padding-bottom:12px}.cafert-postcard__address-hint{margin-top:17px}.cafert-postcard__success{min-height:220px;padding-top:28px}}
+        @media(max-width:420px){.cafert-postcard-newsletter__title{font-size:38px}.cafert-postcard__message{min-height:300px;padding:23px 20px 18px}.cafert-postcard__coffee-cutout{right:-25px;width:79%}.cafert-postcard__message-title{font-size:35px}.cafert-postcard__address{padding:23px 19px}.cafert-postcard__stamp{right:19px;width:62px;height:68px}.cafert-postcard__stamp strong{font-size:19px}.cafert-postcard__to{max-width:calc(100% - 78px);font-size:8px}.cafert-postcard__benefits span{font-size:12px}}
+        @media(prefers-reduced-motion:reduce){.cafert-postcard__send{transition:none!important}}
+      `}</style>
     </Box>
   );
 };
 
 NewsletterSubscriptionComponent.displayName = 'NewsletterSubscription';
 
-// Export without memo for now to avoid comparison issues
-// The componentColors useMemo should handle preventing unnecessary re-renders
-export default NewsletterSubscriptionComponent; 
+export default NewsletterSubscriptionComponent;

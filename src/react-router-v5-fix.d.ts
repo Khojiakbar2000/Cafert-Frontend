@@ -22,6 +22,7 @@ declare module 'react-router-dom' {
   
   export interface LinkProps {
     to: string;
+    className?: string;
     children?: React.ReactNode;
   }
   
@@ -58,6 +59,7 @@ declare module 'react-router-dom' {
   
   export interface LinkProps {
     to: string;
+    className?: string;
     children?: React.ReactNode;
   }
   
@@ -70,4 +72,4 @@ declare module 'react-router-dom' {
   export const useHistory: () => { push: (path: string) => void; goBack: () => void };
   export const useParams: () => { [key: string]: string };
   export const useRouteMatch: (path?: string) => { path: string; url: string };
-} 
+}

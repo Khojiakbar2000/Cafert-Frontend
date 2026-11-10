@@ -620,6 +620,16 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
   const delivery = (fulfillmentType === "delivery" ? 5.0 : 0);
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + delivery + tax;
+  const checkoutItemCount = cartItemCount || currentOrder?.orderItems?.reduce((sum, item) => sum + item.itemQuantity, 0) || 0;
+  const checkoutTicketLines = cartItems.length > 0
+    ? cartItems.slice(0, 3).map((item) => ({ name: item.name, quantity: item.quantity, amount: item.price * item.quantity }))
+    : (currentOrder?.orderItems || []).slice(0, 3).map((item, index) => ({
+      name: currentOrder.productData?.find((product) => product._id === item.productId)?.productName || `Order item ${index + 1}`,
+      quantity: item.itemQuantity,
+      amount: item.itemPrice * item.itemQuantity,
+    }));
+  const checkoutTicketNumber = currentOrder?._id?.slice(-4).toUpperCase() || "NEW";
+  const checkoutHandoffDetails = fulfillmentType === "pickup" ? pickupTime : deliveryAddress || "ADDRESS REQUIRED";
 
   if (!authMember) history.push("/");
 
@@ -642,12 +652,26 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
       sx={{
         width: "100%",
         minHeight: "100vh",
-        background: "#fbfbf8",
+        position: "relative",
+        isolation: "isolate",
+        background: "#efe5d5",
         pt: 15,
         pb: mainView === 'menu' && showCartSummary ? { xs: 20, md: 16 } : 6,
+        "&::before": {
+          content: '""',
+          position: "fixed",
+          inset: 0,
+          zIndex: -1,
+          pointerEvents: "none",
+          backgroundImage: "linear-gradient(rgba(250,246,238,.13), rgba(250,246,238,.13)), url('/img/coffee/cafert-checkout-wall-art.webp')",
+          backgroundPosition: "center top",
+          backgroundSize: "100% auto",
+          backgroundRepeat: "no-repeat",
+          "@media (max-width: 700px)": { backgroundPosition: "center top", backgroundSize: "auto 100vh" },
+        },
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
         {/* Main Tabs: Checkout / Menu */}
         <Paper
           elevation={0}
@@ -697,30 +721,70 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
         {/* Conditional Rendering: Checkout View */}
         {mainView === 'checkout' && (
           <>
-        {/* Page Title */}
-        <Box sx={{ textAlign: "center", mb: 5 }}>
-          <Typography
-            variant="h3"
+        {/* Cafert order pass with detachable fulfillment stub */}
+        <Box
+          className="cafert-ticket-scene"
+          sx={{ position: "relative", minHeight: { xs: 620, md: 455 }, mb: 5, px: { xs: 2.5, md: 5 }, pt: { xs: 3.5, md: 4.5 }, pb: { xs: 25, md: 5 }, overflow: "hidden", borderRadius: "8px", background: "#534931", boxShadow: "0 18px 42px rgba(83,73,49,.18)" }}
+        >
+          <Box sx={{ position: "relative", zIndex: 2 }}>
+            <Typography sx={{ font: '700 .72rem/1.2 monospace', letterSpacing: ".19em", color: "#c77864", mb: 1.1 }}>
+              CAFERT COUNTER · ORDER PASS {checkoutTicketNumber}
+            </Typography>
+            <Typography variant="h3" sx={{ fontFamily: '"Cinzel", "Cormorant Garamond", serif', color: "#f6ebd9", fontSize: { xs: "1.75rem", md: "2.7rem" }, lineHeight: 1.1, mb: .9 }}>
+              Every good cup gets a ticket.
+            </Typography>
+            <Typography sx={{ fontFamily: '"EB Garamond", serif', fontSize: { xs: "1rem", md: "1.15rem" }, color: "#e5dcd2", opacity: .78 }}>
+              One last look before your order leaves the counter.
+            </Typography>
+          </Box>
+
+          <Box
+            className="cafert-order-ticket"
+            aria-label={`Order ticket ${checkoutTicketNumber}, ${checkoutItemCount} items, total $${total.toFixed(2)}`}
             sx={{
-              fontFamily: '"Cinzel", "Cormorant Garamond", serif',
-              fontWeight: 600,
-              color: "#3a3429",
-              mb: 1,
-              letterSpacing: "0.02em",
+              position: "relative", zIndex: 2, mt: { xs: 3, md: 3.5 }, display: "grid",
+              gridTemplateColumns: { xs: "1fr 112px", sm: "1fr 150px" },
+              width: { xs: "100%", md: "69%" }, maxWidth: 920, minHeight: { xs: 260, md: 245 },
+              background: "#f4ead8", color: "#302a20", boxShadow: "0 14px 28px rgba(25,19,12,.25)",
+              transform: { xs: "rotate(-.4deg)", md: "rotate(-.7deg)" },
+              "&::before, &::after": { content: '""', position: "absolute", zIndex: 2, right: { xs: 103, sm: 141 }, width: 16, height: 16, borderRadius: "50%", background: "#534931" },
+              "&::before": { top: -8 }, "&::after": { bottom: -8 },
             }}
           >
-            Checkout
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: '"EB Garamond", serif',
-              fontSize: "1rem",
-              color: "#3a3429",
-              opacity: 0.6,
-            }}
-          >
-            Review and complete your order
-          </Typography>
+            <Box sx={{ p: { xs: 2.1, md: 3.5 }, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, pb: 1.3, mb: 1.1, borderBottom: "1px dashed #b9a88e" }}>
+                <Typography sx={{ font: '700 .66rem/1 monospace', letterSpacing: ".15em", color: "#8f4d40" }}>CAFERT · CUSTOMER COPY</Typography>
+                <Typography sx={{ font: '600 .68rem/1 monospace', letterSpacing: ".08em", color: "#847a69" }}>NO. {checkoutTicketNumber}</Typography>
+              </Box>
+              <Stack spacing={.65} sx={{ flex: 1, justifyContent: "center" }}>
+                {checkoutTicketLines.length > 0 ? checkoutTicketLines.map((line, index) => (
+                  <Box key={`${line.name}-${index}`} sx={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 2 }}>
+                    <Typography sx={{ fontFamily: '"EB Garamond", serif', fontSize: { xs: ".98rem", md: "1.12rem" }, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {String(line.quantity).padStart(2, "0")} × {line.name}
+                    </Typography>
+                    <Typography sx={{ font: '600 .78rem/1 monospace', flex: "0 0 auto" }}>${line.amount.toFixed(2)}</Typography>
+                  </Box>
+                )) : <Typography sx={{ fontFamily: '"EB Garamond", serif', color: "#756b59" }}>Your order details will appear here.</Typography>}
+                {checkoutItemCount > 3 && <Typography sx={{ font: '.68rem/1 monospace', color: "#756b59" }}>+ more items</Typography>}
+              </Stack>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pt: 1.2, mt: 1, borderTop: "1px dashed #b9a88e" }}>
+                <Typography sx={{ font: '700 .69rem/1 monospace', letterSpacing: ".12em", color: "#756b59" }}>TOTAL · {checkoutItemCount} ITEMS</Typography>
+                <Typography sx={{ fontFamily: '"Cinzel", serif', fontSize: { xs: "1.1rem", md: "1.35rem" }, fontWeight: 700, color: "#73442b" }}>${total.toFixed(2)}</Typography>
+              </Box>
+            </Box>
+
+            <Box className="cafert-ticket-stub" sx={{ position: "relative", borderLeft: "2px dashed #b9a88e", p: { xs: 1.3, sm: 2 }, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 1, backgroundImage: "repeating-linear-gradient(135deg, rgba(156,72,64,.035) 0 1px, transparent 1px 6px)" }}>
+              <Typography sx={{ font: '700 .55rem/1 monospace', letterSpacing: ".1em", color: "#8f4d40" }}>HANDOFF</Typography>
+              <Box sx={{ width: { xs: 74, sm: 92 }, height: { xs: 74, sm: 92 }, border: "2px solid #9c4840", borderRadius: "50%", outline: "1px dashed #9c4840", outlineOffset: -6, color: "#9c4840", display: "grid", placeItems: "center", transform: "rotate(8deg)", boxShadow: "inset 0 0 0 3px rgba(156,72,64,.12)" }}>
+                <Typography sx={{ font: '700 .62rem/1.1 monospace', letterSpacing: ".06em", maxWidth: 60 }}>{fulfillmentType === "pickup" ? "PICKUP" : "DELIVERY"}</Typography>
+              </Box>
+              <Typography sx={{ font: '600 .62rem/1 monospace', letterSpacing: ".1em", color: "#756b59" }}>KEEP THIS STUB</Typography>
+              <Typography sx={{ font: '600 .58rem/1.3 monospace', color: deliveryAddress || fulfillmentType === "pickup" ? "#756b59" : "#9c4840", maxWidth: "100%", overflowWrap: "anywhere" }}>{checkoutHandoffDetails}</Typography>
+              {paymentSuccess && <Box role="status" sx={{ mt: .4, px: .7, py: .55, border: "2px solid #9c4840", color: "#9c4840", transform: "rotate(-7deg)", font: '700 .58rem/1 monospace', letterSpacing: ".07em", animation: "cafert-seal-in .28s ease-out both", "@keyframes cafert-seal-in": { from: { opacity: 0, transform: "rotate(-20deg) scale(.7)" }, to: { opacity: 1, transform: "rotate(-7deg) scale(1)" } }, "@media (prefers-reduced-motion: reduce)": { animation: "none" } }}>SEALED · THANK YOU</Box>}
+            </Box>
+          </Box>
+
+          <Box component="img" src="/img/coffee/cafert-packing-counter-barista.webp" alt="" aria-hidden="true" sx={{ position: "absolute", zIndex: 1, right: { xs: -44, md: -38 }, bottom: { xs: -48, md: -90 }, width: { xs: "68%", sm: "57%", md: "52%" }, maxWidth: 700, height: "auto", filter: "drop-shadow(0 12px 10px rgba(28,21,13,.2))", pointerEvents: "none" }} />
         </Box>
 
         {/* 2-Column Layout */}
@@ -732,13 +796,20 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
               <Paper
                 elevation={0}
                 sx={{
-                  borderRadius: "24px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                  position: "relative",
+                  borderRadius: "8px",
+                  border: "1px solid #dfceb2",
+                  backgroundColor: "#f7efdf",
+                  boxShadow: "0 10px 25px rgba(83,73,49,.08)",
                   overflow: "hidden",
+                  "& .MuiStepConnector-line": { borderColor: "#c8b99f", borderTopStyle: "dashed", borderTopWidth: 1.5 },
+                  "& .MuiStepIcon-root": { color: "#d2c4ad", fontSize: 27 },
+                  "& .MuiStepIcon-root.Mui-active": { color: "#9c4840", filter: "drop-shadow(0 2px 2px rgba(156,72,64,.2))" },
+                  "& .MuiStepIcon-root.Mui-completed": { color: "#637747" },
+                  "& .MuiStepIcon-text": { fill: "#fffaf2", fontFamily: "monospace", fontWeight: 700 },
                 }}
               >
-                <Box sx={{ borderBottom: "1px solid rgba(58, 52, 41, 0.08)" }}>
+                <Box sx={{ borderBottom: "1px dashed #cbb797", background: "#f3e8d5" }}>
                   <Tabs
                     value={value}
                     onChange={handleChange}
@@ -746,8 +817,8 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     sx={{
                       px: 3,
                       "& .MuiTabs-indicator": {
-                        backgroundColor: "#8B4513",
-                        height: 3,
+                        backgroundColor: "#9c4840",
+                        height: 2,
                       },
                     }}
                   >
@@ -758,6 +829,8 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         fontFamily: '"EB Garamond", serif',
                         fontSize: "1rem",
                         textTransform: "none",
+                        color: "#746957",
+                        "&.Mui-selected": { color: "#3a3429" },
                         fontWeight: value === "1" ? 600 : 400,
                       }}
                     />
@@ -768,6 +841,8 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         fontFamily: '"EB Garamond", serif',
                         fontSize: "1rem",
                         textTransform: "none",
+                        color: "#746957",
+                        "&.Mui-selected": { color: "#3a3429" },
                         fontWeight: value === "2" ? 600 : 400,
                       }}
                     />
@@ -778,6 +853,8 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         fontFamily: '"EB Garamond", serif',
                         fontSize: "1rem",
                         textTransform: "none",
+                        color: "#746957",
+                        "&.Mui-selected": { color: "#3a3429" },
                         fontWeight: value === "3" ? 600 : 400,
                       }}
                     />
@@ -785,8 +862,12 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 </Box>
 
                 {/* Status Stepper */}
-                <Box sx={{ p: 4, pb: 3 }}>
-                  <Stepper activeStep={getActiveStep()} alternativeLabel>
+                <Box sx={{ p: { xs: 2.5, md: 4 }, pb: { xs: 2.2, md: 3 }, background: "radial-gradient(ellipse at 50% 0%, rgba(255,250,242,.8), transparent 68%)" }}>
+                  <Stepper activeStep={getActiveStep()} alternativeLabel sx={{
+                    "& .MuiStepLabel-label": { color: "#817765", mt: .9 },
+                    "& .MuiStepLabel-label.Mui-active": { color: "#9c4840", fontWeight: 700 },
+                    "& .MuiStepLabel-label.Mui-completed": { color: "#637747" },
+                  }}>
                     <Step>
                       <StepLabel
                         sx={{
@@ -898,9 +979,9 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     alignItems: "center",
                     gap: 2,
                     p: 3,
-                    borderRadius: "16px",
-                    backgroundColor: "rgba(139, 69, 19, 0.04)",
-                    border: "1px solid rgba(139, 69, 19, 0.1)",
+                    borderRadius: "4px",
+                    backgroundColor: "#f8f0e4",
+                    border: "1px dashed #cbb797",
                   }}
                 >
                   {fulfillmentType === "pickup" ? <StorefrontIcon sx={{ fontSize: "2rem", color: "#8B4513" }} /> : <LocalShippingIcon sx={{ fontSize: "2rem", color: "#8B4513" }} />}
@@ -966,6 +1047,18 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       </>
                     )}
                   </Box>
+                  <Box
+                    aria-label={`${fulfillmentType === "pickup" ? "Pickup" : "Delivery"} handoff selected`}
+                    sx={{
+                      width: 78, height: 78, flex: "0 0 78px", border: "2px solid #9c4840", borderRadius: "50%",
+                      outline: "1px dashed #9c4840", outlineOffset: -6, transform: "rotate(7deg)", color: "#9c4840",
+                      display: { xs: "none", sm: "flex" }, flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
+                      boxShadow: "inset 0 0 0 3px rgba(156,72,64,.1)",
+                    }}
+                  >
+                    <Typography sx={{ font: '700 .48rem/1 monospace', letterSpacing: ".08em" }}>HANDOFF</Typography>
+                    <Typography sx={{ font: '700 .58rem/1.1 monospace', mt: .5 }}>{fulfillmentType === "pickup" ? "PICKUP" : "DELIVERY"}</Typography>
+                  </Box>
                 </Box>
               </Paper>
             </Stack>
@@ -984,10 +1077,19 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 <Paper
                   elevation={0}
                   sx={{
-                    borderRadius: "24px",
-                    backgroundColor: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                    position: "relative",
+                    borderRadius: "8px",
+                    border: "1px solid #dfceb2",
+                    backgroundColor: "#f7efdf",
+                    boxShadow: "0 12px 28px rgba(83,73,49,.09)",
                     p: { xs: 3, md: 4 },
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "5px !important",
+                      backgroundColor: "#fffaf2 !important",
+                      "& fieldset": { borderColor: "#d8c8ae !important" },
+                      "&:hover fieldset": { borderColor: "#b38e6a !important" },
+                      "&.Mui-focused fieldset": { borderColor: "#8B4513 !important" },
+                    },
                   }}
                 >
                   {/* Test Mode Badge */}
@@ -1022,6 +1124,22 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     />
                   </Box>
 
+                  <Box
+                    className="cafert-payment-counter"
+                    sx={{
+                      position: "relative", display: "flex", alignItems: "center", minHeight: { xs: 126, md: 148 },
+                      mb: 2.5, p: { xs: 2, md: 2.5 }, overflow: "hidden", borderRadius: "5px",
+                      border: "1px solid #d6c2a1", background: "linear-gradient(110deg,#efe1cb 0%,#f4ead9 62%,#ead7b8 100%)",
+                      "&::before": { content: '""', position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg,rgba(83,73,49,.035) 0 1px,transparent 1px 5px)", pointerEvents: "none" },
+                    }}
+                  >
+                    <Box sx={{ position: "relative", zIndex: 1, maxWidth: "54%" }}>
+                      <Typography sx={{ font: '700 .62rem/1.2 monospace', letterSpacing: ".13em", color: "#9c4840", mb: .7 }}>COUNTER TERMINAL</Typography>
+                      <Typography sx={{ fontFamily: '"Cinzel", serif', fontSize: { xs: ".98rem", md: "1.12rem" }, color: "#3a3429", fontWeight: 600, lineHeight: 1.15 }}>Tap to settle the tab.</Typography>
+                    </Box>
+                    <Box component="img" src="/img/coffee/cafert-payment-terminal.webp" alt="" aria-hidden="true" sx={{ position: "absolute", zIndex: 1, width: { xs: "62%", md: "58%" }, maxWidth: 260, height: "auto", right: { xs: -18, md: -10 }, bottom: { xs: -37, md: -48 }, filter: "drop-shadow(0 7px 6px rgba(58,40,22,.18))", pointerEvents: "none" }} />
+                  </Box>
+
                   {/* Secure Checkout Indicator */}
                   <Box
                     sx={{
@@ -1030,16 +1148,17 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                       gap: 1,
                       mb: 3,
                       p: 1.5,
-                      borderRadius: "12px",
-                      backgroundColor: "rgba(76, 175, 80, 0.08)",
+                      border: "1px dashed #cbb797",
+                      borderRadius: "4px",
+                      backgroundColor: "#f2e7d5",
                     }}
                   >
-                    <LockIcon sx={{ fontSize: "1.2rem", color: "#4caf50" }} />
+                    <LockIcon sx={{ fontSize: "1.2rem", color: "#9c4840" }} />
                     <Typography
                       sx={{
                         fontFamily: '"EB Garamond", serif',
                         fontSize: "0.9rem",
-                        color: "#2e7d32",
+                        color: "#6f5138",
                         fontWeight: 500,
                       }}
                     >
@@ -1263,12 +1382,20 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 <Paper
                   elevation={0}
                   sx={{
-                    borderRadius: "24px",
-                    backgroundColor: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                    position: "relative",
+                    borderRadius: "4px",
+                    border: "1px dashed #cbb797",
+                    backgroundColor: "#f4ead8",
+                    boxShadow: "0 8px 20px rgba(83,73,49,.07)",
                     p: { xs: 3, md: 4 },
+                    "&::before, &::after": { content: '""', position: "absolute", top: "50%", width: 18, height: 18, borderRadius: "50%", background: "#fbfbf8", transform: "translateY(-50%)" },
+                    "&::before": { left: -10 }, "&::after": { right: -10 },
                   }}
                 >
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1.6, mb: 2.2, borderBottom: "1px dashed #b9a88e" }}>
+                    <Typography sx={{ font: '700 .66rem/1 monospace', letterSpacing: ".14em", color: "#8f4d40" }}>CAFERT · COUNTER SLIP</Typography>
+                    <Typography sx={{ font: '600 .66rem/1 monospace', letterSpacing: ".08em", color: "#827762" }}>NO. {checkoutTicketNumber}</Typography>
+                  </Box>
                   <Stack spacing={2}>
                     {/* Subtotal */}
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -1388,21 +1515,23 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                         mt: 2,
                         py: 2,
                         height: 56,
-                        backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#8B4513",
+                        position: "relative",
+                        backgroundColor: paymentSuccess ? "#637747" : paymentProcessing ? "#9c6b3d" : "#9c4840",
                         color: "#ffffff",
                         fontFamily: '"EB Garamond", serif',
                         fontWeight: 600,
                         fontSize: "1.1rem",
-                        borderRadius: "16px",
+                        borderRadius: "4px",
                         textTransform: "none",
-                        boxShadow: paymentSuccess || paymentProcessing ? "none" : "0 4px 12px rgba(139, 69, 19, 0.3)",
+                        boxShadow: paymentSuccess || paymentProcessing ? "none" : "0 5px 12px rgba(156,72,64,.22)",
+                        "&::after": { content: '""', position: "absolute", inset: 4, border: "1px dashed rgba(255,255,255,.58)", pointerEvents: "none" },
                         "&:hover": {
-                          backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#A0522D",
+                          backgroundColor: paymentSuccess ? "#637747" : paymentProcessing ? "#9c6b3d" : "#873b34",
                           transform: paymentSuccess || paymentProcessing ? "none" : "translateY(-2px)",
                           boxShadow: paymentSuccess || paymentProcessing ? "none" : "0 6px 20px rgba(139, 69, 19, 0.4)",
                         },
                         "&:disabled": {
-                          backgroundColor: paymentSuccess ? "#4caf50" : paymentProcessing ? "#9c6b3d" : "#d0d0d0",
+                          backgroundColor: paymentSuccess ? "#637747" : paymentProcessing ? "#9c6b3d" : "#d0d0d0",
                           color: "#ffffff",
                           opacity: paymentProcessing ? 1 : 0.7,
                         },
@@ -1443,15 +1572,28 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
         {/* Conditional Rendering: Menu View */}
         {mainView === 'menu' && (
           <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+            {/* Painted menu board */}
+            <Box sx={{ position: "relative", overflow: "hidden", minHeight: { xs: 180, md: 230 }, mb: 3, px: { xs: 2.5, md: 5 }, py: { xs: 3, md: 4 }, color: "#423a2b", background: "linear-gradient(112deg,#fff8e9 0%,#f3e6ca 58%,#e8edda 100%)", border: "1px solid #dfceb2", boxShadow: "0 12px 30px rgba(83,73,49,.12)", borderRadius: "5px", "&::before": { content: '""', position: "absolute", inset: 9, border: "1px solid rgba(156,72,64,.2)", pointerEvents: "none" }, "&::after": { content: '""', position: "absolute", inset: 0, opacity: .18, pointerEvents: "none", backgroundImage: "repeating-linear-gradient(0deg,transparent 0 8px,rgba(83,73,49,.1) 9px,transparent 10px)" } }}>
+              <Box sx={{ position: "relative", zIndex: 2, maxWidth: { xs: "76%", md: "67%" } }}>
+                <Typography sx={{ font: '700 .65rem/1 monospace', letterSpacing: ".2em", color: "#a85d49", mb: 1.5 }}>CAFERT · THE DAILY MENU</Typography>
+                <Typography component="h1" sx={{ fontFamily: '"Cinzel", "Cormorant Garamond", serif', fontSize: { xs: "1.8rem", md: "3rem" }, lineHeight: 1.03, mb: 1 }}>A good day starts here.</Typography>
+                <Typography sx={{ fontFamily: '"EB Garamond", serif', fontSize: { xs: ".98rem", md: "1.12rem" }, color: "#756b59", maxWidth: 430 }}>Made slowly, served warmly. Pick your counter favorite.</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mt: 2 }}><Box sx={{ width: 34, height: 1, bgcolor: "#c77864" }} /><Typography sx={{ font: '600 .6rem/1 monospace', letterSpacing: ".12em", color: "#756b59" }}>{filteredProducts.length.toString().padStart(2, "0")} SMALL-BATCH FAVORITES</Typography></Box>
+              </Box>
+              <Box component="img" src="/img/coffee/cafert-menu-barista-cutout.webp" alt="" aria-hidden="true" sx={{ position: "absolute", zIndex: 1, right: { xs: -28, md: 8 }, bottom: { xs: -26, md: -55 }, width: { xs: "42%", md: "30%" }, maxWidth: 300, height: "auto", filter: "drop-shadow(0 8px 8px rgba(0,0,0,.22))", pointerEvents: "none" }} />
+              <Typography aria-hidden="true" sx={{ position: "absolute", zIndex: 2, right: { xs: 14, md: 38 }, top: { xs: 20, md: 30 }, writingMode: "vertical-rl", font: '700 .55rem/1 monospace', letterSpacing: ".16em", color: "#a85d49", opacity: .9 }}>BREWED DAILY · 2026</Typography>
+            </Box>
+
             {/* Compact Order Type Controls at Top */}
             <Paper
               elevation={0}
               sx={{
                 mb: 4,
                 p: { xs: 2, md: 3 },
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                backgroundColor: '#f7efdf',
+                borderRadius: '5px',
+                border: '1px solid #dfceb2',
+                boxShadow: '0 8px 20px rgba(83,73,49,.08)',
               }}
             >
               <Stack spacing={3}>
@@ -1761,10 +1903,12 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                 position: 'sticky',
                 top: 80,
                 zIndex: 100,
-                backgroundColor: '#fbfbf8',
+                backgroundColor: 'rgba(247,239,223,.96)',
                 py: 2,
                 mb: 3,
-                borderBottom: '1px solid rgba(58, 52, 41, 0.1)',
+                borderBottom: '1px dashed #b9a88e',
+                backdropFilter: 'blur(8px)',
+                '&::before': { content: '"MENU BOARD / SELECT A SHELF"', display: 'block', mb: 1.1, color: '#9c4840', font: '700 .58rem/1 monospace', letterSpacing: '.16em' },
               }}
             >
               <Stack
@@ -1824,20 +1968,24 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                     onClick={() => handleProductClick(product)}
                     sx={{
                       cursor: 'pointer',
-                      border: '1px solid rgba(58, 52, 41, 0.15)',
-                      borderRadius: '4px',
+                      border: '1px solid #d9c8ad',
+                      borderRadius: '3px',
                       overflow: 'hidden',
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                      transition: 'border-color 0.2s ease',
+                      backgroundColor: '#fffaf0',
+                      boxShadow: '0 8px 20px rgba(65,48,29,.11)',
+                      transform: { xs: 'none', md: (startIndex + paginatedProducts.indexOf(product)) % 2 ? 'rotate(.25deg)' : 'rotate(-.25deg)' },
+                      transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
                       '&:hover': {
-                        borderColor: 'rgba(58, 52, 41, 0.3)',
+                        borderColor: '#9c4840',
+                        transform: 'translateY(-4px) rotate(0deg)',
+                        boxShadow: '0 15px 28px rgba(65,48,29,.17)',
                       },
                     }}
                   >
                     <Box
                       sx={{
                         p: { xs: 2, md: 3 },
-                        backgroundColor: '#faf8f3',
+                        backgroundColor: '#f7f2e8',
                       }}
                     >
                       <Box
@@ -1847,7 +1995,8 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                           borderRadius: '80px 80px 8px 8px',
                           overflow: 'hidden',
                           backgroundColor: '#f5f1e8',
-                          border: '1px solid rgba(58, 52, 41, 0.08)',
+                          border: '1px solid rgba(58, 52, 41, 0.12)',
+                          boxShadow: 'inset 0 0 0 5px rgba(255,250,242,.32)',
                         }}
                       >
                         <Box
@@ -1865,6 +2014,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             display: 'block',
                           }}
                         />
+                        <Box aria-hidden="true" sx={{ position: 'absolute', top: 13, left: 13, width: 36, height: 36, display: 'grid', placeItems: 'center', border: '1px solid rgba(156,72,64,.75)', borderRadius: '50%', color: '#9c4840', bgcolor: 'rgba(247,239,223,.85)', transform: 'rotate(-9deg)', font: '700 .56rem/1 monospace', letterSpacing: '.04em', boxShadow: '0 2px 5px rgba(58,52,41,.12)' }}>{String(startIndex + paginatedProducts.indexOf(product) + 1).padStart(2, '0')}</Box>
                       </Box>
 
                       <Box>
@@ -1903,7 +2053,7 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             pt: 1,
-                            borderTop: '1px solid rgba(58, 52, 41, 0.1)',
+                            borderTop: '1px dashed #cbb797',
                           }}
                         >
                           <Typography
@@ -1928,12 +2078,14 @@ export default function CheckoutOrdersPage(props: CheckoutOrdersPageProps = {}) 
                               fontSize: { xs: '0.9rem', md: '1rem' },
                               borderColor: 'rgba(58, 52, 41, 0.3)',
                               color: parchmentText,
+                              borderRadius: '3px',
+                              backgroundColor: '#f8f0e3',
                               px: { xs: 2, md: 3 },
                               py: 0.75,
                               textTransform: 'none',
                               '&:hover': {
-                                borderColor: 'rgba(58, 52, 41, 0.5)',
-                                backgroundColor: 'rgba(58, 52, 41, 0.05)',
+                                borderColor: '#9c4840',
+                                backgroundColor: '#efe0ca',
                               },
                             }}
                           >

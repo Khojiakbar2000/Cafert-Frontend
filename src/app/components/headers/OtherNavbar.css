@@ -1,0 +1,427 @@
+.cafert-window {
+  isolation: isolate;
+  height: 112px;
+  overflow: visible;
+  background: #f8f1e6 !important;
+  border-bottom: 1px solid #8d6848 !important;
+  box-shadow: 0 5px 13px rgba(64, 43, 24, 0.15) !important;
+}
+
+/* A striped café awning caps the shop fascia. */
+.cafert-window::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 13px;
+  border-bottom: 2px solid #75553a;
+  background: repeating-linear-gradient(
+    90deg,
+    #b78961 0 42px,
+    #fff8ec 42px 84px
+  );
+  pointer-events: none;
+}
+
+.cafert-window > .MuiAppBar-root {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+}
+
+.cafert-window .MuiContainer-root {
+  max-width: 1600px;
+  height: 100%;
+}
+
+.cafert-window .MuiToolbar-root {
+  min-height: 112px !important;
+  height: 100%;
+  padding: 15px clamp(22px, 4vw, 62px) 8px !important;
+  gap: clamp(18px, 3vw, 52px);
+}
+
+.cafert-window__brand {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 4px 0 0 37px;
+}
+
+.cafert-window__brand::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 27px;
+  height: 27px;
+  border: 1px solid #a35741;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #a35741 0 3px, transparent 3.5px),
+    linear-gradient(90deg, transparent 47%, #a35741 48% 52%, transparent 53%),
+    linear-gradient(transparent 47%, #a35741 48% 52%, transparent 53%);
+  transform: translateY(-50%);
+}
+
+.cafert-window__brand::after {
+  content: "COFFEE · COMPANY · CONVERSATION";
+  display: block;
+  margin-top: 5px;
+  color: #725b43;
+  font: 10px/1.15 ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+}
+
+.cafert-window__brand .MuiTypography-root {
+  color: #493e2e !important;
+  font-size: 40px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.cafert-window__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.35vw, 22px) !important;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+}
+
+.cafert-window__links .cafert-window__link.MuiButton-root {
+  position: relative;
+  min-width: 0 !important;
+  height: 54px;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #514633 !important;
+  font: 600 19px/1.1 "EB Garamond", Georgia, serif !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  box-shadow: none !important;
+  transition: color 180ms ease, transform 180ms ease !important;
+}
+
+.cafert-window__links .cafert-window__link.MuiButton-root:hover {
+  color: #9c4e3d !important;
+  transform: translateY(-2px);
+}
+
+.cafert-window__links .cafert-window__link.is-active::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 34px;
+  height: 8px;
+  border: 1px solid #a47952;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: repeating-linear-gradient(90deg, #b78961 0 8px, #fff8ec 8px 16px);
+  transform: translateX(-50%);
+}
+
+.cafert-window__links .cafert-window__link.is-active::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 1px;
+  left: 10px;
+  border-bottom: 2px solid #a35741;
+}
+
+.cafert-window__links .cafert-window__link .MuiBox-root > svg {
+  display: none;
+}
+
+.cafert-window__actions {
+  flex: 0 0 auto;
+  gap: 9px !important;
+}
+
+.cafert-window__actions .MuiIconButton-root {
+  width: 46px;
+  height: 46px;
+  border: 1px solid #bda485;
+  border-radius: 3px !important;
+  background: #fff9ef !important;
+  color: #624b34 !important;
+  box-shadow: none !important;
+}
+
+.cafert-window__actions .MuiIconButton-root:hover {
+  border-color: #9c4e3d;
+  background: #f1e2ce !important;
+  color: #9c4e3d !important;
+  transform: translateY(-2px);
+}
+
+.cafert-window__actions .MuiAccordion-root {
+  width: 46px !important;
+  height: 46px !important;
+  border: 1px solid #bda485 !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+}
+
+.cafert-window__actions .MuiAccordionSummary-root {
+  min-height: 44px !important;
+}
+
+.cafert-window__actions .MuiAccordionSummary-root .MuiIconButton-root {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.cafert-window__actions .MuiButton-root {
+  min-height: 46px;
+  padding: 0 19px !important;
+  border-radius: 2px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.cafert-window__actions .MuiButton-outlined {
+  border-color: #936b48 !important;
+  color: #725337 !important;
+}
+
+.cafert-window__actions .MuiButton-contained {
+  background: #72533a !important;
+  color: #fff8ec !important;
+}
+
+.cafert-window__actions .MuiButton-root:hover {
+  filter: brightness(0.94);
+}
+
+.cafert-window__menu-button {
+  display: none !important;
+}
+
+/* Mobile: the drawer becomes a tall shop window with the same striped lintel. */
+.cafert-window__drawer {
+  position: relative;
+  width: min(88vw, 420px) !important;
+  padding-top: 34px !important;
+  border-left: 5px solid #8a6342 !important;
+  background:
+    linear-gradient(90deg, transparent 0 30px, rgba(163, 87, 65, 0.18) 30px 31px, transparent 31px),
+    repeating-linear-gradient(0deg, transparent 0 42px, rgba(157, 125, 86, 0.12) 42px 43px),
+    #fff9ef !important;
+  color: #493e2e !important;
+}
+
+.cafert-window__drawer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  border-bottom: 2px solid #75553a;
+  background: repeating-linear-gradient(90deg, #b78961 0 30px, #fff8ec 30px 60px);
+}
+
+.cafert-window__drawer .MuiListItem-root {
+  position: relative;
+  min-height: 62px;
+  margin: 3px 17px !important;
+  padding-left: 16px !important;
+  border-bottom: 1px solid rgba(137, 104, 72, 0.28) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #514633 !important;
+  transition: color 180ms ease, padding 180ms ease !important;
+}
+
+.cafert-window__drawer .MuiListItem-root::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #b78961;
+  background: #fff9ef;
+}
+
+.cafert-window__drawer .MuiListItem-root.is-active {
+  padding-left: 23px !important;
+  color: #9c4e3d !important;
+}
+
+.cafert-window__drawer .MuiListItem-root.is-active::before {
+  left: 3px;
+  width: 13px;
+  height: 13px;
+  border: 0;
+  background: #9c4e3d;
+  clip-path: polygon(50% 0, 61% 35%, 100% 35%, 68% 57%, 80% 100%, 50% 72%, 20% 100%, 32% 57%, 0 35%, 39% 35%);
+}
+
+.cafert-window__drawer .MuiListItemIcon-root {
+  min-width: 40px !important;
+  color: inherit !important;
+}
+
+.cafert-window__drawer .MuiListItemText-primary {
+  font: 500 20px/1.2 "EB Garamond", Georgia, serif !important;
+}
+
+.cafert-window__drawer .MuiDrawer-paper {
+  background-color: #fff9ef;
+}
+
+.cafert-window__search-drawer .MuiDrawer-paper {
+  border-top: 13px solid transparent;
+  border-image: repeating-linear-gradient(90deg, #b78961 0 42px, #fff8ec 42px 84px) 13;
+  background: #fff9ef !important;
+}
+
+@media (max-width: 1100px) {
+  .cafert-window .MuiToolbar-root {
+    padding-right: 24px !important;
+    padding-left: 24px !important;
+    gap: 15px;
+  }
+
+  .cafert-window__brand {
+    padding-left: 31px;
+  }
+
+  .cafert-window__brand .MuiTypography-root {
+    font-size: 34px !important;
+  }
+
+  .cafert-window__brand::after {
+    font-size: 8px;
+  }
+
+  .cafert-window__links {
+    gap: 2px !important;
+  }
+
+  .cafert-window__links .cafert-window__link.MuiButton-root {
+    padding: 0 7px !important;
+    font-size: 17px !important;
+  }
+
+  .cafert-window__actions {
+    gap: 4px !important;
+  }
+
+  .cafert-window__actions .MuiButton-root {
+    padding: 0 12px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .cafert-window {
+    height: 88px;
+  }
+
+  .cafert-window .MuiToolbar-root {
+    min-height: 88px !important;
+    padding: 16px 21px 7px !important;
+  }
+
+  .cafert-window__actions {
+    gap: 6px !important;
+  }
+
+  .cafert-window__actions .MuiIconButton-root {
+    width: 42px;
+    height: 42px;
+  }
+
+  .cafert-window__actions .MuiAccordion-root {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .cafert-window__actions .MuiAccordionSummary-root {
+    min-height: 40px !important;
+  }
+
+  .cafert-window__actions .MuiAccordionSummary-root .MuiIconButton-root {
+    width: 40px;
+    height: 40px;
+  }
+
+  .cafert-window__menu-button {
+    display: inline-flex !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .cafert-window {
+    height: 78px;
+  }
+
+  .cafert-window .MuiToolbar-root {
+    min-height: 78px !important;
+    padding: 15px 14px 6px !important;
+    gap: 7px;
+  }
+
+  .cafert-window__brand {
+    padding-left: 28px;
+  }
+
+  .cafert-window__brand::before {
+    width: 21px;
+    height: 21px;
+  }
+
+  .cafert-window__brand::after {
+    margin-top: 3px;
+    font-size: 7px;
+    letter-spacing: 0.04em;
+  }
+
+  .cafert-window__brand .MuiTypography-root {
+    font-size: 29px !important;
+  }
+
+  .cafert-window__actions {
+    gap: 3px !important;
+  }
+
+  .cafert-window__actions .MuiIconButton-root,
+  .cafert-window__actions .MuiAccordion-root {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .cafert-window__actions .MuiAccordionSummary-root {
+    min-height: 36px !important;
+  }
+
+  .cafert-window__actions .MuiAccordionSummary-root .MuiIconButton-root {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .cafert-window__actions .MuiButton-root {
+    min-height: 38px;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cafert-window * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

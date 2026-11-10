@@ -137,16 +137,19 @@ export default function PausedOrders(props: PausedOrderProps) {
     <Stack spacing={2}>
       {pausedOrders?.map((order: Order) => {
         return (
-          <Paper 
+          <Paper
+            className="cafert-pending-ticket"
             key={order._id} 
             elevation={0}
             sx={{
-              borderRadius: '16px',
-              border: '1px solid #e0e0e0',
-              backgroundColor: '#ffffff',
+              position: 'relative',
+              borderRadius: '4px',
+              border: '1px solid #d9c5a5',
+              backgroundColor: '#f8f0e4',
               overflow: 'hidden',
+              boxShadow: '0 6px 14px rgba(83,73,49,.09)',
               '&:hover': {
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                boxShadow: '0 9px 18px rgba(83,73,49,.13)',
               }
             }}
           >
@@ -154,9 +157,14 @@ export default function PausedOrders(props: PausedOrderProps) {
             <Box sx={{ 
               maxHeight: '280px', 
               overflowY: 'auto',
-              p: 2,
+              px: { xs: 1.5, md: 2.5 },
+              pt: 2,
               pb: 1.5
             }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1.1, mb: .3, borderBottom: '1px dashed #cbb797' }}>
+                <Typography sx={{ font: '700 .66rem/1 monospace', letterSpacing: '.15em', color: '#8f4d40' }}>CAFERT · CUSTOMER COPY</Typography>
+                <Typography sx={{ font: '600 .68rem/1 monospace', letterSpacing: '.1em', color: '#827762' }}>NO. {order._id?.slice(-4).toUpperCase()}</Typography>
+              </Box>
               {order?.orderItems?.map((item: OrderItem, index: number) => {
                   // Handle case where productData might not exist in real API data
                   let product: Product | undefined;
@@ -181,7 +189,7 @@ export default function PausedOrders(props: PausedOrderProps) {
                           alignItems: 'center', 
                           gap: 2, 
                           py: 1.5,
-                          borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px solid #f0f0f0' : 'none'
+                          borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px dashed #d8c8ae' : 'none'
                         }}
                       >
                         <Box
@@ -190,8 +198,10 @@ export default function PausedOrders(props: PausedOrderProps) {
                           sx={{ 
                             width: 56, 
                             height: 56, 
-                            borderRadius: '12px',
-                            objectFit: 'cover'
+                            borderRadius: '50%',
+                            border: '2px solid #e5d5bd',
+                            objectFit: 'cover',
+                            backgroundColor: '#efe3d0'
                           }}
                         />
                         <Box sx={{ flex: 1 }}>
@@ -226,20 +236,27 @@ export default function PausedOrders(props: PausedOrderProps) {
                         alignItems: 'center', 
                         gap: 2, 
                         py: 1.5,
-                        borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px solid #f0f0f0' : 'none'
+                        borderBottom: index < (order.orderItems?.length || 0) - 1 ? '1px dashed #d8c8ae' : 'none'
                       }}
                     >
                       <Box
                         component="img"
                         src={imagePath}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
+                          const name = product?.productName?.toLowerCase() || '';
+                          (e.target as HTMLImageElement).src = name.includes('cappuccino')
+                            ? '/img/coffee/coffee-cappuccino.jpg'
+                            : /croissant|pastry|dessert|sweet/.test(name)
+                              ? '/img/food/sweets.webp'
+                              : '/img/coffee/coffee-placeholder.jpg';
                         }}
                         sx={{ 
                           width: 56, 
                           height: 56, 
-                          borderRadius: '12px',
-                          objectFit: 'cover'
+                          borderRadius: '50%',
+                          border: '2px solid #e5d5bd',
+                          objectFit: 'cover',
+                          backgroundColor: '#efe3d0'
                         }}
                       />
                       <Box sx={{ flex: 1 }}>
@@ -262,8 +279,8 @@ export default function PausedOrders(props: PausedOrderProps) {
 
             {/* Total and Actions */}
             <Box sx={{ 
-              borderTop: '2px solid #f0f0f0',
-              backgroundColor: '#fafafa',
+              borderTop: '2px dashed #cbb797',
+              backgroundColor: '#efe3d0',
               p: 2,
               pt: 1.5
             }}>
@@ -285,6 +302,9 @@ export default function PausedOrders(props: PausedOrderProps) {
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
                     ${order.orderTotal.toFixed(2)}
                   </Typography>
+                </Box>
+                <Box aria-label="Payment due" sx={{ display: { xs: 'none', sm: 'flex' }, width: 70, height: 52, flex: '0 0 70px', alignItems: 'center', justifyContent: 'center', textAlign: 'center', border: '1.5px solid #9c4840', outline: '1px dashed #9c4840', outlineOffset: -5, color: '#9c4840', transform: 'rotate(-7deg)', font: '700 .57rem/1.15 monospace', letterSpacing: '.06em' }}>
+                  PAYMENT<br />DUE
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                   <Button

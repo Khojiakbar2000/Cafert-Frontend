@@ -6,6 +6,7 @@ import {
   Box, 
   Typography, 
   Button, 
+  Divider,
   Rating, 
   Chip,
   Grid,
@@ -23,6 +24,8 @@ import {
   SwiperSlide 
 } from "swiper/react";
 import {
+  Add as AddIcon,
+  Remove as RemoveIcon,
   RemoveRedEye as RemoveRedEyeIcon,
   ArrowBack as ArrowBackIcon,
   Favorite as FavoriteIcon,
@@ -271,16 +274,19 @@ export default function ChosenProduct(props: ChosenProductProps) {
 
   return (
     <Box sx={{
-      backgroundColor: colors.background,
-      background: `radial-gradient(circle at 20% 15%, rgba(180,140,90,0.10), transparent 45%),
-                   radial-gradient(circle at 80% 30%, rgba(120,170,160,0.08), transparent 50%)`,
+      backgroundColor: '#d8b88f',
+      backgroundImage: "linear-gradient(rgba(250,244,230,.05),rgba(250,244,230,.05)),url('/img/coffee/cafert-investigation-board.webp')",
+      backgroundSize: '100% auto',
+      backgroundPosition: 'center top',
+      backgroundRepeat: 'repeat-y',
       color: colors.text,
       minHeight: '100vh',
-      py: 4
+      py: { xs: 5, md: 10 },
+      '@media (max-width: 700px)': { backgroundSize: 'auto 1180px' },
     }}>
-      <Container maxWidth="md" sx={{ maxWidth: '1100px !important' }}>
+      <Container maxWidth="xl" sx={{ maxWidth: '1320px !important', px: { xs: 2, md: 4 } }}>
         {/* Breadcrumbs */}
-        <Breadcrumbs sx={{ mb: 3, color: colors.textSecondary }}>
+        <Breadcrumbs sx={{ display: 'table', mb: { xs: 3, md: 5 }, px: 1.5, py: 1, bgcolor: 'rgba(255,250,240,.92)', border: '1px solid #c9b28e', boxShadow: '0 3px 9px rgba(58,43,25,.1)', color: colors.textSecondary }}>
           <Link
             component="button"
             variant="body1"
@@ -296,491 +302,72 @@ export default function ChosenProduct(props: ChosenProductProps) {
           <Typography color="text.primary">{chosenProduct.productName}</Typography>
         </Breadcrumbs>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Box
-            sx={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))',
-              backdropFilter: 'blur(20px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-              border: '1px solid rgba(255,255,255,0.35)',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.14)',
-              borderRadius: '20px',
-              position: 'relative',
-              p: 4,
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                inset: 0,
-                borderRadius: 'inherit',
-                pointerEvents: 'none',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)',
-                zIndex: 0,
-              }
-            }}
-          >
-            <Grid container spacing={4} sx={{ position: 'relative', zIndex: 1 }}>
-            {/* Product Images - 60% */}
-            <Grid item xs={12} md={7.2}>
-              <Stack spacing={2}>
-                {/* Main Image with Carousel */}
-                <Card 
-                  sx={{
-                    backgroundColor: 'transparent',
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    position: 'relative',
-                    '&:hover': {
-                      '& .product-main-image': {
-                        transform: 'scale(1.05)',
-                      },
-                      '& .carousel-arrow': {
-                        opacity: 1,
-                      }
-                    }
-                  }}
-                >
-                  <Box sx={{
-                    '& .swiper-button-next, & .swiper-button-prev': {
-                      color: colors.accent,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      zIndex: 10,
-                      '&:after': {
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                      },
-                      '&:hover': {
-                        backgroundColor: colors.accent,
-                        color: 'white',
-                        transform: 'scale(1.1)',
-                      },
-                      transition: 'all 0.3s ease',
-                    },
-                    '& .swiper-button-next': {
-                      right: '16px',
-                    },
-                    '& .swiper-button-prev': {
-                      left: '16px',
-                    },
-                    '& .swiper-button-disabled': {
-                      opacity: 0.35,
-                    }
-              }}>
-                {chosenProduct?.productImages && chosenProduct.productImages.length > 0 ? (
-                <Swiper
-                    loop={chosenProduct.productImages.length > 1}
-                  spaceBetween={10}
-                    navigation={chosenProduct.productImages.length > 1}
-                  modules={[FreeMode, Navigation, Thumbs]}
-                  className="swiper-area"
-                    style={{ height: '500px' }}
-                    onSlideChange={(swiper) => setSelectedImageIndex(swiper.realIndex)}
-                    initialSlide={selectedImageIndex}
-                >
-                    {chosenProduct.productImages.map((ele: string, index: number) => {
-                      const imagePath = ele ? `${serverApi}${ele}` : '/icons/noimage-list.svg';
-                    return (
-                      <SwiperSlide key={index}>
-                        <img 
-                            className="product-main-image slider-image" 
-                          src={imagePath}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
-                            }}
-                            onClick={() => setLightboxOpen(true)}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                              objectFit: 'cover',
-                              transition: 'transform 0.4s ease',
-                              cursor: 'pointer',
-                          }}
-                          alt={`${chosenProduct.productName} - Image ${index + 1}`}
-                        />
-                      </SwiperSlide>
-                    );
-                  })}
-                </Swiper>
-                ) : (
-                  <Box sx={{ 
-                    width: '100%', 
-                    height: '500px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    backgroundColor: colors.surface,
-                  }}>
-                    <img 
-                      src="/icons/noimage-list.svg"
-                      alt="No image available"
-                      style={{
-                        width: '200px',
-                        height: '200px',
-                        opacity: 0.5
-                      }}
-                    />
-                  </Box>
-                )}
-                  </Box>
-              </Card>
-
-                {/* Thumbnail Strip */}
-                {chosenProduct?.productImages && chosenProduct.productImages.length > 1 && (
-                  <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
-                    {chosenProduct.productImages.map((ele: string, index: number) => {
-                      const imagePath = ele ? `${serverApi}${ele}` : '/icons/noimage-list.svg';
-                      return (
-                        <Box
-                          key={index}
-                          onClick={() => setSelectedImageIndex(index)}
-                          sx={{
-                            flexShrink: 0,
-                            width: 80,
-                            height: 80,
-                            borderRadius: '12px',
-                            overflow: 'hidden',
-                            cursor: 'pointer',
-                            border: selectedImageIndex === index ? `3px solid ${colors.accent}` : `2px solid ${colors.border}`,
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'scale(1.1)',
-                              borderColor: colors.accent,
-                            }
-                          }}
-                        >
-                          <Box
-                            component="img"
-                            src={imagePath}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/icons/noimage-list.svg';
-                            }}
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                )}
-              </Stack>
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45 }}>
+          {/* Product hero: image gallery beside a focused purchase panel */}
+          <Grid container spacing={{ xs: 4, md: 7 }} alignItems="start" sx={{ position: 'relative', '&::after': { content: '""', position: 'absolute', zIndex: 0, left: '48%', top: '28%', width: '10%', height: 110, borderTop: '3px solid #b54f42', borderRight: '3px solid #b54f42', borderRadius: '0 38px 0 0', transform: 'rotate(12deg)', opacity: .82, pointerEvents: 'none', '@media (max-width: 900px)': { display: 'none' } } }}>
+            <Grid item xs={12} md={7}>
+              <Box sx={{ position: 'relative', zIndex: 1, p: { xs: 1.5, md: 2 }, bgcolor: '#f6f0e4', border: '1px solid #dfd4c1', boxShadow: '0 16px 40px rgba(63,49,32,.17)', transform: { md: 'rotate(-.35deg)' }, '&::before': { content: '""', position: 'absolute', zIndex: 8, top: -9, left: '50%', width: 17, height: 17, borderRadius: '50%', bgcolor: '#a05245', border: '2px solid #f2e7d6', boxShadow: '0 2px 4px rgba(48,36,23,.28)' } }}>
+                <Box sx={{ position: 'relative', overflow: 'hidden', bgcolor: '#ece6da', '& .swiper-button-next, & .swiper-button-prev': { color: '#6b7354', bgcolor: 'rgba(255,252,245,.94)', width: 42, height: 42, borderRadius: '50%', boxShadow: '0 3px 10px rgba(45,35,24,.14)', '&::after': { fontSize: 16, fontWeight: 700 } } }}>
+                  {chosenProduct?.productImages?.length ? (
+                    <Swiper loop={chosenProduct.productImages.length > 1} spaceBetween={10} navigation={chosenProduct.productImages.length > 1} modules={[FreeMode, Navigation, Thumbs]} className="swiper-area" style={{ height: 'min(68vw, 680px)', minHeight: 340 }} onSlideChange={(swiper) => setSelectedImageIndex(swiper.realIndex)} initialSlide={selectedImageIndex}>
+                      {chosenProduct.productImages.map((image: string, index: number) => <SwiperSlide key={index}><img className="product-main-image" src={image ? `${serverApi}${image}` : '/icons/noimage-list.svg'} onError={(event) => { (event.target as HTMLImageElement).src = '/icons/noimage-list.svg'; }} onClick={() => setLightboxOpen(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }} alt={`${chosenProduct.productName} · image ${index + 1}`} /></SwiperSlide>)}
+                    </Swiper>
+                  ) : <Box sx={{ height: 320, display: 'grid', placeItems: 'center' }}><img src="/icons/noimage-list.svg" alt="No image available" style={{ width: 160, opacity: .5 }} /></Box>}
+                  <Box aria-hidden="true" sx={{ position: 'absolute', zIndex: 5, top: { xs: 12, md: 20 }, left: { xs: 12, md: 20 }, px: 1.1, py: .65, bgcolor: 'rgba(255,250,240,.94)', color: '#63704f', border: '1px solid rgba(99,112,79,.55)', font: '700 .53rem/1 monospace', letterSpacing: '.11em' }}>LEAD PHOTO · CAFERT</Box>
+                  <Box aria-hidden="true" sx={{ position: 'absolute', zIndex: 5, right: 15, bottom: 15, width: 66, height: 66, border: '1.5px solid #a05245', borderRadius: '50%', outline: '1px dashed #a05245', outlineOffset: -5, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#a05245', bgcolor: 'rgba(255,248,233,.94)', transform: 'rotate(8deg)' }}><Typography sx={{ font: '700 .42rem/1 monospace', letterSpacing: '.1em' }}>CAFERT</Typography><Typography sx={{ font: '700 .55rem/1 monospace', mt: .35 }}>FILED</Typography></Box>
+                </Box>
+                {chosenProduct?.productImages?.length > 1 && <Box sx={{ display: 'flex', gap: 1.5, mt: 2, overflowX: 'auto' }}>{chosenProduct.productImages.map((image: string, index: number) => <Box key={index} onClick={() => setSelectedImageIndex(index)} sx={{ flex: '0 0 72px', height: 72, p: .4, bgcolor: '#fffaf0', border: selectedImageIndex === index ? '2px solid #a05245' : '1px solid #d5c6ad', cursor: 'pointer' }}><Box component="img" src={image ? `${serverApi}${image}` : '/icons/noimage-list.svg'} alt={`${chosenProduct.productName} thumbnail ${index + 1}`} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Box>)}</Box>}
+              </Box>
             </Grid>
 
-            {/* Product Information - 40% */}
-            <Grid item xs={12} md={4.8}>
-              <Stack spacing={2.5}>
-                {/* Product Header - Tightened */}
-                <Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="h3" sx={{
-                      fontWeight: 700,
-                      color: isDarkMode ? '#e0e0e0' : '#2c2c2c', // Slightly darker
-                      fontFamily: 'Playfair Display, serif',
-                      fontSize: { xs: '1.8rem', md: '2.2rem' },
-                      lineHeight: 1.2
-                    }}>
-                      {chosenProduct?.productName}
-                    </Typography>
-                    <IconButton
-                      onClick={toggleFavorite}
-                      sx={{ color: isFavorite ? '#ff6b6b' : colors.textSecondary }}
-                    >
-                      {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                    </IconButton>
-                  </Box>
+            <Grid item xs={12} md={5}>
+              <Box sx={{ position: { md: 'sticky' }, zIndex: 1, top: { md: 100 }, p: { xs: 2.5, md: 4 }, bgcolor: 'rgba(255,250,240,.97)', border: '1px solid #d9c7a8', boxShadow: '0 14px 34px rgba(65,49,31,.18)', '&::before': { content: '""', position: 'absolute', top: -7, left: 26, width: 54, height: 12, bgcolor: '#e8d6b8', border: '1px solid #d0b48a', transform: 'rotate(-4deg)' } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography sx={{ font: '700 .65rem/1 monospace', letterSpacing: '.16em', color: '#a05245' }}>CAFERT CASE FILE · LEAD {productId.slice(-4).toUpperCase()}</Typography>
+                  <IconButton aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'} onClick={toggleFavorite} size="small" sx={{ color: isFavorite ? '#a05245' : colors.textSecondary, border: '1px solid #d8c7a9' }}>{isFavorite ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}</IconButton>
+                </Box>
+                <Typography component="h1" sx={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: { xs: '2.65rem', md: '3.8rem' }, lineHeight: 1.03, color: '#302c24', textTransform: 'capitalize', mb: 2.5 }}>{chosenProduct?.productName}</Typography>
+                <Typography sx={{ fontFamily: 'Georgia,serif', fontSize: '1.12rem', lineHeight: 1.85, color: '#635b4e', mb: 4 }}>{chosenProduct?.productDesc || `A ${chosenProduct?.productName.toLowerCase()} made with care at Cafert.`}</Typography>
 
-                  {/* Rating and Views - Compact */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
-                    <Rating name="half-rating" defaultValue={4.5} precision={0.5} readOnly size="small" />
-                    <Typography variant="body2" sx={{ color: colors.textSecondary, fontSize: '0.85rem' }}>
-                      (1 review)
-                      </Typography>
-                  </Box>
+                <Box sx={{ p: 2.5, borderLeft: '4px solid #9b5c3c', bgcolor: '#f1e7d6', mb: 3.5 }}>
+                  <Typography sx={{ font: '700 .63rem/1 monospace', letterSpacing: '.13em', color: '#a05245', mb: 1.5 }}>VALUE OF THE FIND</Typography>
+                  <Typography sx={{ fontFamily: 'Playfair Display,Georgia,serif', fontSize: '3rem', lineHeight: 1, color: '#78482e', fontWeight: 700 }}>${chosenProduct?.productPrice}</Typography>
                 </Box>
 
-                {/* Price - Stronger, Closer to Title */}
-                <Box>
-                  <Typography variant="h2" sx={{
-                    fontWeight: 700,
-                    color: colors.accent,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
-                    mb: 0.5
-                  }}>
-                    ${chosenProduct?.productPrice}
-                  </Typography>
-                </Box>
-
-                {/* Description - Value-focused */}
-                <Box>
-                  <Typography variant="body1" sx={{ 
-                    color: colors.text,
-                    lineHeight: 1.8,
-                    fontSize: '1rem',
-                    fontWeight: 500,
-                    mb: 2
-                  }}>
-                    {chosenProduct?.productDesc || `A delicious ${chosenProduct?.productName.toLowerCase()} made with premium ingredients and crafted with care.`}
-                  </Typography>
-                  
-                  {/* Bullet Highlights */}
-                  <Stack spacing={1}>
-                    {[
-                      'Freshly prepared daily',
-                      'Made with premium ingredients',
-                      'Perfect for any occasion'
-                    ].map((highlight, index) => (
-                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon sx={{ fontSize: 18, color: colors.accent }} />
-                        <Typography variant="body2" sx={{ 
-                          color: colors.textSecondary,
-                          fontSize: '0.9rem',
-                          lineHeight: 1.6
-                        }}>
-                          {highlight}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Box>
-
-                {/* Product Details - Pill Cards */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                  <Chip
-                    label={`${chosenProduct.productSize} Size`}
-                    sx={{
-                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(139, 69, 19, 0.1)',
-                      color: colors.text,
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      height: 36,
-                      borderRadius: '18px',
-                    }}
-                  />
-                  <Chip
-                    label={`${chosenProduct.productVolume} ml`}
-                    sx={{
-                      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(139, 69, 19, 0.1)',
-                      color: colors.text,
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      height: 36,
-                      borderRadius: '18px',
-                    }}
-                  />
-                  <Chip
-                    label={`${chosenProduct.productLeftCount} Available`}
-                    sx={{
-                      backgroundColor: chosenProduct.productLeftCount > 0 
-                        ? (isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.15)')
-                        : (isDarkMode ? 'rgba(244, 67, 54, 0.2)' : 'rgba(244, 67, 54, 0.15)'),
-                      color: colors.text,
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      height: 36,
-                      borderRadius: '18px',
-                    }}
-                  />
-                </Box>
-
-                {/* CTA - Stronger, Food-app-like */}
-                <Box>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<ShoppingCartIcon />}
-                    onClick={handleAddToCart}
-                    disabled={chosenProduct.productLeftCount === 0}
-                    fullWidth
-                    sx={{
-                      borderRadius: '12px',
-                      background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentDark || colors.accent} 100%)`,
-                      color: 'white',
-                      px: 4,
-                      py: 2,
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                      '&:hover': {
-                        background: `linear-gradient(135deg, ${colors.accentDark || colors.accent} 0%, ${colors.accent} 100%)`,
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-                        transform: 'translateY(-2px)',
-                      },
-                      '&:disabled': {
-                        backgroundColor: colors.textSecondary,
-                        background: 'none',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                  <Typography variant="body2" sx={{ 
-                    textAlign: 'center',
-                    color: colors.textSecondary,
-                    mt: 1,
-                    fontSize: '0.85rem'
-                  }}>
-                    Ready in ~15 minutes
-                  </Typography>
-                </Box>
-
-                {/* Social Proof */}
-                <Box sx={{
-                  background: 'rgba(255,255,255,0.20)',
-                  backdropFilter: 'blur(14px)',
-                  WebkitBackdropFilter: 'blur(14px)',
-                  border: '1px solid rgba(255,255,255,0.30)',
-                  borderRadius: '14px',
-                  p: 2,
-                  textAlign: 'center',
-                }}>
-                  <Typography variant="body2" sx={{ 
-                    color: colors.accent,
-                    fontWeight: 600,
-                    fontSize: '0.95rem'
-                  }}>
-                    🔥 Popular today
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    color: colors.textSecondary,
-                    fontSize: '0.85rem',
-                    mt: 0.5
-                  }}>
-                    Ordered 23 times today
-                  </Typography>
-                </Box>
-
-                {/* Restaurant Info - Enhanced */}
-                {restaurant && (
-                  <Card sx={{
-                    background: 'rgba(255,255,255,0.20)',
-                    backdropFilter: 'blur(14px)',
-                    WebkitBackdropFilter: 'blur(14px)',
-                    border: '1px solid rgba(255,255,255,0.30)',
-                    borderRadius: '14px',
-                    p: 2.5,
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Box sx={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: '50%',
-                        backgroundColor: colors.accent,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: '1.2rem'
-                      }}>
-                        {restaurant?.memberNick?.charAt(0).toUpperCase() || 'C'}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 700, color: colors.text }}>
-                      {restaurant?.memberNick}
-                    </Typography>
-                          <VerifiedIcon sx={{ fontSize: 18, color: colors.accent }} />
-                        </Box>
-                        <Typography variant="caption" sx={{ color: colors.textSecondary, fontSize: '0.75rem' }}>
-                          Verified Cafe
-                    </Typography>
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PhoneIcon sx={{ fontSize: 18, color: colors.accent }} />
-                      <Typography 
-                        variant="body2" 
-                        component="a"
-                        href={`tel:${restaurant?.memberPhone}`}
-                        sx={{ 
-                          color: colors.text,
-                          textDecoration: 'none',
-                          fontWeight: 600,
-                          '&:hover': {
-                            color: colors.accent,
-                            textDecoration: 'underline'
-                          }
-                        }}
-                      >
-                        {restaurant?.memberPhone}
-                      </Typography>
-                    </Box>
-                  </Card>
-                )}
-              </Stack>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
+                  <Typography sx={{ mr: 'auto', font: '700 .56rem/1 monospace', letterSpacing: '.1em', color: '#80765f' }}>QUANTITY</Typography>
+                  <IconButton aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} sx={{ border: '1px solid #d5c6ad', borderRadius: '3px', width: 46, height: 46, color: '#5c584b' }}><RemoveIcon fontSize="small" /></IconButton>
+                  <Typography aria-live="polite" sx={{ minWidth: 28, textAlign: 'center', font: '700 .78rem/1 monospace', color: colors.text }}>{quantity}</Typography>
+                  <IconButton aria-label="Increase quantity" disabled={quantity >= (chosenProduct?.productLeftCount || 1)} onClick={() => setQuantity((value) => Math.min(chosenProduct?.productLeftCount || value + 1, value + 1))} sx={{ border: '1px solid #d5c6ad', borderRadius: '3px', width: 46, height: 46, color: '#5c584b' }}><AddIcon fontSize="small" /></IconButton>
+                </Stack>
+                <Button variant="contained" onClick={handleAddToCart} disabled={chosenProduct?.productLeftCount === 0} fullWidth sx={{ minHeight: 70, borderRadius: '3px', bgcolor: '#a64f42', color: '#fffaf0', fontFamily: 'Georgia,serif', fontSize: '1.18rem', fontWeight: 700, textTransform: 'none', boxShadow: '0 5px 12px rgba(133,58,48,.23)', '&:hover': { bgcolor: '#873f35', boxShadow: '0 7px 16px rgba(133,58,48,.28)' }, '&:disabled': { bgcolor: '#c9c2b5', color: '#f7f2e9' } }}>{chosenProduct?.productLeftCount === 0 ? 'Sold out' : 'Add to Cart'}</Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}><Typography sx={{ px: 1.3, py: .65, borderRadius: 10, bgcolor: '#e7ebdd', color: '#566344', font: '700 .63rem/1 monospace', letterSpacing: '.04em' }}>{chosenProduct?.productLeftCount > 0 ? `${chosenProduct.productLeftCount} AVAILABLE AT THE COUNTER` : 'CURRENTLY UNAVAILABLE'}</Typography></Box>
+              </Box>
             </Grid>
           </Grid>
+
+          {/* Product story and factual details */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.3fr .7fr' }, gap: { xs: 4, md: 8 }, mt: { xs: 7, md: 11 }, pt: { xs: 4, md: 6 }, borderTop: '1px solid #d9cbb5' }}>
+            <Box sx={{ maxWidth: 700, p: { xs: 3, md: 4 }, bgcolor: 'rgba(255,250,240,.96)', border: '1px solid #dfd2bc', boxShadow: '0 9px 24px rgba(73,55,34,.09)', transform: { md: 'rotate(-.4deg)' } }}><Typography sx={{ font: '700 .62rem/1 monospace', letterSpacing: '.16em', color: '#a05245', mb: 1.5 }}>CASE NOTES · CAFERT COUNTER</Typography><Typography variant="h4" sx={{ fontFamily: 'Playfair Display,Georgia,serif', color: colors.text, mb: 2.5 }}>What we found.</Typography><Typography sx={{ fontFamily: 'Georgia,serif', fontSize: '1.08rem', lineHeight: 1.95, color: colors.textSecondary }}>{chosenProduct?.productDesc || `Meet the ${chosenProduct?.productName}, available from the Cafert counter.`}</Typography></Box>
+            <Box sx={{ p: { xs: 3, md: 4 }, bgcolor: '#f3ead8', border: '1px solid #dfd2bc' }}><Typography sx={{ font: '700 .57rem/1 monospace', letterSpacing: '.14em', color: '#7a8061', mb: 2.5 }}>AT A GLANCE</Typography><Stack spacing={2}><Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}><Typography sx={{ fontFamily: 'Georgia,serif', color: colors.textSecondary }}>Size</Typography><Typography sx={{ font: '700 .65rem/1.5 monospace', color: colors.text, textTransform: 'uppercase' }}>{chosenProduct?.productSize || 'Regular'}</Typography></Box><Divider sx={{ borderColor: '#d5c6ad', borderStyle: 'dashed' }} /><Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}><Typography sx={{ fontFamily: 'Georgia,serif', color: colors.textSecondary }}>Volume</Typography><Typography sx={{ font: '700 .65rem/1.5 monospace', color: colors.text }}>{chosenProduct?.productVolume || '—'} ml</Typography></Box>{restaurant && <><Divider sx={{ borderColor: '#d5c6ad', borderStyle: 'dashed' }} /><Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}><Typography sx={{ fontFamily: 'Georgia,serif', color: colors.textSecondary }}>Made by</Typography><Typography sx={{ font: '700 .65rem/1.5 monospace', color: colors.text }}>{restaurant.memberNick}</Typography></Box></>}</Stack></Box>
           </Box>
 
-          {/* Related Items Section */}
           {relatedProducts.length > 0 && (
-            <Box sx={{ mt: 8 }}>
-              <Typography variant="h4" sx={{
-                fontWeight: 700,
-                color: colors.text,
-                mb: 4,
-                fontFamily: 'Playfair Display, serif'
-              }}>
-                You might also like
-              </Typography>
-              <Grid container spacing={3}>
+            <Box sx={{ mt: { xs: 7, md: 11 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', mb: 4, pb: 2, borderBottom: '1px solid #d9cbb5' }}>
+                <Box>
+                  <Typography sx={{ font: '700 .62rem/1 monospace', letterSpacing: '.15em', color: '#a05245', mb: 1 }}>FOLLOW THE THREAD</Typography>
+                  <Typography variant="h4" sx={{ fontFamily: 'Playfair Display,Georgia,serif', color: colors.text }}>Other leads</Typography>
+                </Box>
+              </Box>
+              <Grid container spacing={{ xs: 2, md: 3 }}>
                 {relatedProducts.map((product: Product) => (
                   <Grid item xs={6} sm={4} md={3} key={product._id}>
-                    <Card
-                      onClick={() => {
-                        setChosenProduct(product);
-                        history.push(`/products/${product._id}`);
-                      }}
-                      sx={{
-                        cursor: 'pointer',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translateY(-8px)',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                        }
-                      }}
-                    >
-                      <CardMedia
-                        component="img"
-                        height="200"
-                        image={`${serverApi}${product.productImages[0]}`}
-                        alt={product.productName}
-                        sx={{ objectFit: 'cover' }}
-                      />
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="h6" sx={{
-                          fontWeight: 600,
-                          color: colors.text,
-                          fontSize: '1rem',
-                          mb: 1,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {product.productName}
-                        </Typography>
-                        <Typography variant="h6" sx={{
-                          fontWeight: 700,
-                          color: colors.accent,
-                          fontSize: '1.1rem'
-                        }}>
-                          ${product.productPrice}
-                        </Typography>
+                    <Card onClick={() => { setChosenProduct(product); history.push(`/products/${product._id}`); }} sx={{ cursor: 'pointer', overflow: 'hidden', borderRadius: '4px', border: '1px solid #ded2be', bgcolor: '#f9f5ed', boxShadow: '0 4px 12px rgba(73,55,34,.07)', transition: 'transform .2s ease, box-shadow .2s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 9px 18px rgba(73,55,34,.12)' } }}>
+                      <CardMedia component="img" height="220" image={`${serverApi}${product.productImages?.[0] || ''}`} alt={product.productName} sx={{ objectFit: 'cover' }} />
+                      <CardContent sx={{ p: 2.2 }}>
+                        <Typography sx={{ fontFamily: 'Georgia,serif', color: colors.text, fontWeight: 700, mb: .8 }}>{product.productName}</Typography>
+                        <Typography sx={{ font: '700 .72rem/1 monospace', color: '#865638' }}>${product.productPrice}</Typography>
                       </CardContent>
                     </Card>
                   </Grid>

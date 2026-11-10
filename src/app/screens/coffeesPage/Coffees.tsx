@@ -40,7 +40,6 @@ import {
   AddShoppingCart as AddShoppingCartIcon,
   LocationOn as LocationOnIcon,
   Phone as PhoneIcon,
-  AccessTime as AccessTimeIcon,
   Star as StarIcon,
   Visibility as VisibilityIcon,
   Whatshot as WhatshotIcon,
@@ -61,32 +60,205 @@ import { serverApi } from "../../../lib/config";
 const AwardsStrip = React.lazy(() => import('../../../mui-coffee/components/AwardsStrip'));
 const ImageRightSection = React.lazy(() => import('../../../mui-coffee/components/ImageRightSection'));
 
-// Loading skeleton for cards
-const CardSkeleton = () => (
-  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Skeleton variant="rectangular" height={220} />
-    <CardContent sx={{ flexGrow: 1 }}>
-      <Skeleton variant="text" height={32} sx={{ mb: 1 }} />
-      <Skeleton variant="text" height={20} sx={{ mb: 2 }} />
-      <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
-      <Skeleton variant="rectangular" height={40} sx={{ mb: 2 }} />
-      <Skeleton variant="rectangular" height={48} />
-    </CardContent>
-  </Card>
-);
+// While products arrive, the counter presents blank order tickets in the same
+// shape and grid positions as the finished product cards.
+const CardSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const paper = isDarkMode ? '#30271f' : '#fff9ee';
+  const line = isDarkMode ? 'rgba(225,197,160,.14)' : 'rgba(128,91,54,.14)';
+  const placeholder = isDarkMode ? 'rgba(218,190,151,.14)' : 'rgba(157,119,77,.15)';
 
-// Loading skeleton for the entire grid
-const GridSkeleton = () => (
-  <Box sx={{ 
-    display: 'grid', 
-    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-    gap: 4 
-  }}>
-    {Array.from({ length: 8 }).map((_, index) => (
-      <CardSkeleton key={index} />
+  return (
+    <Card
+      aria-hidden="true"
+      sx={{
+        minHeight: { xs: 510, sm: 540 },
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        borderRadius: '2px',
+        backgroundColor: paper,
+        backgroundImage: `radial-gradient(circle at 0 7px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 3.5px, transparent 4px), radial-gradient(circle at 100% 7px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 3.5px, transparent 4px)`,
+        backgroundSize: '8px 14px, 8px 14px',
+        backgroundRepeat: 'repeat-y, repeat-y',
+        border: `1px dashed ${isDarkMode ? '#806747' : '#c6a982'}`,
+        boxShadow: isDarkMode ? '3px 5px 0 rgba(0,0,0,.2)' : '3px 5px 0 #e2d2b9, 0 10px 20px rgba(72,49,27,.07)',
+        '&::before': {
+          content: '""', position: 'absolute', inset: 9, border: `1px dashed ${line}`, pointerEvents: 'none', zIndex: 2,
+        },
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, pt: 2.25, pb: 1.25, borderBottom: `1px dashed ${line}` }}>
+        <Skeleton animation={false} variant="text" width="38%" height={17} sx={{ bgcolor: placeholder }} />
+        <Skeleton animation={false} variant="circular" width={20} height={20} sx={{ bgcolor: placeholder }} />
+      </Box>
+      <Box sx={{ position: 'relative', height: { xs: 252, sm: 270 }, mx: 2, mt: 1.75, overflow: 'hidden', clipPath: 'polygon(2% 1%, 22% 0, 43% 1.5%, 64% 0, 82% 1%, 98% 0, 100% 24%, 98% 50%, 100% 76%, 98% 100%, 77% 98%, 55% 100%, 32% 98%, 1% 100%, 0 74%, 2% 50%, 0 25%)', background: isDarkMode ? '#443629' : '#ecdfcc' }}>
+        <Skeleton animation={false} variant="rectangular" sx={{ width: '100%', height: '100%', bgcolor: 'transparent' }} />
+        <Box sx={{ position: 'absolute', inset: 12, display: 'grid', placeItems: 'center', border: `1px dashed ${line}`, color: isDarkMode ? '#b79c78' : '#a17d58', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.92rem', letterSpacing: '.02em' }}>
+          menu photo
+        </Box>
+      </Box>
+      <CardContent sx={{ px: 2.5, pt: 2, pb: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Skeleton animation={false} variant="text" width="54%" height={30} sx={{ bgcolor: placeholder }} />
+          <Skeleton animation={false} variant="text" width="18%" height={25} sx={{ bgcolor: placeholder }} />
+        </Box>
+        <Skeleton animation={false} variant="text" width="46%" height={20} sx={{ bgcolor: placeholder, mb: 1.5 }} />
+        <Skeleton animation={false} variant="rounded" width="35%" height={23} sx={{ bgcolor: placeholder, borderRadius: 0, mb: 2 }} />
+        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: `1px dashed ${line}` }}>
+          <Skeleton animation={false} variant="rounded" height={42} sx={{ bgcolor: placeholder, borderRadius: 0 }} />
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+// `display: contents` lets the loading banner and ticket cards occupy the real
+// product grid directly, so loading and loaded layouts share the same tracks.
+const GridSkeleton = ({ isDarkMode, count }: { isDarkMode: boolean; count: number }) => (
+  <Box role="status" aria-label="Loading the menu" sx={{ display: 'contents' }}>
+    <Box sx={{ gridColumn: '1 / -1', minHeight: { xs: 94, sm: 108 }, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, pl: { xs: 2, sm: 3 }, pr: { xs: 1.5, sm: 2.5 }, py: 1.5, overflow: 'hidden', backgroundColor: isDarkMode ? '#3a2e23' : '#eadbc4', border: `1px dashed ${isDarkMode ? '#806747' : '#c6a982'}`, boxShadow: isDarkMode ? '3px 4px 0 rgba(0,0,0,.16)' : '3px 4px 0 #ddc9aa' }}>
+      <Box sx={{ minWidth: 0, position: 'relative', zIndex: 1 }}>
+        <Typography sx={{ color: isDarkMode ? '#d2b181' : '#8a5c3b', fontSize: '.8rem', fontWeight: 800, letterSpacing: '.1em', mb: .5 }}>
+          ORDER RAIL · MENU IN PREPARATION
+        </Typography>
+        <Typography sx={{ color: isDarkMode ? '#f0e2cf' : '#49392c', fontFamily: 'Georgia, serif', fontSize: { xs: '.98rem', sm: '1.12rem' }, fontStyle: 'italic' }}>
+          The barista is setting out today’s menu.
+        </Typography>
+      </Box>
+      <Box component="img" src="/img/coffee/cafert-counter-barista.webp" alt="" sx={{ alignSelf: 'stretch', width: { xs: 72, sm: 90 }, height: { xs: 94, sm: 116 }, flex: '0 0 auto', objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 5px 4px rgba(58,38,21,.18))', pointerEvents: 'none' }} />
+      <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', zIndex: 2, right: 90, top: 8, px: 1.2, py: .6, maxWidth: 180, color: '#503a29', backgroundColor: '#fff9ee', border: '1px solid #d4bd9c', boxShadow: '2px 3px 0 rgba(78,53,29,.12)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.86rem', transform: 'rotate(-2deg)', '&::after': { content: '""', position: 'absolute', right: -5, bottom: 4, width: 8, height: 8, backgroundColor: '#fff9ee', borderRight: '1px solid #d4bd9c', borderBottom: '1px solid #d4bd9c', transform: 'rotate(-45deg)' } }}>
+        Just a moment, I’m laying out the menu.
+      </Box>
+    </Box>
+    {Array.from({ length: count }).map((_, index) => (
+      <CardSkeleton key={index} isDarkMode={isDarkMode} />
     ))}
   </Box>
 );
+
+type CafeLocation = {
+  id: string;
+  name: string;
+  address: string;
+  area: string;
+  mapQuery: string;
+  hours?: string;
+  phone?: string;
+};
+
+const CAFE_LOCATIONS: CafeLocation[] = [
+  { id: 'main', name: 'Main Coffee Shop', address: '123 Coffee Street, Downtown, New York, NY 10001', area: 'Downtown', mapQuery: 'Downtown Manhattan, New York, NY', hours: 'Open daily, 7:00 AM–10:00 PM', phone: '(555) 123-4567' },
+  { id: 'midtown', name: 'Midtown Branch', address: '456 Avenue A, Midtown', area: 'Midtown', mapQuery: 'Midtown Manhattan, New York, NY' },
+  { id: 'brooklyn', name: 'Brooklyn Branch', address: '789 Coffee Lane, Brooklyn', area: 'Brooklyn', mapQuery: 'Brooklyn, New York, NY' },
+  { id: 'queens', name: 'Queens Branch', address: '321 Brew Street, Queens', area: 'Queens', mapQuery: 'Queens, New York, NY' },
+];
+
+function CafertLocationGuide({ isDarkMode }: { isDarkMode: boolean }) {
+  const [selectedId, setSelectedId] = useState(CAFE_LOCATIONS[0].id);
+  const selected = CAFE_LOCATIONS.find((location) => location.id === selectedId) || CAFE_LOCATIONS[0];
+  const paper = isDarkMode ? '#33291f' : '#f4ead9';
+  const ink = isDarkMode ? '#f0e2cf' : '#443326';
+  const muted = isDarkMode ? '#c8b7a1' : '#76634e';
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(selected.mapQuery)}&output=embed`;
+  const destination = selected.id === 'main' ? selected.address : `${selected.address}, New York, NY, USA`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+
+  return (
+    <Box component="section" sx={{ mt: { xs: 5, md: 8 }, color: ink }} aria-labelledby="cafert-location-title">
+      <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'flex-end' }, justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
+        <Box>
+          <Typography sx={{ color: isDarkMode ? '#c99a68' : '#9a6846', fontSize: '.72rem', fontWeight: 800, letterSpacing: '.16em', mb: .75 }}>
+            THE NEIGHBORHOOD GUIDE
+          </Typography>
+          <Typography id="cafert-location-title" component="h2" sx={{ m: 0, fontFamily: 'Georgia, serif', fontSize: { xs: '2rem', sm: '2.45rem' }, lineHeight: 1.04, fontWeight: 600, color: ink }}>
+            Your Cafert, around the corner.
+          </Typography>
+        </Box>
+        <Typography sx={{ display: { xs: 'none', md: 'block' }, color: muted, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1rem' }}>
+          Choose a stop to unfold its map ticket.
+        </Typography>
+      </Box>
+
+      <Paper elevation={0} sx={{ p: { xs: 1.25, sm: 2 }, backgroundColor: paper, border: `1px solid ${isDarkMode ? '#68533b' : '#d7c3a5'}`, borderRadius: 0, boxShadow: isDarkMode ? '0 12px 26px rgba(0,0,0,.24)' : '4px 8px 0 #e8dbc7, 0 16px 35px rgba(74,48,24,.11)', position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.45fr) 18px minmax(300px, .78fr)' }, alignItems: 'stretch' }}>
+          <Box sx={{ minWidth: 0, p: { xs: .5, sm: 1 }, background: isDarkMode ? '#27231f' : '#e7decf', clipPath: 'polygon(0 1%, 18% 0, 36% 1%, 54% 0, 72% 1%, 100% 0, 99% 22%, 100% 44%, 99% 66%, 100% 100%, 78% 99%, 56% 100%, 34% 99%, 12% 100%, 0 99%)' }}>
+            <Box sx={{ height: { xs: 270, sm: 340, md: 410 }, position: 'relative', backgroundColor: '#e6dfd3', overflow: 'hidden', clipPath: 'polygon(1% 0, 20% 1%, 40% 0, 60% 1%, 80% 0, 100% 1%, 99% 22%, 100% 44%, 99% 66%, 100% 99%, 80% 100%, 60% 99%, 40% 100%, 20% 99%, 0 100%, 1% 78%, 0 56%, 1% 34%)' }}>
+              <iframe
+                key={selected.id}
+                src={mapUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title={`Map to ${selected.name}`}
+              />
+              <Box sx={{ position: 'absolute', top: 12, left: 12, px: 1.25, py: .65, color: '#493522', background: '#fff8ec', border: '1px solid #d1b993', fontFamily: 'Georgia, serif', fontSize: '.84rem', boxShadow: '2px 3px 0 rgba(61,41,21,.16)', pointerEvents: 'none' }}>
+                CAFERT · {selected.area.toUpperCase()}
+              </Box>
+            </Box>
+          </Box>
+
+          <Box aria-hidden="true" sx={{ display: { xs: 'none', md: 'block' }, background: `repeating-linear-gradient(90deg, ${paper} 0 4px, ${isDarkMode ? '#775b3d' : '#d8c3a5'} 4px 5px, ${paper} 5px 9px)`, mx: .25 }} />
+
+          <Box sx={{ position: 'relative', mt: { xs: 2, md: 0 }, minHeight: { xs: 350, md: 410 }, px: { xs: 2, sm: 3 }, pt: { xs: 2.5, md: 3.5 }, pb: { xs: 2.5, md: 3 }, overflow: 'hidden', color: ink, backgroundColor: isDarkMode ? '#e7d7bf' : '#fbf3e6', clipPath: 'polygon(0 2%, 5% 0, 10% 2%, 15% 0, 20% 2%, 25% 0, 30% 2%, 35% 0, 40% 2%, 45% 0, 50% 2%, 55% 0, 60% 2%, 65% 0, 70% 2%, 75% 0, 80% 2%, 85% 0, 90% 2%, 95% 0, 100% 2%, 100% 100%, 0 100%)' }}>
+            <Typography sx={{ color: '#986a45', fontSize: '.68rem', fontWeight: 800, letterSpacing: '.15em', mb: 1 }}>FOLD-OUT LOCATION TICKET</Typography>
+            <Typography component="h3" sx={{ m: 0, maxWidth: '74%', fontFamily: 'Georgia, serif', fontSize: { xs: '1.7rem', md: '1.85rem' }, lineHeight: 1.05, color: '#443326' }}>
+              {selected.name}
+            </Typography>
+            <Box sx={{ width: 38, height: 2, my: 1.8, backgroundColor: '#b6865c' }} />
+            <Typography sx={{ maxWidth: '78%', fontSize: '.98rem', lineHeight: 1.55, color: '#6c5843' }}>{selected.address}</Typography>
+            {selected.hours && <Typography sx={{ mt: 1.25, maxWidth: '78%', color: '#6c5843', fontSize: '.91rem' }}>{selected.hours}</Typography>}
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2.25, pr: { xs: 0, md: 1 } }}>
+              <Button component="a" href={directionsUrl} target="_blank" rel="noopener noreferrer" variant="contained" startIcon={<LocationOnIcon />} sx={{ backgroundColor: '#8d5b3c', color: '#fff8ed', textTransform: 'none', borderRadius: 0, px: 2, '&:hover': { backgroundColor: '#71442d' } }}>
+                Get directions
+              </Button>
+              {selected.phone && <Button component="a" href={`tel:${selected.phone.replace(/[^\d+]/g, '')}`} variant="outlined" startIcon={<PhoneIcon />} sx={{ color: '#70482f', borderColor: '#b99673', textTransform: 'none', borderRadius: 0 }}>
+                Call
+              </Button>}
+            </Box>
+
+            <Box sx={{ position: 'absolute', left: 16, right: 112, bottom: 16, borderTop: '1px dashed rgba(89,62,36,.35)', pt: 1, color: '#876b4e', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.9rem' }}>
+              {selected.phone ? 'Open daily · come say hello.' : 'A Cafert stop in the neighborhood.'}
+            </Box>
+            <Box component="img" src="/img/coffee/cafert-counter-barista.webp" alt="" sx={{ position: 'absolute', right: -8, bottom: -21, width: 128, height: 190, objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 6px 4px rgba(54,35,18,.18))', pointerEvents: 'none' }} />
+            <Box sx={{ position: 'absolute', right: 101, bottom: 78, px: 1, py: .6, color: '#493522', backgroundColor: '#fffaf0', border: '1px solid #d1b993', boxShadow: '2px 2px 0 rgba(61,41,21,.14)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.8rem', transform: 'rotate(-3deg)', '&::after': { content: '""', position: 'absolute', right: -5, bottom: 5, width: 8, height: 8, background: '#fffaf0', borderRight: '1px solid #d1b993', borderBottom: '1px solid #d1b993', transform: 'rotate(-45deg)' } }}>
+              Let’s find your stop.
+            </Box>
+          </Box>
+        </Box>
+
+        <Box role="group" aria-label="Choose a Cafert location" sx={{ display: 'flex', gap: 1, overflowX: { xs: 'auto', md: 'visible' }, mt: 2, pt: 1.5, borderTop: `1px dashed ${isDarkMode ? '#766148' : '#cdb997'}`, scrollbarWidth: 'thin' }}>
+          {CAFE_LOCATIONS.map((location, index) => (
+            <Button
+              key={location.id}
+              type="button"
+              aria-pressed={selected.id === location.id}
+              onClick={() => setSelectedId(location.id)}
+              sx={{
+                flex: { xs: '0 0 auto', md: '1 1 0' }, justifyContent: 'flex-start', textAlign: 'left',
+                minHeight: 58, px: 1.5, py: 1, borderRadius: 0,
+                color: selected.id === location.id ? '#fff8ed' : ink,
+                backgroundColor: selected.id === location.id ? '#8d5b3c' : (isDarkMode ? '#3c3024' : '#efe3d0'),
+                border: `1px solid ${selected.id === location.id ? '#8d5b3c' : (isDarkMode ? '#6a5338' : '#d9c4a5')}`,
+                '&:hover': { backgroundColor: selected.id === location.id ? '#71442d' : (isDarkMode ? '#493a2b' : '#e7d8c1') },
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography component="span" sx={{ display: 'block', fontSize: '.9rem', fontWeight: 700, lineHeight: 1.2 }}>{location.name}</Typography>
+                <Typography component="span" sx={{ display: 'block', mt: .35, fontSize: '.75rem', opacity: .82 }}>{String(index + 1).padStart(2, '0')} · {location.area}</Typography>
+              </Box>
+            </Button>
+          ))}
+        </Box>
+      </Paper>
+    </Box>
+  );
+}
 
 // Extended coffee data with new fields
 interface CoffeeItem {
@@ -415,7 +587,30 @@ export default function Coffees(props: CoffeesProps) {
       width: '100%',
       minHeight: '100vh',
       position: 'relative',
+      isolation: 'isolate',
+      overflow: 'hidden',
+      backgroundColor: isDarkMode ? '#27221b' : '#f5eee2',
+      backgroundImage: isDarkMode
+        ? 'radial-gradient(ellipse at 12% 8%, rgba(168,124,79,.15), transparent 32%), radial-gradient(ellipse at 88% 54%, rgba(108,123,83,.12), transparent 30%), repeating-linear-gradient(0deg, rgba(239,218,188,.018) 0 1px, transparent 1px 5px)'
+        : 'radial-gradient(ellipse at 12% 8%, rgba(202,151,103,.18), transparent 32%), radial-gradient(ellipse at 88% 54%, rgba(124,143,96,.13), transparent 30%), repeating-linear-gradient(0deg, rgba(104,76,47,.025) 0 1px, transparent 1px 5px)',
     }}>
+      {/* Cafert's wrapping-paper backdrop: a printed neighborhood route and real coffee-plant cutouts sit behind the whole page. */}
+      <Box aria-hidden="true" sx={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <Box component="svg" viewBox="0 0 1440 1800" preserveAspectRatio="none" sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: isDarkMode ? .22 : .34 }}>
+          <path d="M-80 175 C180 90 180 270 430 225 S730 115 870 215 S1150 330 1510 165" fill="none" stroke={isDarkMode ? '#b58a5b' : '#b6895b'} strokeWidth="2" strokeDasharray="3 11" />
+          <path d="M1460 540 C1240 430 1190 650 1000 610 S760 475 620 590 S350 745 -50 605" fill="none" stroke={isDarkMode ? '#95a07a' : '#8c9970'} strokeWidth="2" strokeDasharray="2 12" />
+          <path d="M-70 1130 C180 1010 310 1240 520 1165 S870 995 1040 1135 S1320 1300 1500 1160" fill="none" stroke={isDarkMode ? '#b58a5b' : '#b6895b'} strokeWidth="2" strokeDasharray="3 11" />
+          <g fill={isDarkMode ? '#c9a477' : '#ae8053'}>
+            <circle cx="430" cy="225" r="7"/><circle cx="870" cy="215" r="7"/><circle cx="1000" cy="610" r="7"/><circle cx="620" cy="590" r="7"/><circle cx="520" cy="1165" r="7"/><circle cx="1040" cy="1135" r="7"/>
+          </g>
+          <g fill="none" stroke={isDarkMode ? '#c6a67c' : '#9a7956'} strokeWidth="1.5" opacity=".55">
+            <path d="M70 350h150m-126 16h112M1170 825h190m-164 16h144M180 1480h180m-150 16h120" />
+            <circle cx="120" cy="353" r="30"/><circle cx="1280" cy="830" r="30"/><circle cx="270" cy="1485" r="30"/>
+          </g>
+        </Box>
+        <Box component="img" src="/img/coffee/coffee-branch-cutout.webp" alt="" sx={{ position: 'absolute', top: { xs: 90, md: 120 }, right: { xs: -120, md: -80 }, width: { xs: 230, md: 360 }, height: 'auto', opacity: isDarkMode ? .72 : .9, transform: 'rotate(-8deg)', filter: 'drop-shadow(0 14px 11px rgba(54,35,18,.16))' }} />
+        <Box component="img" src="/img/coffee/coffee-branch-cutout.webp" alt="" sx={{ position: 'absolute', top: { xs: 1120, md: 1450 }, left: { xs: -145, md: -115 }, width: { xs: 260, md: 410 }, height: 'auto', opacity: isDarkMode ? .52 : .72, transform: 'scaleX(-1) rotate(-14deg)', filter: 'drop-shadow(0 14px 11px rgba(54,35,18,.13))' }} />
+      </Box>
       {/* Content in Container */}
       <Container
         maxWidth="xl"
@@ -432,29 +627,37 @@ export default function Coffees(props: CoffeesProps) {
         <Stack spacing={6}>
           {/* Enhanced Search and Controls */}
           <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-            borderRadius: '20px',
-            p: 3,
+            position: 'relative',
+            backgroundColor: isDarkMode ? '#34291f' : '#f0e3cf',
+            backgroundImage: `radial-gradient(circle at 0 8px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 4px, transparent 4.5px), radial-gradient(circle at 100% 8px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 4px, transparent 4.5px)`,
+            backgroundSize: '10px 16px, 10px 16px',
+            backgroundRepeat: 'repeat-y, repeat-y',
+            border: `1px dashed ${isDarkMode ? '#806747' : '#b9956e'}`,
+            borderRadius: '3px',
+            p: { xs: 2, sm: 2.5 },
             boxShadow: isDarkMode 
-              ? '0 8px 32px rgba(0,0,0,0.3)'
-              : '0 8px 32px rgba(0,0,0,0.1)',
-            backdropFilter: 'blur(10px)'
+              ? '4px 6px 0 rgba(0,0,0,.16), 0 14px 28px rgba(0,0,0,.16)'
+              : '4px 6px 0 #ddc9aa, 0 14px 28px rgba(72,49,27,.08)',
+            overflow: 'hidden',
           }}>
             <Box sx={{ 
               display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
               flexWrap: 'wrap', 
-              gap: 3 
+              gap: { xs: 1.5, md: 2 },
+              position: 'relative',
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 300 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: .65, flex: 1, minWidth: { xs: '100%', sm: 280 } }}>
+                <Typography sx={{ color: isDarkMode ? '#d2b181' : '#8a5c3b', fontSize: '.84rem', fontWeight: 800, letterSpacing: '.1em' }}>
+                  CAFERT COUNTER · ORDER SLIP
+                </Typography>
                 {/* Enhanced Search Bar */}
                 <TextField
                   id="coffee-search"
                   name="coffee-search"
-                  label="Search Products"
-                  placeholder="Search for products... (Press Enter to scroll to results)"
+                  label="Search the menu"
+                  placeholder="Type a coffee, drink, or dessert"
                   value={searchText}
                   onChange={handleSearch}
                   onKeyPress={handleSearchKeyPress}
@@ -462,31 +665,31 @@ export default function Coffees(props: CoffeesProps) {
                   fullWidth
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                      borderRadius: '12px',
+                      backgroundColor: isDarkMode ? '#2b241d' : '#fffaf2',
+                      borderRadius: '2px',
                       fontSize: '1.1rem',
                       '& fieldset': {
-                        borderColor: isDarkMode ? '#404040' : '#e0e0e0',
-                        borderWidth: '2px',
+                        borderColor: isDarkMode ? '#806747' : '#c6a982',
+                        borderWidth: '1px',
                       },
                       '&:hover fieldset': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
+                        borderColor: isDarkMode ? '#c49b61' : '#8B4513',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
+                        borderColor: isDarkMode ? '#c49b61' : '#8B4513',
                         borderWidth: '2px',
                       },
                     },
                     '& .MuiInputBase-input': {
-                      color: isDarkMode ? '#ffffff' : '#333333',
-                      padding: '16px 20px',
+                      color: isDarkMode ? '#fffaf2' : '#49392c',
+                      padding: '14px 16px',
                     },
                   }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start" sx={{ ml: 1 }}>
                         <SearchIcon sx={{ 
-                          color: isDarkMode ? '#ffd700' : '#8B4513',
+                          color: isDarkMode ? '#c49b61' : '#8B4513',
                           fontSize: '1.5rem'
                         }} />
                       </InputAdornment>
@@ -496,10 +699,10 @@ export default function Coffees(props: CoffeesProps) {
                         <IconButton
                           onClick={scrollToSearchResults}
                           sx={{
-                            color: isDarkMode ? '#ffd700' : '#8B4513',
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.1)',
+                            color: isDarkMode ? '#c49b61' : '#8B4513',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.1)' : 'rgba(139, 69, 19, 0.1)',
                             '&:hover': {
-                              backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.2)',
+                              backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.2)',
                             }
                           }}
                           title="Click to scroll to results"
@@ -511,6 +714,8 @@ export default function Coffees(props: CoffeesProps) {
                   }}
                 />
               </Box>
+
+              <Box component="img" src="/img/coffee/cafert-menu-barista-cutout.webp" alt="" aria-hidden="true" sx={{ display: { xs: 'none', md: 'block' }, width: 72, height: 104, objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 5px 4px rgba(58,38,21,.18))', pointerEvents: 'none', flex: '0 0 auto' }} />
               
             </Box>
           </Paper>
@@ -523,8 +728,8 @@ export default function Coffees(props: CoffeesProps) {
           {/* Enhanced Category Tabs */}
           <Box ref={categoryTabsRef}>
           <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+            backgroundColor: isDarkMode ? '#2b241d' : '#fffaf2',
+            border: `1px solid ${isDarkMode ? '#49392c' : '#d7c3a5'}`,
             borderRadius: '16px',
             overflow: 'hidden',
             boxShadow: isDarkMode 
@@ -537,9 +742,9 @@ export default function Coffees(props: CoffeesProps) {
               variant={isMobile ? "scrollable" : "fullWidth"}
               scrollButtons={isMobile ? "auto" : false}
               sx={{
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
                 '& .MuiTab-root': {
-                  color: isDarkMode ? '#b0b0b0' : '#666666',
+                  color: isDarkMode ? '#c8b7a1' : '#76634e',
                   fontWeight: 600,
                   textTransform: 'none',
                   fontSize: '1.1rem',
@@ -547,16 +752,16 @@ export default function Coffees(props: CoffeesProps) {
                   minHeight: '64px',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    color: isDarkMode ? '#ffd700' : '#8B4513',
-                    backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                    color: isDarkMode ? '#c49b61' : '#8B4513',
+                    backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.1)' : 'rgba(139, 69, 19, 0.05)',
                   },
                   '&.Mui-selected': {
-                    color: isDarkMode ? '#ffd700' : '#8B4513',
+                    color: isDarkMode ? '#c49b61' : '#8B4513',
                     fontWeight: 700,
                   },
                 },
                 '& .MuiTabs-indicator': {
-                  backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
+                  backgroundColor: isDarkMode ? '#c49b61' : '#8B4513',
                   height: '4px',
                   borderRadius: '2px 2px 0 0',
                 },
@@ -572,8 +777,8 @@ export default function Coffees(props: CoffeesProps) {
 
           {/* Enhanced Sort Controls */}
           <Paper sx={{ 
-            backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+            backgroundColor: isDarkMode ? '#2b241d' : '#fffaf2',
+            border: `1px solid ${isDarkMode ? '#49392c' : '#d7c3a5'}`,
             borderRadius: '16px',
             p: 3,
             boxShadow: isDarkMode 
@@ -595,9 +800,9 @@ export default function Coffees(props: CoffeesProps) {
                     sx={{ 
                       width: '100%',
                       boxShadow: sortAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                      border: `1px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`,
                       borderRadius: '12px',
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
                       position: 'relative',
                       zIndex: sortAccordionExpanded ? 1000 : 1,
                       '&:before': {
@@ -612,7 +817,7 @@ export default function Coffees(props: CoffeesProps) {
                   <AccordionSummary sx={{ 
                     minHeight: 48, 
                     '&.Mui-expanded': { minHeight: 48 },
-                  color: isDarkMode ? '#ffffff' : '#333333', 
+                  color: isDarkMode ? '#fffaf2' : '#49392c',
                   }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -631,8 +836,8 @@ export default function Coffees(props: CoffeesProps) {
                     top: '100%',
                     left: 0,
                     right: 0,
-                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                    border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                    backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
+                    border: `1px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`,
                     borderTop: 'none',
                     borderRadius: '0 0 12px 12px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -646,17 +851,17 @@ export default function Coffees(props: CoffeesProps) {
                         setSortAccordionExpanded(false);
                       }}
                     sx={{
-                      color: isDarkMode ? '#ffffff' : '#333333',
+                      color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                       },
                     }}
                   >
                       <ListItemIcon>
-                        <WhatshotIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+                        <WhatshotIcon sx={{ color: isDarkMode ? '#c49b61' : '#8B4513' }} />
                       </ListItemIcon>
                       <ListItemText primary={t('common.newest')} />
                     </ListItemButton>
@@ -667,17 +872,17 @@ export default function Coffees(props: CoffeesProps) {
                         setSortAccordionExpanded(false);
                       }}
                       sx={{
-                        color: isDarkMode ? '#ffffff' : '#333333',
+                        color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                         },
                       }}
                     >
                       <ListItemIcon>
-                        <AttachMoneyIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+                        <AttachMoneyIcon sx={{ color: isDarkMode ? '#c49b61' : '#8B4513' }} />
                       </ListItemIcon>
                       <ListItemText primary={t('common.price')} />
                     </ListItemButton>
@@ -688,17 +893,17 @@ export default function Coffees(props: CoffeesProps) {
                         setSortAccordionExpanded(false);
                       }}
                       sx={{
-                        color: isDarkMode ? '#ffffff' : '#333333',
+                        color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                         },
                       }}
                     >
                       <ListItemIcon>
-                        <VisibilityIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+                        <VisibilityIcon sx={{ color: isDarkMode ? '#c49b61' : '#8B4513' }} />
                       </ListItemIcon>
                       <ListItemText primary={t('common.views')} />
                     </ListItemButton>
@@ -709,17 +914,17 @@ export default function Coffees(props: CoffeesProps) {
                         setSortAccordionExpanded(false);
                       }}
                       sx={{
-                        color: isDarkMode ? '#ffffff' : '#333333',
+                        color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                         },
                       }}
                     >
                       <ListItemIcon>
-                        <StarIcon sx={{ color: isDarkMode ? '#ffd700' : '#8B4513' }} />
+                        <StarIcon sx={{ color: isDarkMode ? '#c49b61' : '#8B4513' }} />
                       </ListItemIcon>
                       <ListItemText primary={t('common.rating')} />
                     </ListItemButton>
@@ -734,9 +939,9 @@ export default function Coffees(props: CoffeesProps) {
                     sx={{
                       width: '100%',
                       boxShadow: orderAccordionExpanded ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                      border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                      border: `1px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`,
                       borderRadius: '12px',
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                      backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
                       position: 'relative',
                       zIndex: orderAccordionExpanded ? 1000 : 1,
                       '&:before': {
@@ -755,7 +960,7 @@ export default function Coffees(props: CoffeesProps) {
                       minHeight: 48,
                       maxHeight: 48,
                     },
-                      color: isDarkMode ? '#ffffff' : '#333333',
+                      color: isDarkMode ? '#fffaf2' : '#49392c',
                   }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {t('common.order')}: {sortOrder === 'desc' ? t('common.descending') : t('common.ascending')}
@@ -767,8 +972,8 @@ export default function Coffees(props: CoffeesProps) {
                     top: '100%',
                     left: 0,
                     right: 0,
-                    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                    border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                    backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
+                    border: `1px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`,
                     borderTop: 'none',
                     borderRadius: '0 0 12px 12px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -783,11 +988,11 @@ export default function Coffees(props: CoffeesProps) {
                         setOrderAccordionExpanded(false);
                       }}
                       sx={{
-                        color: isDarkMode ? '#ffffff' : '#333333',
+                        color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                         },
                       }}
@@ -801,11 +1006,11 @@ export default function Coffees(props: CoffeesProps) {
                         setOrderAccordionExpanded(false);
                       }}
                       sx={{
-                        color: isDarkMode ? '#ffffff' : '#333333',
+                        color: isDarkMode ? '#fffaf2' : '#49392c',
                         '&.Mui-selected': {
-                          backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.2)' : 'rgba(139, 69, 19, 0.1)',
+                          backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.2)' : 'rgba(139, 69, 19, 0.1)',
                           '&:hover': {
-                            backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.15)',
+                            backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.15)',
                           },
                       },
                     }}
@@ -818,14 +1023,14 @@ export default function Coffees(props: CoffeesProps) {
               </Box>
 
               <Typography variant="body1" sx={{ 
-                color: isDarkMode ? '#b0b0b0' : '#666666',
+                color: isDarkMode ? '#c8b7a1' : '#76634e',
                 fontWeight: 500,
                 fontSize: '1rem',
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
                 px: 2,
                 py: 1,
                 borderRadius: '8px',
-                border: `1px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`
+                border: `1px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`
               }}>
                 {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, filteredCoffees.length)} {t('common.of')} {filteredCoffees.length} {t('common.items')}
               </Typography>
@@ -842,13 +1047,13 @@ export default function Coffees(props: CoffeesProps) {
               <Paper sx={{ 
                 p: 2, 
                 mb: 3,
-                backgroundColor: isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)',
-                border: `1px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`,
+                backgroundColor: isDarkMode ? 'rgba(196, 155, 97, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                border: `1px solid ${isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`,
                 borderRadius: '12px',
                 textAlign: 'center'
               }}>
                 <Typography variant="body1" sx={{ 
-                  color: isDarkMode ? '#ffd700' : '#8B4513',
+                  color: isDarkMode ? '#c49b61' : '#8B4513',
                   fontWeight: 600,
                   fontSize: '1rem'
                 }}>
@@ -857,6 +1062,41 @@ export default function Coffees(props: CoffeesProps) {
               </Paper>
             </motion.div>
           )}
+
+          <Box
+            sx={{
+              position: 'relative',
+              minHeight: { xs: 210, sm: 230 },
+              mb: { xs: 2, md: 3 },
+              px: { xs: 2.5, sm: 4, md: 6 },
+              py: { xs: 3, sm: 4 },
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden',
+              background: isDarkMode ? '#30271f' : '#f3eadb',
+              borderTop: `1px solid ${isDarkMode ? '#594936' : '#dfceb5'}`,
+              borderBottom: `1px solid ${isDarkMode ? '#594936' : '#dfceb5'}`,
+            }}
+          >
+            <Box sx={{ position: 'relative', zIndex: 2, maxWidth: { xs: '70%', sm: '62%' } }}>
+              <Typography sx={{ color: isDarkMode ? '#d5ae7d' : '#9a643e', fontSize: '.72rem', fontWeight: 800, letterSpacing: '.16em', mb: 1 }}>
+                FRESH FROM THE COUNTER
+              </Typography>
+              <Typography component="h2" sx={{ color: isDarkMode ? '#f7eddd' : '#3d2d20', fontFamily: 'Georgia, serif', fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3rem' }, fontWeight: 700, lineHeight: 1.03, maxWidth: 540 }}>
+                Find your little<br />pick-me-up.
+              </Typography>
+              <Typography sx={{ color: isDarkMode ? '#d6c8b6' : '#725e4b', mt: 1.2, fontSize: { xs: '.9rem', sm: '1rem' }, maxWidth: 430 }}>
+                A good cup, a sweet bite, or both. Pick what feels right today.
+              </Typography>
+            </Box>
+            <Box sx={{ position: 'absolute', right: { xs: '-20px', sm: '5%', md: '11%' }, bottom: '-20px', width: { xs: 170, sm: 230, md: 270 }, height: { xs: 190, sm: 245, md: 285 }, display: 'grid', placeItems: 'end center', pointerEvents: 'none' }}>
+              <Box sx={{ position: 'absolute', width: '78%', height: '70%', right: '4%', bottom: '5%', background: isDarkMode ? 'rgba(179,142,106,.22)' : 'rgba(179,142,106,.28)', clipPath: 'polygon(50% 0, 60% 7%, 76% 3%, 81% 15%, 97% 20%, 91% 37%, 100% 52%, 88% 64%, 92% 81%, 74% 84%, 67% 100%, 50% 91%, 34% 100%, 25% 85%, 7% 82%, 12% 64%, 0 51%, 10% 36%, 4% 20%, 21% 15%, 26% 2%, 41% 8%)' }} />
+              <Box component="img" src="/img/coffee/cafert-menu-barista-cutout.webp" alt="" sx={{ position: 'relative', zIndex: 1, height: '100%', width: '100%', objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 8px 7px rgba(54,35,18,.22))' }} />
+              <Box sx={{ position: 'absolute', zIndex: 2, right: { xs: 112, sm: 180 }, top: { xs: 22, sm: 15 }, px: 1.4, py: .8, color: '#4b3524', background: '#fffaf0', border: '1px solid #d9c5a7', boxShadow: '2px 3px 0 rgba(97,65,36,.13)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: { xs: '.72rem', sm: '.86rem' }, whiteSpace: 'nowrap', transform: 'rotate(-3deg)', '&::after': { content: '""', position: 'absolute', right: -7, bottom: 3, width: 12, height: 12, background: '#fffaf0', borderRight: '1px solid #d9c5a7', borderBottom: '1px solid #d9c5a7', transform: 'rotate(-45deg)' } }}>
+                What looks good?
+              </Box>
+            </Box>
+          </Box>
 
           {/* Enhanced Items Grid */}
           <Box 
@@ -870,114 +1110,67 @@ export default function Coffees(props: CoffeesProps) {
               padding: '16px',
               transition: 'all 0.5s ease',
               backgroundColor: highlightResults 
-                ? (isDarkMode ? 'rgba(255, 215, 0, 0.1)' : 'rgba(139, 69, 19, 0.05)')
+                ? (isDarkMode ? 'rgba(196, 155, 97, 0.1)' : 'rgba(139, 69, 19, 0.05)')
                 : 'transparent',
               border: highlightResults 
-                ? `2px solid ${isDarkMode ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`
+                ? `2px solid ${isDarkMode ? 'rgba(196, 155, 97, 0.3)' : 'rgba(139, 69, 19, 0.2)'}`
                 : '2px solid transparent',
               boxShadow: highlightResults 
                 ? (isDarkMode 
-                  ? '0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 20px rgba(255, 215, 0, 0.1)'
+                  ? '0 0 20px rgba(196, 155, 97, 0.2), inset 0 0 20px rgba(196, 155, 97, 0.1)'
                   : '0 0 20px rgba(139, 69, 19, 0.15), inset 0 0 20px rgba(139, 69, 19, 0.05)')
                 : 'none',
+              '& > .cafert-product-card:nth-of-type(even) .cafert-product-photo': { transform: 'rotate(1.6deg)' },
+              '& > .cafert-product-card:nth-of-type(odd) .cafert-product-photo': { transform: 'rotate(-1.4deg)' },
             }}>
             {loading ? (
-              <GridSkeleton />
+              <GridSkeleton isDarkMode={isDarkMode} count={ITEMS_PER_PAGE} />
             ) : (
-              currentItems.map((item) => (
+              currentItems.map((item, itemIndex) => (
               <Card 
                 key={item.id}
+                className="cafert-menu-ticket cafert-product-card"
                 sx={{ 
                   height: '100%',
+                  minHeight: { xs: 510, sm: 540 },
                   display: 'flex',
                   flexDirection: 'column',
-                  // Glassmorphism effect
-                  backgroundColor: isDarkMode 
-                    ? 'rgba(26, 26, 26, 0.7)' 
-                    : 'rgba(255, 255, 255, 0.8)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)', // For Safari support
-                  border: isDarkMode 
-                    ? '1px solid rgba(255, 255, 255, 0.1)' 
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '24px',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backgroundColor: isDarkMode ? '#28221b' : '#f7f0e4',
+                  border: isDarkMode ? '1px solid #67543d' : '1px solid #d6c3a7',
+                  borderRadius: '2px',
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                   cursor: 'pointer',
                   overflow: 'hidden',
                   position: 'relative',
-                  // Glassmorphism shadow
-                  boxShadow: isDarkMode 
-                    ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
-                    : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                  boxShadow: isDarkMode ? '0 8px 22px rgba(0,0,0,.24)' : '3px 5px 0 #e5d6c0, 0 12px 24px rgba(80,55,30,.12)',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '4px',
-                    background: isDarkMode 
-                      ? 'linear-gradient(90deg, #ffd700, #8B4513, #ffd700)'
-                      : 'linear-gradient(90deg, #8B4513, #A0522D, #8B4513)',
-                    zIndex: 1,
-                    transform: 'scaleX(0)',
-                    transition: 'transform 0.3s ease',
+                    top: '10px', left: '10px', right: '10px', bottom: '10px',
+                    border: isDarkMode ? '1px dashed rgba(229,203,166,.28)' : '1px dashed rgba(112,79,45,.27)',
+                    pointerEvents: 'none', zIndex: 3,
                   },
                   '&:hover': {
-                    transform: 'translateY(-12px) scale(1.03)',
-                    backgroundColor: isDarkMode 
-                      ? 'rgba(26, 26, 26, 0.9)' 
-                      : 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                    border: isDarkMode 
-                      ? '1px solid rgba(255, 215, 0, 0.3)' 
-                      : '1px solid rgba(139, 69, 19, 0.3)',
-                    boxShadow: isDarkMode 
-                      ? '0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 215, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                      : '0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(139, 69, 19, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                    '&::before': {
-                      transform: 'scaleX(1)',
-                    },
-                    '& .glassmorphism-glow': {
-                      opacity: 1,
-                      transform: 'scale(1.1)',
-                    },
+                    transform: 'translateY(-5px) rotate(-0.5deg)',
+                    boxShadow: isDarkMode ? '0 16px 30px rgba(0,0,0,.32)' : '4px 10px 0 #e7dccb, 0 22px 36px rgba(80,55,30,.18)',
                   },
                 }}
                 onClick={() => handleCoffeeClick(item.id)}
               >
-                {/* Glassmorphism glow effect */}
-                <Box 
-                  className="glassmorphism-glow"
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    background: isDarkMode 
-                      ? 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)' 
-                      : 'radial-gradient(circle, rgba(139, 69, 19, 0.1) 0%, transparent 70%)',
-                    transform: 'translate(-50%, -50%) scale(0.8)',
-                    opacity: 0,
-                    transition: 'all 0.4s ease',
-                    pointerEvents: 'none',
-                    zIndex: 0,
-                  }}
-                />
-                <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+                {/* A clipped, lifted product photo sits over its paper order chit. */}
+                <Box className="cafert-product-photo" sx={{ position: 'relative', overflow: 'visible', mx: 2, mt: 2, pt: 0.5, backgroundColor: 'transparent', transformOrigin: '50% 50%', transition: 'transform .28s ease', '&::before': { content: '""', position: 'absolute', inset: '4px -3px -4px 4px', background: isDarkMode ? '#594936' : '#fff9ee', clipPath: 'polygon(2% 1%, 18% 0, 35% 2%, 53% 0, 72% 1%, 98% 2%, 100% 21%, 97% 40%, 100% 59%, 98% 78%, 99% 97%, 79% 100%, 59% 98%, 39% 100%, 19% 98%, 1% 100%, 0 79%, 2% 58%, 0 38%, 2% 18%)', transform: 'rotate(1deg)', boxShadow: '0 6px 12px rgba(66,43,22,.16)' }, '&:hover': { transform: 'translateY(-3px) rotate(0deg)' } }}>
                   <CardMedia
                     component="img"
+                    className="cafert-product-image-cutout"
                     image={item.image}
                     alt={item.name}
                     sx={{ 
-                      height: '220px',
+                      height: { xs: '275px', sm: '290px', lg: '305px' },
                       objectFit: 'cover',
-                      transition: 'transform 0.4s ease',
-                      '&:hover': {
-                        transform: 'scale(1.05)',
-                      }
+                      position: 'relative',
+                      zIndex: 1,
+                      clipPath: 'polygon(3% 1%, 19% 2%, 36% 0, 54% 2%, 72% 0, 98% 2%, 97% 19%, 100% 35%, 98% 51%, 100% 67%, 97% 84%, 99% 97%, 81% 98%, 64% 100%, 46% 97%, 29% 100%, 12% 98%, 1% 99%, 2% 82%, 0 65%, 2% 48%, 0 31%, 3% 16%)',
+                      filter: 'drop-shadow(0 8px 5px rgba(59,38,18,.25)) saturate(.96) contrast(1.03)',
                     }}
                   />
                   
@@ -988,11 +1181,48 @@ export default function Coffees(props: CoffeesProps) {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: isDarkMode 
-                      ? 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)'
-                      : 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%)',
+                    background: 'linear-gradient(180deg, transparent 65%, rgba(45,30,17,0.18) 100%)',
                     pointerEvents: 'none'
                   }} />
+
+                  <Box
+                    className="cafert-card-barista"
+                    component="img"
+                    src="/img/coffee/cafert-menu-barista-cutout.webp"
+                    alt=""
+                    sx={{
+                      position: 'absolute', right: -9, bottom: -8, width: { xs: 130, sm: 142 }, height: { xs: 124, sm: 138 },
+                      objectFit: 'contain', objectPosition: 'bottom right', zIndex: 2,
+                      opacity: 0, transform: 'translateY(13px) rotate(3deg)',
+                      transition: 'opacity .22s ease, transform .28s cubic-bezier(.2,.7,.2,1)',
+                      filter: 'drop-shadow(0 5px 3px rgba(48,31,16,.28))',
+                      '.cafert-menu-ticket:hover &, .cafert-menu-ticket:focus-within &': { opacity: 1, transform: 'translateY(0) rotate(0deg)' },
+                      '@media (hover: none)': { opacity: 1, transform: 'translateY(0) rotate(0deg)' },
+                      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                    }}
+                  />
+                  <Box
+                    className="cafert-card-greeting"
+                    sx={{
+                      position: 'absolute', right: { xs: 86, sm: 100 }, bottom: 18, zIndex: 3,
+                      px: 1.25, py: .75, background: isDarkMode ? '#f1e5d2' : '#fffaf0',
+                      color: '#4b3524', border: '1px solid #d9c5a7',
+                      fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.82rem',
+                      whiteSpace: 'nowrap', boxShadow: '1px 2px 0 rgba(70,46,22,.16)',
+                      opacity: 0, transform: 'translateY(5px)',
+                      transition: 'opacity .2s ease, transform .2s ease',
+                      '.cafert-menu-ticket:hover &, .cafert-menu-ticket:focus-within &': { opacity: 1, transform: 'translateY(0)' },
+                      '@media (hover: none)': { opacity: 1, transform: 'translateY(0)' },
+                      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+                      '&::after': { content: '""', position: 'absolute', right: -5, bottom: 5, width: 8, height: 8, background: isDarkMode ? '#f1e5d2' : '#fffaf0', borderRight: '1px solid #d9c5a7', borderBottom: '1px solid #d9c5a7', transform: 'rotate(-45deg)' },
+                    }}
+                  >
+                    What’ll it be?
+                  </Box>
+
+                  <Box sx={{ position: 'absolute', left: 14, top: 15, zIndex: 4, px: 1.2, py: .65, color: '#453325', background: '#f8edda', border: '1px solid rgba(89,62,36,.36)', boxShadow: '2px 3px 0 rgba(50,31,15,.16)', fontFamily: 'Georgia, serif', fontSize: '.82rem', letterSpacing: '.04em', transform: 'rotate(-3deg)' }}>
+                    COUNTER No. {String(startIndex + itemIndex + 1).padStart(2, '0')}
+                  </Box>
                   
                   {/* New Badge with glassmorphism */}
                   {item.isNew && (
@@ -1004,19 +1234,19 @@ export default function Coffees(props: CoffeesProps) {
                         top: 12,
                         left: 12,
                         backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 0.9)' 
+                          ? 'rgba(196, 155, 97, 0.9)'
                           : 'rgba(139, 69, 19, 0.9)',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
-                        color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                        color: isDarkMode ? '#2b241d' : '#fffaf2',
                         fontWeight: 700,
                         fontSize: '0.75rem',
                         borderRadius: '16px',
                         border: isDarkMode 
-                          ? '1px solid rgba(255, 215, 0, 0.3)' 
+                          ? '1px solid rgba(196, 155, 97, 0.3)'
                           : '1px solid rgba(139, 69, 19, 0.3)',
                         boxShadow: isDarkMode 
-                          ? '0 4px 12px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                          ? '0 4px 12px rgba(196, 155, 97, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
                           : '0 4px 12px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                         zIndex: 2,
                       }}
@@ -1036,14 +1266,14 @@ export default function Coffees(props: CoffeesProps) {
                       WebkitBackdropFilter: 'blur(15px)',
                       width: 44,
                       height: 44,
-                      borderRadius: '16px',
+                      borderRadius: '50%',
                       border: isDarkMode 
                         ? '1px solid rgba(255, 255, 255, 0.2)' 
                         : '1px solid rgba(255, 255, 255, 0.3)',
                       boxShadow: isDarkMode 
                         ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
                         : '0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                      zIndex: 2,
+                      zIndex: 4,
                       '&:hover': {
                         backgroundColor: isDarkMode 
                           ? 'rgba(255, 255, 255, 0.25)' 
@@ -1079,7 +1309,7 @@ export default function Coffees(props: CoffeesProps) {
                         backgroundColor: 'rgba(244, 67, 54, 0.9)',
                         backdropFilter: 'blur(10px)',
                         WebkitBackdropFilter: 'blur(10px)',
-                        color: '#ffffff',
+                        color: '#fffaf2',
                         fontWeight: 600,
                         fontSize: '0.75rem',
                         borderRadius: '16px',
@@ -1095,8 +1325,13 @@ export default function Coffees(props: CoffeesProps) {
                   flexGrow: 1, 
                   display: 'flex', 
                   flexDirection: 'column',
-                  p: 2,
+                  p: { xs: 2.5, sm: 3 },
                   position: 'relative',
+                  zIndex: 2,
+                  mt: '-12px',
+                  backgroundColor: isDarkMode ? '#28221b' : '#fffaf0',
+                  clipPath: 'polygon(0 3%, 5% 0, 10% 3%, 15% 1%, 20% 3%, 25% 0, 30% 3%, 35% 1%, 40% 3%, 45% 0, 50% 3%, 55% 1%, 60% 3%, 65% 0, 70% 3%, 75% 1%, 80% 3%, 85% 0, 90% 3%, 95% 1%, 100% 3%, 100% 100%, 0 100%)',
+                  color: isDarkMode ? '#f2e7d5' : '#34271c',
                 }}>
                   {/* Title and Price in same row */}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -1104,10 +1339,12 @@ export default function Coffees(props: CoffeesProps) {
                       variant="subtitle1" 
                       component="h2" 
                       sx={{ 
-                        color: isDarkMode ? '#ffffff' : '#1a1a1a',
+                        color: isDarkMode ? '#fffaf2' : '#2b241d',
                         fontWeight: 600,
                         flex: 1,
-                        fontSize: '1rem',
+                        fontFamily: 'Georgia, serif',
+                        fontSize: '1.2rem',
+                        letterSpacing: '-.015em',
                         lineHeight: 1.3,
                       }}
                     >
@@ -1116,7 +1353,7 @@ export default function Coffees(props: CoffeesProps) {
                   <Typography 
                       variant="subtitle1" 
                     sx={{ 
-                        color: isDarkMode ? '#ffd700' : '#8B4513',
+                        color: isDarkMode ? '#c49b61' : '#8B4513',
                         fontWeight: 700,
                         ml: 1,
                         fontSize: '1rem'
@@ -1125,6 +1362,12 @@ export default function Coffees(props: CoffeesProps) {
                       ${item.price}
                   </Typography>
                   </Box>
+
+                  {item.description && item.description !== 'No description available' && (
+                    <Typography sx={{ color: isDarkMode ? '#d2c2ad' : '#6d5946', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.97rem', lineHeight: 1.48, mb: 1.75, minHeight: '2.9em' }}>
+                      {item.description}
+                    </Typography>
+                  )}
                   
                   {/* Rating and reviews - with spacing */}
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
@@ -1136,21 +1379,21 @@ export default function Coffees(props: CoffeesProps) {
                       sx={{
                         fontSize: '0.875rem',
                         '& .MuiRating-iconFilled': {
-                          color: isDarkMode ? '#ffd700' : '#ffc107',
+                          color: isDarkMode ? '#c49b61' : '#c49b61',
                         },
                       }}
                     />
                     <Typography variant="caption" sx={{ 
-                      color: isDarkMode ? '#b0b0b0' : '#666666',
+                      color: isDarkMode ? '#c8b7a1' : '#76634e',
                       ml: 0.5,
                       fontSize: '0.75rem'
                     }}>
                       ({item.reviews})
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
-                      <VisibilityIcon fontSize="small" sx={{ color: isDarkMode ? '#ffd700' : '#8B4513', fontSize: '0.75rem' }} />
+                      <VisibilityIcon fontSize="small" sx={{ color: isDarkMode ? '#c49b61' : '#8B4513', fontSize: '0.75rem' }} />
                       <Typography variant="caption" sx={{ 
-                        color: isDarkMode ? '#b0b0b0' : '#666666',
+                        color: isDarkMode ? '#c8b7a1' : '#76634e',
                         fontSize: '0.75rem'
                       }}>
                         {item.views}
@@ -1166,10 +1409,10 @@ export default function Coffees(props: CoffeesProps) {
                       variant="outlined"
                       sx={{ 
                         backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 0.1)' 
+                          ? 'rgba(196, 155, 97, 0.1)'
                           : 'rgba(139, 69, 19, 0.1)',
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513', 
-                        color: isDarkMode ? '#ffd700' : '#8B4513',
+                        borderColor: isDarkMode ? '#c49b61' : '#8B4513',
+                        color: isDarkMode ? '#c49b61' : '#8B4513',
                         fontWeight: 600,
                         fontSize: '0.75rem',
                         height: 22,
@@ -1190,19 +1433,21 @@ export default function Coffees(props: CoffeesProps) {
                     }}
                     sx={{
                       backgroundColor: isDarkMode 
-                        ? 'rgba(255, 215, 0, 0.9)' 
+                        ? 'rgba(196, 155, 97, 0.9)'
                         : 'rgba(139, 69, 19, 0.9)',
-                      color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                      color: isDarkMode ? '#2b241d' : '#fffaf2',
                       fontWeight: 600,
                       fontSize: '0.8rem',
-                      height: 36,
-                      borderRadius: '8px',
+                      height: 42,
+                      borderRadius: '3px',
                       textTransform: 'none',
                       mt: 1,
                       py: 0,
+                      boxShadow: 'none',
+                      letterSpacing: '.035em',
                       '&:hover': {
                         backgroundColor: isDarkMode 
-                          ? 'rgba(255, 215, 0, 1)' 
+                          ? 'rgba(196, 155, 97, 1)'
                           : 'rgba(139, 69, 19, 1)',
                       },
                       '&:disabled': {
@@ -1221,21 +1466,34 @@ export default function Coffees(props: CoffeesProps) {
           {/* Enhanced Pagination */}
           {totalPages > 1 && (
             <Paper sx={{ 
-              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-              border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-              borderRadius: '16px',
-              p: 3,
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: isDarkMode ? '#34291f' : '#f0e3cf',
+              backgroundImage: `radial-gradient(circle at 0 8px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 4px, transparent 4.5px), radial-gradient(circle at 100% 8px, ${isDarkMode ? '#27221b' : '#f5eee2'} 0 4px, transparent 4.5px), repeating-linear-gradient(0deg, transparent 0 32px, ${isDarkMode ? 'rgba(210,177,129,.05)' : 'rgba(138,92,59,.055)'} 32px 33px)`,
+              backgroundSize: '10px 16px, 10px 16px, auto',
+              backgroundRepeat: 'repeat-y, repeat-y, repeat',
+              border: `1px dashed ${isDarkMode ? '#806747' : '#b9956e'}`,
+              borderRadius: '3px',
+              p: { xs: 2, sm: 2.5 },
               boxShadow: isDarkMode 
-                ? '0 4px 20px rgba(0,0,0,0.2)'
-                : '0 4px 20px rgba(0,0,0,0.08)'
+                ? '4px 6px 0 rgba(0,0,0,.16), 0 12px 24px rgba(0,0,0,.12)'
+                : '4px 6px 0 #ddc9aa, 0 12px 24px rgba(72,49,27,.07)'
             }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                <Typography variant="h6" sx={{ 
-                  color: isDarkMode ? '#ffffff' : '#333333',
-                  fontWeight: 600,
-                  fontSize: '1.1rem'
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', justifyContent: 'center', gap: { xs: 2, sm: 3 } }}>
+                <Typography aria-live="polite" sx={{
+                  px: 1.5,
+                  py: .7,
+                  color: isDarkMode ? '#e4c590' : '#8d5b3c',
+                  border: `3px double ${isDarkMode ? '#a88558' : '#b6895b'}`,
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  letterSpacing: '.08em',
+                  textTransform: 'uppercase',
+                  transform: 'rotate(-1.5deg)',
+                  boxShadow: '2px 3px 0 rgba(72,49,27,.1)',
                 }}>
-                  Page {currentPage} of {totalPages}
+                  Page {String(currentPage).padStart(2, '0')} / {String(totalPages).padStart(2, '0')}
                 </Typography>
                 <Pagination
                   count={totalPages}
@@ -1246,38 +1504,37 @@ export default function Coffees(props: CoffeesProps) {
                   showFirstButton
                   showLastButton
                   sx={{
+                    '& .MuiPagination-ul': {
+                      gap: .35,
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                    },
                     '& .MuiPaginationItem-root': {
-                      color: isDarkMode ? '#ffffff' : '#333333',
-                      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
-                      border: `2px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
-                      borderRadius: '12px',
-                      margin: '0 4px',
+                      color: isDarkMode ? '#f0e2cf' : '#5c4533',
+                      backgroundColor: isDarkMode ? '#3b3026' : '#fff9ee',
+                      border: `1px dashed ${isDarkMode ? '#806747' : '#c6a982'}`,
+                      borderRadius: '2px',
+                      margin: 0,
                       fontWeight: 600,
                       fontSize: '1rem',
                       minWidth: 44,
                       height: 44,
                       '&:hover': {
-                        backgroundColor: isDarkMode ? '#404040' : '#e8e8e8',
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
-                        transform: 'translateY(-2px)',
-                        boxShadow: isDarkMode 
-                          ? '0 4px 12px rgba(255, 215, 0, 0.2)'
-                          : '0 4px 12px rgba(139, 69, 19, 0.2)',
+                        backgroundColor: isDarkMode ? '#49392c' : '#eadbc4',
+                        borderColor: isDarkMode ? '#c49b61' : '#8B4513',
                       },
                       '&.Mui-selected': {
-                        backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
-                        color: isDarkMode ? '#1a1a1a' : '#ffffff',
-                        borderColor: isDarkMode ? '#ffd700' : '#8B4513',
+                        backgroundColor: isDarkMode ? '#b58a5b' : '#8d5b3c',
+                        color: '#fffaf2',
+                        border: `3px double ${isDarkMode ? '#e4c590' : '#c99569'}`,
                         fontWeight: 700,
+                        transform: 'rotate(-3deg)',
+                        boxShadow: '2px 3px 0 rgba(72,49,27,.18)',
                         '&:hover': {
-                          backgroundColor: isDarkMode ? '#ffed4e' : '#A0522D',
-                          transform: 'translateY(-2px)',
-                          boxShadow: isDarkMode 
-                            ? '0 6px 16px rgba(255, 215, 0, 0.3)'
-                            : '0 6px 16px rgba(139, 69, 19, 0.3)',
+                          backgroundColor: isDarkMode ? '#b58a5b' : '#8d5b3c',
                         },
                       },
-                      transition: 'all 0.3s ease',
+                      transition: 'background-color .18s ease, border-color .18s ease',
                     },
                   }}
                 />
@@ -1287,14 +1544,14 @@ export default function Coffees(props: CoffeesProps) {
 
           {/* Image Right Section */}
           <Suspense fallback={<Box sx={{ py: 4 }} />}>
-            <ImageRightSection imageSrc="/penguin.png" />
+            <ImageRightSection featuredProducts={coffees.slice(0, 3)} />
           </Suspense>
 
           {/* Enhanced No Results */}
           {filteredCoffees.length === 0 && (
             <Paper sx={{ 
-              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-              border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
+              backgroundColor: isDarkMode ? '#2b241d' : '#fffaf2',
+              border: `1px solid ${isDarkMode ? '#49392c' : '#d7c3a5'}`,
               borderRadius: '20px',
               p: 6,
               textAlign: 'center',
@@ -1312,27 +1569,27 @@ export default function Coffees(props: CoffeesProps) {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+                  backgroundColor: isDarkMode ? '#3b3026' : '#f4eadb',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: `2px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
+                  border: `2px solid ${isDarkMode ? '#584638' : '#d7c3a5'}`,
                   mb: 2
                 }}>
                   <SearchIcon sx={{ 
                     fontSize: '2rem',
-                    color: isDarkMode ? '#ffd700' : '#8B4513'
+                    color: isDarkMode ? '#c49b61' : '#8B4513'
                   }} />
                 </Box>
                 <Typography variant="h5" sx={{ 
-                  color: isDarkMode ? '#ffffff' : '#333333',
+                  color: isDarkMode ? '#fffaf2' : '#49392c',
                   fontWeight: 600,
                   fontSize: '1.5rem'
                 }}>
                   No items found
                 </Typography>
                 <Typography variant="body1" sx={{ 
-                  color: isDarkMode ? '#b0b0b0' : '#666666',
+                  color: isDarkMode ? '#c8b7a1' : '#76634e',
                   maxWidth: '400px',
                   lineHeight: 1.6
                 }}>
@@ -1345,8 +1602,8 @@ export default function Coffees(props: CoffeesProps) {
                     setSelectedCategory("all");
                   }}
                   sx={{
-                    backgroundColor: isDarkMode ? '#ffd700' : '#8B4513',
-                    color: isDarkMode ? '#1a1a1a' : '#ffffff',
+                    backgroundColor: isDarkMode ? '#c49b61' : '#8B4513',
+                    color: isDarkMode ? '#2b241d' : '#fffaf2',
                     fontWeight: 600,
                     fontSize: '1rem',
                     px: 4,
@@ -1355,7 +1612,7 @@ export default function Coffees(props: CoffeesProps) {
                     textTransform: 'none',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                     '&:hover': {
-                      backgroundColor: isDarkMode ? '#ffed4e' : '#A0522D',
+                      backgroundColor: isDarkMode ? '#d1af77' : '#A0522D',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
                     },
@@ -1368,108 +1625,9 @@ export default function Coffees(props: CoffeesProps) {
             </Paper>
           )}
 
-          {/* Map Section */}
-          <Box sx={{ mt: 6 }}>
-            <Typography variant="h5" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 3, fontWeight: 600 }}>
-              Find Our Locations
-            </Typography>
-            
-            <Paper 
-              sx={{ 
-                p: 3, 
-                backgroundColor: isDarkMode ? '#2a2a2a' : '#ffffff', 
-                border: `1px solid ${isDarkMode ? '#333333' : '#e0e0e0'}`,
-                overflow: 'hidden'
-              }}
-            >
-              {/* Interactive Map */}
-              <Box sx={{ height: 400, position: 'relative', mb: 3 }}>
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2219901290355!2d-74.00369368400567!3d40.71312937933185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a23e28c1191%3A0x49f75d3281df052a!2s150%20Park%20Row%2C%20New%20York%2C%20NY%2010007%2C%20USA!5e0!3m2!1sen!2sus!4v1640995200000!5m2!1sen!2sus"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0, borderRadius: '8px' }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Coffee Shop Location"
-                />
-              </Box>
-              
-              {/* Location Info */}
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                {/* Main Location */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationOnIcon sx={{ color: isDarkMode ? '#8B4513' : '#8B4513' }} />
-                    Main Coffee Shop
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666', mb: 1 }}>
-                    123 Coffee Street, Downtown
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666', mb: 1 }}>
-                    New York, NY 10001
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666', mb: 2 }}>
-                    Open Daily: 7:00 AM - 10:00 PM
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<PhoneIcon />}
-                      sx={{ borderColor: isDarkMode ? '#8B4513' : '#8B4513', color: isDarkMode ? '#8B4513' : '#8B4513' }}
-                    >
-                      (555) 123-4567
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<AccessTimeIcon />}
-                      sx={{ borderColor: isDarkMode ? '#8B4513' : '#8B4513', color: isDarkMode ? '#8B4513' : '#8B4513' }}
-                    >
-                      Hours
-                    </Button>
-                  </Box>
-                </Box>
-                
-                {/* Additional Locations */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" sx={{ color: isDarkMode ? '#ffffff' : '#333333', mb: 2 }}>
-                    Other Locations
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#ffffff' : '#333333', fontWeight: 600 }}>
-                        Midtown Branch
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666' }}>
-                        456 Avenue A, Midtown
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#ffffff' : '#333333', fontWeight: 600 }}>
-                        Brooklyn Branch
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666' }}>
-                        789 Coffee Lane, Brooklyn
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#ffffff' : '#333333', fontWeight: 600 }}>
-                        Queens Branch
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666666' }}>
-                        321 Brew Street, Queens
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
+          <CafertLocationGuide isDarkMode={isDarkMode} />
         </Stack>
       </Container>
     </Box>
   );
-} 
+}

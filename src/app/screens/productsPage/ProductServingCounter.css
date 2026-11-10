@@ -1,0 +1,283 @@
+.cafert-serving-counter {
+  position: relative;
+  isolation: isolate;
+  max-width: 1340px;
+  margin: 10px auto 34px;
+  padding: 26px 24px 18px;
+  overflow: hidden;
+  border: 1px solid #e8ddcf;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(255,255,255,.94), transparent 42%),
+    linear-gradient(145deg, #f8f0e5 0%, #f3e6d4 58%, #ead9c3 100%);
+  box-shadow: 0 15px 36px rgba(79, 54, 35, .09), inset 0 1px rgba(255,255,255,.9);
+}
+
+.cafert-serving-counter::after {
+  position: absolute;
+  z-index: -1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 13px;
+  border-top: 1px solid rgba(91, 58, 35, .17);
+  background: linear-gradient(180deg, #c28d62, #a66e49);
+  content: "";
+  box-shadow: 0 -3px 8px rgba(91, 58, 35, .08);
+}
+
+.cafert-counter-scene {
+  position: absolute;
+  z-index: 1;
+  bottom: 8px;
+  left: 8px;
+  width: 226px;
+  height: 350px;
+  pointer-events: none;
+}
+
+.cafert-counter-scene img {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 9px 7px rgba(61, 42, 29, .18));
+}
+
+.cafert-counter-note {
+  position: absolute;
+  bottom: 13px;
+  left: 18px;
+  color: #fff8ef;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-shadow: 0 1px 3px rgba(47, 30, 18, .4);
+  transform: rotate(-5deg);
+}
+
+.cafert-counter-heading {
+  position: relative;
+  z-index: 2;
+  margin: 0 0 20px 238px;
+  color: #493b2d;
+}
+
+.cafert-counter-kicker {
+  color: #9d704c;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+.cafert-counter-heading h2 {
+  margin: 4px 0 2px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2.4vw, 2.05rem);
+  font-weight: 600;
+  letter-spacing: -.035em;
+}
+
+.cafert-counter-heading p {
+  margin: 0;
+  color: #76685b;
+  font-size: .91rem;
+}
+
+.cafert-serving-counter .cafert-counter-categories,
+.cafert-serving-counter .cafert-counter-sorting {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 238px);
+  max-width: none !important;
+  margin-right: 0 !important;
+  margin-left: auto !important;
+}
+
+.cafert-serving-counter .cafert-counter-categories {
+  border-color: rgba(123, 88, 59, .2) !important;
+  border-radius: 13px !important;
+  background: rgba(255, 252, 247, .83) !important;
+  box-shadow: 0 5px 14px rgba(92, 63, 39, .07);
+  backdrop-filter: blur(5px);
+}
+
+.cafert-serving-counter .cafert-counter-categories .MuiTab-root {
+  min-height: 58px !important;
+  border-radius: 10px;
+  color: #776755;
+  font-size: .91rem !important;
+  font-weight: 700 !important;
+}
+
+.cafert-serving-counter .cafert-counter-categories .MuiTab-root.Mui-selected {
+  color: #fffaf4 !important;
+  background: #986440 !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.18), 0 3px 8px rgba(93, 57, 34, .2);
+}
+
+.cafert-serving-counter .cafert-counter-sorting {
+  border-color: rgba(123, 88, 59, .19) !important;
+  border-radius: 13px !important;
+  background: rgba(255, 252, 247, .72) !important;
+  box-shadow: 0 5px 14px rgba(92, 63, 39, .06) !important;
+}
+
+@media (max-width: 700px) {
+  .cafert-serving-counter {
+    margin: 6px auto 26px;
+    padding: 16px 12px 20px;
+    border-radius: 17px;
+  }
+
+  .cafert-counter-scene {
+    top: 8px;
+    bottom: auto;
+    left: 0;
+    width: 102px;
+    height: 158px;
+  }
+
+  .cafert-counter-note { display: none; }
+
+  .cafert-counter-heading {
+    min-height: 118px;
+    margin: 0 0 10px 94px;
+    padding-top: 13px;
+  }
+
+  .cafert-counter-heading h2 { font-size: 1.32rem; line-height: 1.1; }
+  .cafert-counter-heading p { max-width: 250px; font-size: .78rem; line-height: 1.35; }
+  .cafert-counter-kicker { font-size: .55rem; letter-spacing: .12em; }
+
+  .cafert-serving-counter .cafert-counter-categories,
+  .cafert-serving-counter .cafert-counter-sorting {
+    width: 100%;
+  }
+
+  .cafert-serving-counter .cafert-counter-categories .MuiTab-root {
+    min-width: 100px !important;
+    min-height: 50px !important;
+    padding-right: 12px;
+    padding-left: 12px;
+    font-size: .8rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cafert-serving-counter *,
+  .cafert-serving-counter *::before,
+  .cafert-serving-counter *::after { scroll-behavior: auto !important; }
+}
+
+/* Product photos sit like pasted clippings on the café's printed order slips. */
+.cafert-menu-slip {
+  position: relative;
+  border: 1px solid #ddcbb8 !important;
+  border-radius: 5px 13px 5px 5px !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(110, 77, 49, .018) 0 1px, transparent 1px 5px),
+    #f8f2e9 !important;
+  box-shadow: 0 9px 22px rgba(74, 49, 30, .11), 2px 3px 0 rgba(179, 142, 106, .11) !important;
+}
+
+.cafert-menu-slip::before {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 17px;
+  background:
+    radial-gradient(circle at 100% 7px, #fffdf9 0 4px, transparent 4.5px) right top / 9px 16px repeat-y,
+    linear-gradient(90deg, transparent 0 11px, rgba(132, 100, 72, .32) 11px 12px, transparent 12px);
+  content: "";
+  pointer-events: none;
+}
+
+.cafert-menu-slip .cafert-menu-photo {
+  box-sizing: border-box;
+  height: 220px !important;
+  width: calc(100% - 27px) !important;
+  margin: 10px 17px 0 10px;
+  padding: 6px;
+  background: #fffdf8 !important;
+  filter: drop-shadow(0 3px 3px rgba(76, 52, 35, .11));
+  clip-path: polygon(1% 0, 99% 1%, 100% 9%, 99% 18%, 100% 27%, 99% 36%, 100% 45%, 99% 54%, 100% 63%, 99% 72%, 100% 81%, 99% 90%, 100% 99%, 1% 100%, 0 91%, 1% 82%, 0 73%, 1% 64%, 0 55%, 1% 46%, 0 37%, 1% 28%, 0 19%, 1% 10%);
+}
+
+.cafert-menu-slip .cafert-menu-photo > img,
+.cafert-menu-slip .cafert-menu-photo > .MuiBox-root:first-of-type {
+  clip-path: polygon(0 1%, 100% 0, 99% 100%, 1% 99%);
+}
+
+.cafert-menu-details {
+  padding: 16px 25px 17px 16px !important;
+  background: linear-gradient(180deg, rgba(255, 252, 247, .48), rgba(255, 252, 247, .9));
+}
+
+.cafert-menu-details > .MuiBox-root:first-child .MuiTypography-root:first-child {
+  color: #493b2d !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem !important;
+  font-weight: 700 !important;
+}
+
+.cafert-menu-details > .MuiBox-root:first-child .MuiTypography-root:last-child {
+  display: inline-flex;
+  min-width: 42px;
+  justify-content: center;
+  padding: 4px 7px;
+  border: 1px solid rgba(153, 101, 62, .32);
+  background: #f1e2cf;
+  color: #86562f !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .98rem !important;
+}
+
+.cafert-menu-order {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 244, 229, .35) !important;
+  border-radius: 2px !important;
+  background: #835536 !important;
+  box-shadow: 0 3px 0 #67432e;
+  clip-path: polygon(0 0, 98% 0, 100% 12%, 99% 25%, 100% 38%, 99% 50%, 100% 62%, 99% 75%, 100% 88%, 98% 100%, 0 100%);
+}
+
+.cafert-menu-order:hover {
+  background: #70472f !important;
+  box-shadow: 0 2px 0 #583723;
+}
+
+.cafert-menu-slip-dark {
+  border-color: rgba(214, 190, 165, .22) !important;
+  background: repeating-linear-gradient(0deg, rgba(237, 213, 187, .025) 0 1px, transparent 1px 5px), #302923 !important;
+}
+
+.cafert-menu-slip-dark::before {
+  background:
+    radial-gradient(circle at 100% 7px, #302923 0 4px, transparent 4.5px) right top / 9px 16px repeat-y,
+    linear-gradient(90deg, transparent 0 11px, rgba(214, 190, 165, .4) 11px 12px, transparent 12px);
+}
+
+.cafert-menu-slip-dark .cafert-menu-photo { background: #eee2d2 !important; }
+.cafert-menu-slip-dark .cafert-menu-details {
+  background: linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.045));
+}
+.cafert-menu-slip-dark .cafert-menu-details > .MuiBox-root:first-child .MuiTypography-root:first-child {
+  color: #f1e1ce !important;
+}
+.cafert-menu-slip-dark .cafert-menu-details > .MuiBox-root:first-child .MuiTypography-root:last-child {
+  border-color: rgba(214, 168, 127, .38);
+  background: #48382d;
+  color: #e0b68d !important;
+}
+
+@media (max-width: 600px) {
+  .cafert-menu-slip .cafert-menu-photo { height: 205px !important; }
+  .cafert-menu-details { padding: 14px 24px 15px 14px !important; }
+}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import './OtherNavbarBroadsheet.css';
 import {
   Box,
   Container,
@@ -33,7 +34,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Collapse,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -53,7 +53,6 @@ import {
   Clear as ClearIcon,
   Add as AddIcon,
   TrendingUp as AnalyticsIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { NavLink, useLocation, useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -108,8 +107,6 @@ export default function OtherNavbar(props: OtherNavbarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
-  const productsDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -213,49 +210,15 @@ export default function OtherNavbar(props: OtherNavbarProps) {
 
   const navigationItems = useMemo(() => [
     { path: '/', label: t('navigation.home'), icon: <HomeIcon /> },
-    { path: '/products', label: t('navigation.products'), icon: <ProductsIcon />, isProducts: true },
+    { path: '/products', label: t('navigation.products'), icon: <ProductsIcon /> },
     ...(authMember ? [{ path: '/orders', label: t('navigation.orders'), icon: <OrdersIcon /> }] : []),
     ...(authMember ? [{ path: '/my-page', label: t('navigation.myPage'), icon: <AccountIcon /> }] : []),
     { path: '/stats', label: t('navigation.analytics'), icon: <AnalyticsIcon /> },
     { path: '/help', label: t('navigation.about'), icon: <HelpIcon /> },
   ], [t, authMember]);
 
-  const handleProductsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (productsDropdownOpen) {
-      // Second click: navigate to products page
-      setProductsDropdownOpen(false);
-      history.push('/products');
-    } else {
-      // First click: open dropdown
-      setProductsDropdownOpen(true);
-    }
-  };
-
-  const handleCategoryClick = (category: string) => {
-    setProductsDropdownOpen(false);
-    history.push(`/products?category=${category}`);
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (productsDropdownRef.current && !productsDropdownRef.current.contains(event.target as Node)) {
-        setProductsDropdownOpen(false);
-      }
-    };
-
-    if (productsDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [productsDropdownOpen]);
-
   const drawer = (
-    <Box sx={{ 
+    <Box className="cafert-broadsheet__drawer" sx={{
       width: 320, 
       pt: 3, 
       bgcolor: '#fafafa', 
@@ -282,90 +245,6 @@ export default function OtherNavbar(props: OtherNavbarProps) {
       
       <List>
         {navigationItems.map((item) => {
-          if ((item as any).isProducts) {
-            // Products item with accordion
-            return (
-              <Box key={`${item.path}-${i18n.language}`}>
-                <ListItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (productsDropdownOpen) {
-                      setProductsDropdownOpen(false);
-                      history.push('/products');
-                      handleDrawerToggle();
-                    } else {
-                      setProductsDropdownOpen(true);
-                    }
-                  }}
-                  sx={{
-                    color: location.pathname === item.path ? '#8b4513' : '#5d4037',
-                    backgroundColor: location.pathname === item.path ? 'rgba(139, 69, 19, 0.08)' : 'transparent',
-                    margin: '4px 12px',
-                    borderRadius: '12px',
-                    transition: 'all 0.3s ease',
-                    minHeight: 56,
-                    cursor: 'pointer',
-                    '&:hover': {
-                      backgroundColor: 'rgba(139, 69, 19, 0.12)',
-                      transform: 'translateX(8px)',
-                    },
-                  }}
-                >
-                  <MuiListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
-                    {item.icon}
-                  </MuiListItemIcon>
-                  <ListItemText 
-                    primary={item.label} 
-                    sx={{ 
-                      '& .MuiListItemText-primary': {
-                        fontWeight: location.pathname === item.path ? 600 : 500,
-                        fontSize: '1rem',
-                        fontFamily: 'Inter, sans-serif',
-                      }
-                    }}
-                  />
-                  <ExpandMoreIcon 
-                    sx={{ 
-                      transform: productsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.3s ease',
-                    }} 
-                  />
-                </ListItem>
-                <Collapse in={productsDropdownOpen}>
-                  <List component="div" disablePadding>
-                    {['all', 'drinks', 'desserts', 'salads'].map((category) => (
-                      <ListItem
-                        key={category}
-                        onClick={() => {
-                          handleCategoryClick(category);
-                          handleDrawerToggle();
-                        }}
-                        sx={{
-                          pl: 6,
-                          py: 1,
-                          color: '#5d4037',
-                          '&:hover': {
-                            backgroundColor: 'rgba(139, 69, 19, 0.08)',
-                          },
-                        }}
-                      >
-                        <ListItemText 
-                          primary={category === 'all' ? t('common.all') : t(`navigation.${category}`)}
-                          sx={{ 
-                            '& .MuiListItemText-primary': {
-                              fontSize: '0.9rem',
-                              fontFamily: 'Inter, sans-serif',
-                            }
-                          }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Collapse>
-              </Box>
-            );
-          }
-          
           // Regular navigation items
           const isActive = item.path.includes('?') 
             ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
@@ -373,6 +252,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
           
           return (
             <ListItem
+              className={isActive ? 'is-active' : ''}
               key={`${item.path}-${i18n.language}`}
               onClick={() => {
                 if (item.path.includes('?')) {
@@ -535,6 +415,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
 
   return (
     <>
+
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -542,7 +423,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 320 },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 'min(88vw, 380px)', backgroundColor: '#fff9ee' },
         }}
       >
         {drawer}
@@ -551,6 +432,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
       {/* Search Drawer */}
       <Drawer
         anchor="top"
+        className="cafert-broadsheet__search-drawer"
         open={searchOpen}
         onClose={handleSearchToggle}
         ModalProps={{ keepMounted: true }}
@@ -766,24 +648,18 @@ export default function OtherNavbar(props: OtherNavbarProps) {
       </Drawer>
 
       <Box
+        className="cafert-broadsheet"
         sx={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           zIndex: 1200,
-          background: scrolled 
-            ? 'rgba(255, 255, 255, 0.1)'
-            : 'rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(50px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
-          borderBottom: scrolled 
-            ? '2px solid rgba(255, 255, 255, 0.4)' 
-            : '2px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: scrolled 
-            ? '0 25px 70px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
-            : '0 15px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          background: 'transparent',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          border: 0,
+          boxShadow: 'none',
         }}
       >
       <AppBar
@@ -795,9 +671,9 @@ export default function OtherNavbar(props: OtherNavbarProps) {
         elevation={0}
       >
         <Container maxWidth="xl">
-          <Toolbar sx={{ justifyContent: 'space-between', py: 3, minHeight: 100 }}>
+          <Toolbar sx={{ justifyContent: 'space-between', py: 1, minHeight: 76 }}>
             {/* Logo */}
-            <Box>
+            <Box className="cafert-broadsheet__brand">
               <NavLink to="/" style={{ textDecoration: 'none' }}>
                 <Typography
                   sx={{
@@ -815,148 +691,8 @@ export default function OtherNavbar(props: OtherNavbarProps) {
 
             {/* Desktop Navigation */}
             {!isMobile && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'nowrap' }}>
+              <Box className="cafert-broadsheet__links" sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'nowrap' }}>
                 {navigationItems.map((item) => {
-                  if ((item as any).isProducts) {
-                    // Products button with dropdown
-                    return (
-                      <Box key={item.path} ref={productsDropdownRef} sx={{ position: 'relative' }}>
-                        <Button
-                          onClick={handleProductsClick}
-                          sx={{
-                            color: isDarkMode ? '#ffffff' : (location.pathname === item.path ? '#8b4513' : '#5d4037'),
-                            backgroundColor: location.pathname === item.path 
-                              ? (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(139, 69, 19, 0.08)')
-                              : 'transparent',
-                            borderRadius: '25px',
-                            px: 3,
-                            py: 2,
-                            minWidth: '120px',
-                            height: '48px',
-                            textTransform: 'none',
-                            fontWeight: location.pathname === item.path ? 600 : 500,
-                            fontSize: '1rem',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            ...(isDarkMode && {
-                              textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
-                              boxShadow: location.pathname === item.path
-                                ? '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)'
-                                : 'none',
-                            }),
-                            '&:hover': {
-                              backgroundColor: isDarkMode 
-                                ? 'rgba(255, 255, 255, 0.15)'
-                                : 'rgba(139, 69, 19, 0.12)',
-                              color: isDarkMode ? '#ffffff' : '#8b4513',
-                              transform: 'translateY(-2px)',
-                              ...(isDarkMode && {
-                                textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
-                                boxShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2)',
-                              }),
-                            },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'center' }}>
-                            {item.icon}
-                            <Typography 
-                              variant="body1" 
-                              sx={{ 
-                                fontSize: '1rem', 
-                                fontWeight: 'inherit', 
-                                whiteSpace: 'nowrap',
-                                color: 'inherit',
-                                ...(isDarkMode && {
-                                  textShadow: '0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4)',
-                                }),
-                              }}
-                            >
-                              {item.label}
-                            </Typography>
-                            <ExpandMoreIcon 
-                              sx={{ 
-                                transform: productsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                transition: 'transform 0.3s ease',
-                                fontSize: '20px',
-                              }} 
-                            />
-                          </Box>
-                        </Button>
-                        <Collapse in={productsDropdownOpen}>
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: '100%',
-                              left: 0,
-                              mt: 1.5,
-                              minWidth: '280px',
-                              width: '280px',
-                              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-                              borderRadius: '20px',
-                              boxShadow: isDarkMode
-                                ? '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
-                                : '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)',
-                              border: isDarkMode 
-                                ? '1px solid rgba(255, 255, 255, 0.08)' 
-                                : '1px solid rgba(0, 0, 0, 0.05)',
-                              zIndex: 1300,
-                              overflow: 'hidden',
-                              py: 2,
-                            }}
-                          >
-                            {['all', 'drinks', 'desserts', 'salads'].map((category, index) => (
-                              <React.Fragment key={category}>
-                                <Button
-                                  onClick={() => handleCategoryClick(category)}
-                                  fullWidth
-                                  sx={{
-                                    justifyContent: 'flex-start',
-                                    px: 4,
-                                    py: 2.5,
-                                    textTransform: 'none',
-                                    color: isDarkMode ? '#ffffff' : '#3a3429',
-                                    borderRadius: 0,
-                                    transition: 'all 0.15s ease',
-                                    '&:hover': {
-                                      backgroundColor: isDarkMode 
-                                        ? 'rgba(255, 255, 255, 0.1)'
-                                        : 'rgba(139, 69, 19, 0.05)',
-                                      transform: 'translateX(2px)',
-                                    },
-                                  }}
-                                >
-                                  <Typography 
-                                    sx={{ 
-                                      fontSize: '1rem', 
-                                      fontWeight: 500,
-                                      lineHeight: 1.5,
-                                      fontFamily: '"EB Garamond", serif',
-                                    }}
-                                  >
-                                    {category === 'all' ? t('common.all') : t(`navigation.${category}`)}
-                                  </Typography>
-                                </Button>
-                                {index < 3 && (
-                                  <Box 
-                                    sx={{ 
-                                      height: '1px',
-                                      backgroundColor: isDarkMode 
-                                        ? 'rgba(255, 255, 255, 0.06)'
-                                        : 'rgba(0, 0, 0, 0.04)',
-                                      mx: 3,
-                                    }} 
-                                  />
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </Box>
-                        </Collapse>
-                      </Box>
-                    );
-                  }
-                  
                   // Regular navigation items
                   const isActive = item.path.includes('?') 
                     ? location.pathname === item.path.split('?')[0] && (location as any).search === `?${item.path.split('?')[1]}`
@@ -964,6 +700,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                   
                   return (
                     <Button
+                      className={`cafert-broadsheet__link ${isActive ? 'is-active' : ''}`}
                       key={item.path}
                       onClick={() => {
                         if (item.path.includes('?')) {
@@ -1032,7 +769,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
             )}
 
             {/* Right Side Actions */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box className="cafert-broadsheet__actions" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {/* Cart */}
               <Basket
                 cartItems={cartItems}
@@ -1047,6 +784,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
 
               {/* Search Icon */}
               <IconButton
+                className="cafert-broadsheet__search"
                 onClick={handleSearchToggle}
                 sx={{
                   color: isDarkMode ? '#ffffff' : '#5d4037',
@@ -1076,6 +814,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                 return !authMember ? (
                   <Box sx={{ display: 'flex', gap: 2, ml: 3 }}>
                     <Button
+                      className="cafert-broadsheet__signup"
                       variant="outlined"
                       size="medium"
                       onClick={() => setSignupOpen(true)}
@@ -1105,6 +844,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
                       {t('navigation.signup')}
                     </Button>
                     <Button
+                      className="cafert-broadsheet__login"
                       variant="contained"
                       size="medium"
                       onClick={() => setLoginOpen(true)}
@@ -1153,6 +893,7 @@ export default function OtherNavbar(props: OtherNavbarProps) {
               {/* Mobile Menu Button */}
               {isMobile && (
                 <IconButton
+                  className="cafert-broadsheet__menu-button"
                   color="inherit"
                   aria-label="open drawer"
                   edge="start"

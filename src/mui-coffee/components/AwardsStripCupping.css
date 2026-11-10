@@ -1,0 +1,325 @@
+.cafert-cupping {
+  --cup-ink: #493d2c;
+  --cup-muted: #786850;
+  --cup-paper: #fff9ef;
+  --cup-wood: #c8a77c;
+  --cup-terracotta: #a95c46;
+  position: relative;
+  overflow: hidden;
+  padding: clamp(54px, 7vw, 92px) 0 clamp(58px, 7vw, 88px);
+  color: var(--cup-ink);
+  background:
+    radial-gradient(ellipse at 12% 72%, rgba(202, 163, 112, .19), transparent 32%),
+    radial-gradient(ellipse at 95% 12%, rgba(169, 92, 70, .07), transparent 24%),
+    #f7f1e8;
+}
+
+.cafert-cupping::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 7%;
+  width: 1px;
+  height: 100%;
+  background: rgba(133, 107, 73, .14);
+}
+
+.cafert-cupping__container.MuiContainer-root {
+  position: relative;
+  z-index: 1;
+  max-width: 1480px;
+  padding-right: clamp(22px, 5vw, 78px);
+  padding-left: clamp(22px, 5vw, 78px);
+}
+
+.cafert-cupping__heading {
+  position: relative;
+  z-index: 2;
+  max-width: 690px;
+  margin: 0 0 22px 4%;
+}
+
+.cafert-cupping__eyebrow {
+  margin: 0 0 11px;
+  color: var(--cup-terracotta);
+  font: 700 12px/1.2 "Poppins", sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.cafert-cupping__title {
+  margin: 0;
+  color: var(--cup-ink);
+  font: 600 clamp(40px, 5vw, 64px)/1.02 "EB Garamond", Georgia, serif;
+  letter-spacing: -.035em;
+}
+
+.cafert-cupping__intro {
+  max-width: 52ch;
+  margin: 13px 0 0;
+  color: var(--cup-muted);
+  font: 18px/1.55 "Poppins", sans-serif;
+}
+
+.cafert-cupping__scene {
+  display: grid;
+  min-height: 555px;
+  grid-template-columns: minmax(290px, .88fr) minmax(500px, 1.45fr);
+  align-items: center;
+  gap: clamp(15px, 3vw, 48px);
+}
+
+.cafert-cupping__crew {
+  position: relative;
+  align-self: end;
+  min-width: 0;
+  padding-bottom: 32px;
+}
+
+.cafert-cupping__crew-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 112%;
+  max-width: 610px;
+  height: auto;
+  margin-left: -6%;
+  object-fit: contain;
+  filter: drop-shadow(0 17px 15px rgba(69, 48, 29, .12));
+}
+
+.cafert-cupping__crew-note {
+  position: absolute;
+  z-index: 2;
+  top: 7%;
+  left: -2%;
+  padding: 8px 11px;
+  color: #fff8eb;
+  background: var(--cup-terracotta);
+  font: 700 10px/1 "Poppins", sans-serif;
+  letter-spacing: .12em;
+  transform: rotate(-7deg);
+}
+
+.cafert-cupping__crew-caption {
+  position: absolute;
+  z-index: 2;
+  right: 2%;
+  bottom: 27px;
+  color: #705c40;
+  font: italic 17px/1.1 "EB Garamond", Georgia, serif;
+  transform: rotate(-3deg);
+}
+
+.cafert-cupping__tasting {
+  position: relative;
+  min-width: 0;
+  padding: 34px 0 12px;
+}
+
+.cafert-cupping__table {
+  position: relative;
+  min-height: 244px;
+  padding: 35px clamp(15px, 3vw, 44px) 33px;
+  background:
+    linear-gradient(177deg, rgba(255, 244, 223, .62), transparent 32%),
+    repeating-linear-gradient(2deg, transparent 0 25px, rgba(105, 72, 41, .07) 26px, transparent 28px),
+    linear-gradient(100deg, #b99165, #dfc49c 48%, #bd966b);
+  box-shadow: 0 13px 22px rgba(81, 58, 34, .15), inset 0 1px rgba(255, 251, 237, .75), inset 0 -7px 0 rgba(104, 69, 38, .12);
+  clip-path: polygon(0 0, 100% 0, 99% 91%, 95% 94%, 91% 91%, 87% 95%, 83% 92%, 79% 95%, 75% 92%, 71% 95%, 67% 92%, 63% 95%, 59% 92%, 55% 95%, 51% 92%, 47% 95%, 43% 92%, 39% 95%, 35% 92%, 31% 95%, 27% 92%, 23% 95%, 19% 92%, 15% 95%, 11% 92%, 7% 95%, 3% 92%, 0 95%);
+}
+
+.cafert-cupping__table-edge {
+  position: absolute;
+  right: 0;
+  bottom: -17px;
+  left: 0;
+  height: 22px;
+  background: linear-gradient(#a97f54, #8d6745);
+  clip-path: polygon(0 0, 100% 0, 99% 55%, 0 100%);
+}
+
+.cafert-cupping__bowls-cutout {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  left: 4%;
+  display: block;
+  width: 92%;
+  height: auto;
+  pointer-events: none;
+}
+
+.cafert-cupping__bowls {
+  position: absolute;
+  z-index: 2;
+  top: 36px;
+  left: 4%;
+  display: grid;
+  width: 92%;
+  height: 130px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(2px, .6vw, 8px);
+}
+
+.cafert-cupping__bowl.MuiButton-root {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  padding: 0 !important;
+  color: var(--cup-ink);
+  background: transparent;
+  transition: background-color 220ms ease;
+}
+
+.cafert-cupping__bowl.MuiButton-root::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  left: 3px;
+  height: 62%;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 250, 237, .48), transparent 72%);
+  opacity: 0;
+  transition: opacity 180ms ease, border-color 180ms ease;
+}
+
+.cafert-cupping__bowl.MuiButton-root:hover,
+.cafert-cupping__bowl.MuiButton-root.is-selected { background-color: rgba(255, 250, 237, .05); }
+
+.cafert-cupping__bowl.MuiButton-root:hover::before,
+.cafert-cupping__bowl.MuiButton-root.is-selected::before {
+  border-color: rgba(255, 250, 237, .72);
+  opacity: 1;
+}
+
+.cafert-cupping__bowl.MuiButton-root:focus-visible { outline: 3px solid var(--cup-terracotta); outline-offset: 2px; }
+
+.cafert-cupping__bowl-number {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  z-index: 1;
+  color: #493d2c;
+  font: 700 10px/1 "Poppins", sans-serif;
+  letter-spacing: .06em;
+  text-shadow: 0 1px rgba(255, 248, 235, .85);
+  transform: translateX(-50%);
+}
+
+.cafert-cupping__table-label {
+  position: absolute;
+  right: 17px;
+  bottom: 18px;
+  color: rgba(75, 51, 29, .7);
+  font: 700 8px/1 "Poppins", sans-serif;
+  letter-spacing: .14em;
+}
+
+.cafert-cupping__scorecard {
+  position: relative;
+  min-height: 198px;
+  margin: 25px 10px 0 5%;
+  padding: 26px clamp(22px, 3vw, 43px) 26px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 37px, rgba(126, 103, 73, .11) 38px),
+    var(--cup-paper);
+  box-shadow: 0 12px 25px rgba(74, 54, 32, .12), inset 0 0 0 1px rgba(151, 119, 79, .27);
+  transform-origin: 13% 0;
+  clip-path: polygon(0 0, 100% 0, 100% 93%, 96% 95%, 92% 93%, 88% 97%, 84% 94%, 80% 97%, 76% 94%, 72% 97%, 68% 94%, 64% 97%, 60% 94%, 56% 97%, 52% 94%, 48% 97%, 44% 94%, 40% 97%, 36% 94%, 32% 97%, 28% 94%, 24% 97%, 20% 94%, 16% 97%, 12% 94%, 8% 97%, 4% 94%, 0 97%);
+}
+
+.cafert-cupping__scorecard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 42px;
+  width: 1px;
+  background: rgba(169, 92, 70, .26);
+}
+
+.cafert-cupping__scorecard-head,
+.cafert-cupping__scorecard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.cafert-cupping__scorecard-head {
+  margin-bottom: 19px;
+  color: var(--cup-terracotta);
+  font: 700 10px/1.2 "Poppins", sans-serif;
+  letter-spacing: .12em;
+}
+
+.cafert-cupping__award-title {
+  max-width: 30ch;
+  margin: 0;
+  color: var(--cup-ink);
+  font: 600 clamp(26px, 3vw, 39px)/1.08 "EB Garamond", Georgia, serif;
+  letter-spacing: -.02em;
+}
+
+.cafert-cupping__scorecard-foot { margin-top: 15px; }
+.cafert-cupping__scorecard-foot p { margin: 0; color: var(--cup-muted); font: italic 17px/1.2 "EB Garamond", Georgia, serif; }
+
+.cafert-cupping__year {
+  padding: 5px 9px;
+  border: 1px solid #c8b79e;
+  color: #746248;
+  font: 700 10px/1 "Poppins", sans-serif;
+  letter-spacing: .08em;
+}
+
+.cafert-cupping__paper-tear {
+  position: absolute;
+  top: 0;
+  right: 32px;
+  width: 18px;
+  height: 9px;
+  border-radius: 0 0 10px 10px;
+  background: #e1d2bd;
+}
+
+@media (max-width: 980px) {
+  .cafert-cupping__scene { grid-template-columns: minmax(220px, .72fr) minmax(440px, 1.28fr); gap: 6px; }
+  .cafert-cupping__crew-image { width: 125%; margin-left: -15%; }
+  .cafert-cupping__bowls-cutout { top: 4px; }
+  .cafert-cupping__bowls { top: 32px; height: 125px; }
+}
+
+@media (max-width: 720px) {
+  .cafert-cupping { padding: 45px 0 52px; }
+  .cafert-cupping__heading { margin: 0 0 4px; }
+  .cafert-cupping__title { font-size: clamp(39px, 11vw, 54px); }
+  .cafert-cupping__intro { max-width: 40ch; font-size: 16px; }
+  .cafert-cupping__scene { display: flex; flex-direction: column; align-items: stretch; }
+  .cafert-cupping__crew { width: 100%; max-width: 440px; align-self: center; margin: -5px 0 -32px; padding-bottom: 0; }
+  .cafert-cupping__crew-image { width: 100%; max-width: none; margin: 0; }
+  .cafert-cupping__crew-note { top: 10%; left: 2%; font-size: 9px; }
+  .cafert-cupping__crew-caption { right: 3%; bottom: 20px; font-size: 15px; }
+  .cafert-cupping__tasting { padding-top: 0; }
+  .cafert-cupping__table { min-height: 208px; padding: 27px 10px 29px; }
+  .cafert-cupping__bowls { gap: 2px; }
+  .cafert-cupping__bowls-cutout { top: 8px; }
+  .cafert-cupping__bowls { top: 25px; height: 129px; }
+  .cafert-cupping__scorecard { min-height: 184px; margin: 25px 3px 0; padding: 24px 20px 25px 48px; }
+  .cafert-cupping__scorecard::before { left: 34px; }
+  .cafert-cupping__scorecard-head { gap: 7px; font-size: 8px; letter-spacing: .07em; }
+  .cafert-cupping__award-title { font-size: 29px; }
+}
+
+@media (max-width: 390px) {
+  .cafert-cupping__table-label { right: 8px; font-size: 7px; }
+  .cafert-cupping__scorecard { padding-right: 16px; }
+  .cafert-cupping__scorecard-head { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cafert-cupping__bowl.MuiButton-root,
+  .cafert-cupping__bowl.MuiButton-root::before { transition: none; }
+}

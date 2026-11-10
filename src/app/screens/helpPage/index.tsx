@@ -39,8 +39,6 @@ import {
   LocationOn as LocationOnIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
-  DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon,
   NavigateNext as NavigateNextIcon,
   Support as SupportIcon,
   QuestionAnswer as QuestionAnswerIcon,
@@ -361,39 +359,50 @@ export default function HelpPage() {
         keywords="help, support, FAQ, questions, customer service, coffee shop help"
       />
       <Box sx={{ 
-      backgroundColor: isDarkMode ? colors.background : '#f8f9fa', 
+      backgroundColor: isDarkMode ? '#29231c' : '#f2eadc',
+      backgroundImage: isDarkMode
+        ? 'url("/img/coffee/coffee-branch-cutout.webp"), url("/img/coffee/coffee-branch-cutout.webp"), radial-gradient(circle at 18% 20%, transparent 0 70px, rgba(196,155,104,.11) 71px 73px, transparent 74px), repeating-linear-gradient(0deg, rgba(239,218,188,.02) 0 1px, transparent 1px 5px)'
+        : 'url("/img/coffee/coffee-branch-cutout.webp"), url("/img/coffee/coffee-branch-cutout.webp"), radial-gradient(circle at 18% 20%, transparent 0 70px, rgba(173,128,80,.17) 71px 73px, transparent 74px), repeating-linear-gradient(0deg, rgba(104,76,47,.03) 0 1px, transparent 1px 5px)',
+      backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat',
+      backgroundSize: '300px auto, 350px auto, auto, auto',
+      backgroundPosition: 'right -110px top 210px, left -140px bottom 130px, 0 0, 0 0',
       minHeight: '100vh',
-      pt: 12, // Add more top padding to account for fixed navbar
-      pb: 4
+      pt: 12,
+      pb: 8,
+      overflowX: 'clip',
     }}>
       
       
       <Container maxWidth="xl">
         {/* Hero Header */}
         <Box sx={{ 
-          textAlign: 'center', 
+          position: 'relative',
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 260px' },
+          alignItems: 'center',
+          gap: { xs: 2, md: 4 },
+          textAlign: 'left',
           mb: 6,
-          background: `linear-gradient(135deg, ${isDarkMode ? colors.surface : '#ffffff'} 0%, ${isDarkMode ? colors.background : '#f8f9fa'} 100%)`,
-          borderRadius: 4,
-          p: 6,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`
+          backgroundColor: isDarkMode ? '#3b3024' : '#eadcc7',
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent 0 35px, rgba(116,83,52,.055) 35px 36px)',
+          borderRadius: 0,
+          p: { xs: 3, sm: 4, md: 5 },
+          boxShadow: isDarkMode ? '6px 8px 0 rgba(0,0,0,.16), 0 18px 36px rgba(0,0,0,.18)' : '6px 8px 0 #ddc9aa, 0 18px 36px rgba(78,53,29,.12)',
+          border: `1px solid ${isDarkMode ? '#68533b' : '#d3bc99'}`,
+          overflow: 'hidden',
+          clipPath: 'polygon(0 1%, 17% 0, 34% 1%, 51% 0, 68% 1%, 84% 0, 100% 1%, 99.6% 32%, 100% 66%, 99.5% 100%, 76% 99%, 53% 100%, 29% 99%, 0 100%, .4% 68%, 0 34%)',
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 4 }}>
-            <Box sx={{
-              background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDark})`,
-              borderRadius: '50%',
-              p: 3,
-              mr: 3,
-              boxShadow: `0 8px 24px ${colors.accent}40`
-            }}>
-              <HelpIcon sx={{ fontSize: 64, color: '#ffffff' }} />
-            </Box>
+          <Box sx={{ position: 'relative', zIndex: 1 }}>
+            <Typography sx={{ color: isDarkMode ? '#d0aa7e' : '#93633f', fontSize: '.76rem', fontWeight: 800, letterSpacing: '.15em', mb: 1.5 }}>
+              CAFERT COUNTER · HELP DESK
+            </Typography>
             <Box>
-              <Typography variant="h2" sx={{ 
+              <Typography variant="h2" component="h1" sx={{
                 color: colors.text, 
                 fontWeight: 800,
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                fontFamily: 'Georgia, serif',
+                fontSize: { xs: '2.45rem', md: '3.5rem' },
+                lineHeight: 1.04,
                 mb: 1
               }}>
                 Help Center
@@ -405,10 +414,9 @@ export default function HelpPage() {
                 Find answers to your questions quickly and easily
               </Typography>
             </Box>
-          </Box>
 
           {/* Search Bar */}
-          <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+          <Box sx={{ maxWidth: 680, mt: 3 }}>
             <Autocomplete
               freeSolo
               options={searchSuggestions}
@@ -445,8 +453,8 @@ export default function HelpPage() {
                       </InputAdornment>
                     ),
                     sx: {
-                      backgroundColor: isDarkMode ? colors.surface : '#ffffff',
-                      borderRadius: 3,
+                      backgroundColor: isDarkMode ? '#2f271f' : '#fffaf1',
+                      borderRadius: 1,
                       '& .MuiOutlinedInput-notchedOutline': {
                         borderColor: colors.accent,
                         borderWidth: 2,
@@ -477,6 +485,14 @@ export default function HelpPage() {
               )}
             />
           </Box>
+          </Box>
+
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, minHeight: 250, alignItems: 'flex-end', justifyContent: 'center', position: 'relative' }}>
+            <Box sx={{ position: 'absolute', top: 20, left: 0, right: 0, mx: 'auto', width: 'fit-content', maxWidth: 205, px: 1.4, py: 1, color: '#503a29', backgroundColor: '#fff9ee', border: '1px solid #d4bd9c', boxShadow: '3px 4px 0 rgba(78,53,29,.12)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '.91rem', transform: 'rotate(-2deg)', zIndex: 2, '&::after': { content: '""', position: 'absolute', left: 20, bottom: -6, width: 10, height: 10, backgroundColor: '#fff9ee', borderRight: '1px solid #d4bd9c', borderBottom: '1px solid #d4bd9c', transform: 'rotate(45deg)' } }}>
+              Tell me what went wrong. I’ll find the right answer.
+            </Box>
+            <Box component="img" src="/img/coffee/cafert-counter-barista.webp" alt="" aria-hidden="true" sx={{ width: 190, height: 245, objectFit: 'contain', objectPosition: 'bottom center', filter: 'drop-shadow(0 8px 6px rgba(60,39,21,.2))', pointerEvents: 'none' }} />
+          </Box>
         </Box>
 
         {/* Main Content - Two Column Layout */}
@@ -485,10 +501,10 @@ export default function HelpPage() {
           <Grid item xs={12} md={3}>
             <Paper sx={{
               p: 3,
-              background: isDarkMode ? colors.surface : '#ffffff',
-              borderRadius: 3,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-              border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
+              background: isDarkMode ? '#382e23' : '#f8f0e3',
+              borderRadius: 0,
+              boxShadow: isDarkMode ? '5px 7px 0 rgba(0,0,0,.14), 0 12px 28px rgba(0,0,0,.14)' : '5px 7px 0 #dfcbaa, 0 12px 28px rgba(78,53,29,.09)',
+              border: `1px solid ${isDarkMode ? '#68533b' : '#d4bd9c'}`,
               height: 'fit-content',
               position: 'sticky',
               top: 24
@@ -607,14 +623,15 @@ export default function HelpPage() {
                     <Grid item xs={12} sm={6} key={faq.id}>
                       <Card sx={{
                         p: 3,
-                        background: isDarkMode ? colors.surface : '#ffffff',
-                        borderRadius: 2,
-                        border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
+                        background: isDarkMode ? '#382f25' : '#fff9ee',
+                        borderRadius: 0,
+                        clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
+                        border: `1px solid ${isDarkMode ? '#68533b' : '#d4bd9c'}`,
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                          transform: 'translateY(-3px) rotate(-.25deg)',
+                          boxShadow: '4px 6px 0 rgba(78,53,29,.12), 0 12px 25px rgba(0,0,0,0.12)',
                         }
                       }}
                       onClick={() => {
@@ -675,10 +692,11 @@ export default function HelpPage() {
                     onChange={handleAccordionChange(`panel${index}`)}
                     sx={{
                       mb: 2,
-                      background: isDarkMode ? colors.surface : '#ffffff',
-                      borderRadius: 3,
-                      border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      background: isDarkMode ? '#382f25' : '#fff9ee',
+                      borderRadius: 0,
+                      clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
+                      border: `1px dashed ${isDarkMode ? '#806747' : '#c8ae88'}`,
+                      boxShadow: isDarkMode ? '4px 5px 0 rgba(0,0,0,.14), 0 8px 22px rgba(0,0,0,.12)' : '4px 5px 0 #e2cfb1, 0 8px 22px rgba(78,53,29,.08)',
                       transition: 'all 0.3s ease',
                       '&:before': {
                         display: 'none',
@@ -687,8 +705,8 @@ export default function HelpPage() {
                         margin: '16px 0',
                       },
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                          transform: 'translateY(-2px) rotate(-.15deg)',
+                          boxShadow: '5px 7px 0 rgba(78,53,29,.13), 0 12px 30px rgba(0,0,0,0.12)',
                       },
                     }}
                   >
@@ -879,9 +897,10 @@ export default function HelpPage() {
                     <Grid item xs={12} sm={6} key={article.id}>
                       <Card sx={{
                         p: 3,
-                        background: isDarkMode ? colors.surface : '#ffffff',
-                        borderRadius: 3,
-                        border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
+                        background: isDarkMode ? '#382f25' : '#fff9ee',
+                        borderRadius: 0,
+                        clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
+                        border: `1px solid ${isDarkMode ? '#68533b' : '#d4bd9c'}`,
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         height: '100%',
@@ -946,10 +965,13 @@ export default function HelpPage() {
             {/* Support CTA */}
             <Box sx={{ 
               textAlign: 'center',
-              background: `linear-gradient(135deg, ${colors.accent}10, ${colors.accent}05)`,
-              borderRadius: 4,
+              position: 'relative',
+              backgroundColor: isDarkMode ? '#382f25' : '#eadcc7',
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent 0 35px, rgba(116,83,52,.06) 35px 36px)',
+              borderRadius: 0,
               p: 6,
-              border: `2px solid ${colors.accent}20`
+              border: `1px dashed ${isDarkMode ? '#806747' : '#c8ae88'}`,
+              boxShadow: isDarkMode ? '5px 7px 0 rgba(0,0,0,.14)' : '5px 7px 0 #ddc9aa',
             }}>
               <ContactSupportIcon sx={{ 
                 fontSize: 64, 
@@ -981,7 +1003,7 @@ export default function HelpPage() {
                     background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentDark})`,
                     px: 4,
                     py: 2,
-                    borderRadius: 3,
+                    borderRadius: 0,
                     fontWeight: 600,
                     '&:hover': {
                       background: `linear-gradient(135deg, ${colors.accentDark}, ${colors.accent})`,
@@ -1001,7 +1023,7 @@ export default function HelpPage() {
                     color: colors.accent,
                     px: 4,
                     py: 2,
-                    borderRadius: 3,
+                    borderRadius: 0,
                     fontWeight: 600,
                     '&:hover': {
                       borderColor: colors.accentDark,
@@ -1020,4 +1042,4 @@ export default function HelpPage() {
     </Box>
     </>
   );
-} 
+}
