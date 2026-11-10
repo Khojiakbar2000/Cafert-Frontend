@@ -45,8 +45,6 @@ import {
   Visibility as VisibilityIcon,
   Whatshot as WhatshotIcon,
   AttachMoney as AttachMoneyIcon,
-  DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon,
   LocalCafe as LocalCafeIcon,
   RestaurantMenu as RestaurantMenuIcon,
   EmojiFoodBeverage as EmojiFoodBeverageIcon
@@ -119,7 +117,7 @@ export default function Coffees(props: CoffeesProps) {
   const { onAdd } = props;
   const history = useHistory();
   const location = useLocation();
-  const { isDarkMode, toggleTheme, colors } = useCoffeeTheme();
+  const { isDarkMode, colors } = useCoffeeTheme();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const { t } = useTranslation();
@@ -514,28 +512,6 @@ export default function Coffees(props: CoffeesProps) {
                 />
               </Box>
               
-              {/* Enhanced Night Mode Toggle */}
-              <IconButton
-                onClick={toggleTheme}
-                sx={{
-                  backgroundColor: isDarkMode ? '#333333' : '#f5f5f5',
-                  color: isDarkMode ? '#ffd700' : '#8B4513',
-                  width: 56,
-                  height: 56,
-                  borderRadius: '16px',
-                  border: `2px solid ${isDarkMode ? '#404040' : '#e0e0e0'}`,
-                  '&:hover': {
-                    backgroundColor: isDarkMode ? '#404040' : '#e8e8e8',
-                    transform: 'scale(1.05)',
-                    boxShadow: isDarkMode 
-                      ? '0 8px 20px rgba(255, 215, 0, 0.3)'
-                      : '0 8px 20px rgba(139, 69, 19, 0.2)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {isDarkMode ? <LightModeIcon sx={{ fontSize: '1.5rem' }} /> : <DarkModeIcon sx={{ fontSize: '1.5rem' }} />}
-              </IconButton>
             </Box>
           </Paper>
 

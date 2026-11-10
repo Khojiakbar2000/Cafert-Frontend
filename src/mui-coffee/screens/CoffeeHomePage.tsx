@@ -59,7 +59,6 @@ import { useTheme as useThemeContext } from '../context/ThemeContext';
 import { useGlobals } from '../../app/hooks/useGlobals';
 import ProductService from '../../app/services/ProductService';
 import MemberService from '../../app/services/MemberService';
-import ThemeToggle from '../components/ThemeToggle';
 import LanguageToggle from '../components/LanguageToggle';
 import HeroSection from '../../app/components/HeroSection';
 import NewsletterSubscription from '../components/NewsletterSubscription';
@@ -86,7 +85,7 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
   setLoginOpen 
 }: CoffeeHomePageProps) => {
   const { t, i18n } = useTranslation();
-  const { isDarkMode, toggleTheme, colors } = useThemeContext();
+  const { isDarkMode, colors } = useThemeContext();
   const { authMember, setAuthMember } = useGlobals();
   const history = useHistory();
   const [activeMenuTab, setActiveMenuTab] = useState('popular-coffees');
@@ -1011,7 +1010,6 @@ const CoffeeHomePage: React.FC<CoffeeHomePageProps> = ({
             
             {/* Right side controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
               <LanguageToggle isDarkMode={isDarkMode} />
               
               {/* Show login/signup buttons only when not authenticated */}

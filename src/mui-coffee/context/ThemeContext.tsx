@@ -39,7 +39,6 @@ interface ThemeColors {
 interface ThemeContextType {
   isDarkMode: boolean;
   currentTheme: string;
-  toggleTheme: () => void;
   setTheme: (theme: string) => void;
   colors: ThemeColors;
 }
@@ -78,42 +77,6 @@ const lightTheme: ThemeColors = {
   border: '#E5DCD2', // Cafert primary color
   shadow: 'rgba(83, 73, 49, 0.1)', // Using Cafert header color
   shadowLight: 'rgba(83, 73, 49, 0.05)', // Using Cafert header color
-};
-
-const darkTheme: ThemeColors = {
-  // Background colors - Cafert dark theme
-  primary: '#B38E6A', // Cafert accent color
-  secondary: '#E5DCD2', // Cafert primary color
-  background: '#1a1a1a',
-  surface: '#2c2c2c',
-  paper: '#333333',
-  
-  // Text colors - Cafert dark theme
-  text: '#E5DCD2', // Cafert primary color
-  textSecondary: '#B38E6A', // Cafert accent color
-  textLight: '#8a8a8a',
-  
-  // Accent colors - Cafert dark theme
-  accent: '#B38E6A', // Cafert accent color
-  accentLight: '#E5DCD2', // Cafert primary color
-  accentDark: '#534931', // Cafert header color
-  
-  // Coffee theme colors - Cafert dark theme
-  coffee: '#B38E6A', // Cafert accent color
-  coffeeLight: '#E5DCD2', // Cafert primary color
-  coffeeDark: '#534931', // Cafert header color
-  cream: '#2c2c2c',
-  
-  // Status colors
-  success: '#66bb6a',
-  warning: '#ffb74d',
-  error: '#ef5350',
-  info: '#42a5f5',
-  
-  // Border and shadow colors
-  border: '#404040',
-  shadow: 'rgba(0,0,0,0.3)',
-  shadowLight: 'rgba(0,0,0,0.2)',
 };
 
 const coffeeTheme: ThemeColors = {
@@ -168,34 +131,19 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    // Check localStorage for saved preference
+    // Keep the warm Coffee palette when selected; legacy/system dark mode is now light.
     const saved = localStorage.getItem('theme');
-    if (saved !== null) {
-      return saved;
-    }
-    // Check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return saved === 'coffee' ? 'coffee' : 'light';
   });
 
-  const isDarkMode = currentTheme === 'dark';
+  const isDarkMode = false;
   
   const colors = useMemo(() => {
-    switch (currentTheme) {
-      case 'dark':
-        return darkTheme;
-      case 'coffee':
-        return coffeeTheme;
-      default:
-        return lightTheme;
-    }
+    return currentTheme === 'coffee' ? coffeeTheme : lightTheme;
   }, [currentTheme]);
 
-  const toggleTheme = useCallback(() => {
-    setCurrentTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  }, []);
-
   const setTheme = useCallback((theme: string) => {
-    setCurrentTheme(theme);
+    setCurrentTheme(theme === 'coffee' ? 'coffee' : 'light');
   }, []);
 
   useEffect(() => {
@@ -223,14 +171,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const value: ThemeContextType = useMemo(() => ({
     isDarkMode,
     currentTheme,
-    toggleTheme,
     setTheme,
     colors,
-  }), [isDarkMode, currentTheme, toggleTheme, setTheme, colors]);
+  }), [currentTheme, setTheme, colors]);
 
   return (
     <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
-}; 
+};

@@ -13,7 +13,6 @@ import {
   Divider
 } from '@mui/material';
 import {
-  DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
   LocalCafe as CoffeeIcon,
   Star as WeatherIcon,
@@ -30,7 +29,7 @@ interface ThemeOption {
 }
 
 const FloatingStyleSwitcher: React.FC = () => {
-  const { isDarkMode, currentTheme, setTheme, colors } = useTheme();
+  const { currentTheme, setTheme, colors } = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [coffeeWidgetEnabled, setCoffeeWidgetEnabled] = useState(() => {
@@ -44,12 +43,6 @@ const FloatingStyleSwitcher: React.FC = () => {
       name: 'Light Mode',
       icon: <LightModeIcon />,
       description: 'Clean and bright interface'
-    },
-    {
-      id: 'dark',
-      name: 'Dark Mode',
-      icon: <DarkModeIcon />,
-      description: 'Easy on the eyes'
     },
     {
       id: 'coffee',
@@ -85,17 +78,11 @@ const FloatingStyleSwitcher: React.FC = () => {
   };
 
   const getCurrentThemeIcon = () => {
-    if (isDarkMode) {
-      return <DarkModeIcon />;
-    }
-    return <LightModeIcon />;
+    return currentTheme === 'coffee' ? <CoffeeIcon /> : <LightModeIcon />;
   };
 
   const getCurrentThemeName = () => {
-    if (isDarkMode) {
-      return 'Dark Mode';
-    }
-    return 'Light Mode';
+    return currentTheme === 'coffee' ? 'Coffee Theme' : 'Light Mode';
   };
 
   return (
@@ -140,7 +127,7 @@ const FloatingStyleSwitcher: React.FC = () => {
             >
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={isDarkMode ? 'dark' : 'light'}
+                  key={currentTheme}
                   initial={{ rotate: -180, opacity: 0 }}
                   animate={{ rotate: 0, opacity: 1 }}
                   exit={{ rotate: 180, opacity: 0 }}
@@ -378,4 +365,4 @@ const FloatingStyleSwitcher: React.FC = () => {
   );
 };
 
-export default FloatingStyleSwitcher; 
+export default FloatingStyleSwitcher;
